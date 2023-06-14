@@ -47,10 +47,7 @@ public class WeatherForecastController : ControllerBase
     /// </summary>
     [HttpGet("MyAction2")]
     [ServiceLevelIndicator(Operation = "MyOperation")]
-    public IEnumerable<WeatherForecast> GetOperation()
-    {
-        return GetWeather();
-    }
+    public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
 
     /// <summary>
     /// Should emit SLI metrics
