@@ -1,29 +1,31 @@
-﻿namespace ServiceLevelIndicators;
+﻿namespace Asp.ServiceLevelIndicators;
 
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Options;
 
 public class ServiceLevelIndicator
 {
-    public string CustomerResourceId { get; }
-    public string LocationId { get; }
+    public ServiceLevelIndicatorOptions ServiceLevelIndicatorOptions { get; }
 
     private readonly Histogram<long> _responseLatencyHistogram;
 
-    public ServiceLevelIndicator(string customerResourceId, string locationId, Meter meter, string name = "LatencySLI")
+    public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options, IServiceLevelIndicatorMeter meter)
     {
-        CustomerResourceId = customerResourceId;
-        LocationId = locationId;
-        _responseLatencyHistogram = meter.CreateHistogram<long>(name);
+        ServiceLevelIndicatorOptions = options.Value;
+        _responseLatencyHistogram = meter.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName);
     }
 
-    public void RecordLatency(string operation, long elapsedTime, params KeyValuePair<string, object?>[] tags)
+    public void RecordLatency(string operation, long elapsedTime, params KeyValuePair<string, object?>[] tags) =>
+        RecordLatency(operation, ServiceLevelIndicatorOptions.DefaultCustomerResourceId, elapsedTime, tags);
+
+    public void RecordLatency(string operation, string customerResourseId, long elapsedTime, params KeyValuePair<string, object?>[] tags)
     {
         var tagList = new TagList
         {
-            { "CustomerResourceId", CustomerResourceId },
-            { "LocationId", LocationId },
+            { "CustomerResourceId", customerResourseId },
+            { "LocationId", ServiceLevelIndicatorOptions.LocationId },
             { "Operation", operation }
         };
 

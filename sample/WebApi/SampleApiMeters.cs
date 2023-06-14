@@ -2,7 +2,7 @@
 {
     using System.Diagnostics.Metrics;
 
-    public class SampleApiMeters
+    internal class SampleApiMeters
     {
         public const string MeterName = "SampleMeter";
 

@@ -8,11 +8,11 @@ Tags: SLI, OpenTelemetry, Metrics.
 
 Service Level Indicator library will help emit latency metrics for each API operation. The metrics is emitted via OpenTelemetry and can be used to monitor service level agreements.
 
-By default a meter named `LatencySLI` is created and the metrics are emitted to the meter. The metrics are emitted with the following dimensions (Tags).
+By default an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following dimensions (Tags).
 
 * CustomerResourceId - The customer resource id.
 * LocationId - The location id. Where is the service running? eg. public cloud, West US 3 region.
-* Operation - The name of the operation.
+* Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information.
 * HttpStatusCode - The http status code.
 
 
@@ -28,10 +28,8 @@ The library targets .net core and requires the service to use OpenTelemetry http
     public class SampleApiMeters
     {
         public const string MeterName = "SampleMeter";
-
         public Meter Meter { get; } = new Meter(MeterName);
     }
-
     builder.Services.AddSingleton<SampleApiMeters>();
     ```
 
@@ -40,33 +38,50 @@ The library targets .net core and requires the service to use OpenTelemetry http
    Example.
 
     ``` csharp
-    builder.Services.AddSingleton((sp) =>
+    builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
     {
         var meters = sp.GetRequiredService<SampleApiMeters>();
-
-        var customerResourceId = ServiceLevelIndicator.CreateCustomerResourceId("MyProduct", "SampleAPI");
-        var locationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-        return new ServiceLevelIndicator(customerResourceId, locationId, meters.Meter);
+        return new ServiceLevelIndicatorMeter(meters.Meter);
+    });
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        options.DefaultCustomerResourceId = "SampleCustomerResourceId";
+        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
     });
 
-    ```
+     ```
 
 ### Usage
 
-Once the Prerequisites are done, it is ready for usage.
+Once the Prerequisites are done, all controllers will emit SLI information.
+The default operation name is in the format HTTP Method_Controller_Action. 
+eg GET WeatherForecast_Get_WeatherForecast/Action1
 
-1. To measure all the operation in a controller add the attribute `[ServiceLevelIndicatorLatency]`.
+1. To override the default operation name add the attribute `[ServiceLevelIndicator]` on the method.
 
    Example.
 
     ``` csharp
-    [ApiController]
-    [Route("[controller]")]
-    [ServiceLevelIndicatorLatency]
-    public class WeatherForecastController : ControllerBase
+    [HttpGet("MyAction2")]
+    [ServiceLevelIndicator(Operation = "MyOperation")]
+    public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
     ```
 
-2. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
+2. To set the CustomerResourceId within an API method, get the `IServiceLevelIndicatorFeature` and set it.
+    ``` csharp
+    [HttpGet("{customerResourceId}")]
+    public IEnumerable<WeatherForecast> Get(string customerResourceId)
+    {
+        var sliFeature = HttpContext.Features.Get<IServiceLevelIndicatorFeature>();
+        if (sliFeature is not null)
+        {
+            sliFeature.CustomerResourceId = customerResourceId;
+        }
+        return GetWeather();
+    }
+    ```
+
+3. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
 
    Example.
 

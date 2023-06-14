@@ -1,41 +1,40 @@
-﻿namespace ServiceLevelIndicators.Tests
+﻿namespace Asp.ServiceLevelIndicators.Tests;
+
+using FluentAssertions;
+using Xunit;
+
+public class IdTests
 {
-    using FluentAssertions;
-    using Xunit;
-
-    public class IdTests
+    [Fact]
+    public void Will_create_CustomerResourceId()
     {
-        [Fact]
-        public void Will_create_CustomerResourceId()
-        {
-            // Arrange
-            // Act
-            var actual = ServiceLevelIndicator.CreateCustomerResourceId("myproduct", "myservice");
+        // Arrange
+        // Act
+        var actual = ServiceLevelIndicator.CreateCustomerResourceId("myproduct", "myservice");
 
-            // Assert
-            actual.Should().Be("myproduct_myservice");
-        }
+        // Assert
+        actual.Should().Be("myproduct_myservice");
+    }
 
-        [Fact]
-        public void Will_create_LocationId()
-        {
-            // Arrange
-            // Act
-            var actual = ServiceLevelIndicator.CreateLocationId("public", "west");
+    [Fact]
+    public void Will_create_LocationId()
+    {
+        // Arrange
+        // Act
+        var actual = ServiceLevelIndicator.CreateLocationId("public", "west");
 
-            // Assert
-            actual.Should().Be("public_west");
-        }
+        // Assert
+        actual.Should().Be("public_west");
+    }
 
-        [Fact]
-        public void Will_create_LocationId_with_stamp()
-        {
-            // Arrange
-            // Act
-            var actual = ServiceLevelIndicator.CreateLocationId("gov", "west", "stamp");
+    [Fact]
+    public void Will_create_LocationId_with_stamp()
+    {
+        // Arrange
+        // Act
+        var actual = ServiceLevelIndicator.CreateLocationId("gov", "west", "stamp");
 
-            // Assert
-            actual.Should().Be("gov_west_stamp");
-        }
+        // Assert
+        actual.Should().Be("gov_west_stamp");
     }
 }

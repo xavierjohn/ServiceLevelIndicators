@@ -1,4 +1,4 @@
-﻿namespace ServiceLevelIndicators;
+﻿namespace Asp.ServiceLevelIndicators;
 
 using System;
 using System.Collections.Generic;
@@ -10,15 +10,21 @@ public class LatencyMeasureOperation : IDisposable
     private bool _disposedValue;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly string _operation;
+    private string _customerResourceId;
     private readonly KeyValuePair<string, object?>[] _tags;
     private readonly Stopwatch _stopWatch;
     private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
     private int _httpStatusCode;
 
-    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] tags)
+    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] tags) :
+        this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.DefaultCustomerResourceId, tags)
+    { }
+
+    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] tags)
     {
         _serviceLevelIndicator = serviceLevelIndicator;
         _operation = operation;
+        _customerResourceId = customerResourceId;
         _tags = tags;
         _stopWatch = new Stopwatch();
         _stopWatch.Start();
@@ -27,6 +33,8 @@ public class LatencyMeasureOperation : IDisposable
     public void SetState(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
     public void SetState(HttpStatusCode httpStatusCode) => _httpStatusCode = (int)httpStatusCode;
     public void SetHttpStatusCode(int httpStatusCode) => _httpStatusCode = httpStatusCode;
+
+    public void SetCustomerResourceId(string customerResourceId) => _customerResourceId = customerResourceId;
 
     internal bool DoEmitMetrics { get; set; } = true;
 
@@ -41,8 +49,8 @@ public class LatencyMeasureOperation : IDisposable
                 var tags = _tags.ToList();
                 tags.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
                 if (_httpStatusCode > 0)
-                    tags.Add(new KeyValuePair<string, object?>("HttpStatusCode", (int)_httpStatusCode));
-                _serviceLevelIndicator.RecordLatency(_operation, elapsedTime, tags.ToArray());
+                    tags.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
+                _serviceLevelIndicator.RecordLatency(_operation, _customerResourceId, elapsedTime, tags.ToArray());
             }
 
             _disposedValue = true;

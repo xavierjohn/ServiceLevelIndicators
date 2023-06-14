@@ -8,7 +8,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <SolutionDir Condition=" '$(SolutionDir)' == '' OR '$(SolutionDir)' == '*Undefined if not building a solution or within Visual Studio*' ">$(MSBuildThisFileDirectory)</SolutionDir>
     <IsTestProject>$(MSBuildProjectName.EndsWith('.Tests'))</IsTestProject>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>Latest</LangVersion>
@@ -32,6 +32,11 @@
 		<PackageReference Include="DotNet.ReproducibleBuilds" PrivateAssets="All"/>
 	</ItemGroup>
 
+  <PropertyGroup Condition=" '$(IsTestProject)' == 'false' ">
+    <RootNamespace>Asp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <AssemblyName>Asp.$(MSBuildProjectName)</AssemblyName>
+  </PropertyGroup>
+  
 	<!-- Test projects. -->
 	<ImportGroup Condition=" '$(IsTestProject)' == 'true' ">
 		<Import Project="$(MSBuildThisFileDirectory)build/test.props"/>

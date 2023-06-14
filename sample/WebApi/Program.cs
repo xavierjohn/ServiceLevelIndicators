@@ -1,7 +1,7 @@
 ﻿using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using SampleWebApplicationSLI;
-using ServiceLevelIndicators;
+using Asp.ServiceLevelIndicators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    var filePath = Path.Combine(AppContext.BaseDirectory, "Asp.SampleWebApplicationSLI.xml");
+    options.IncludeXmlComments(filePath);
+});
 
 #region OpenTelemetry
 // Build a resource configuration action to set service information.
@@ -21,23 +25,23 @@ Action<ResourceBuilder> configureResource = r => r.AddService(
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
     .WithMetrics(options =>
-{
-    options.AddMeter(SampleApiMeters.MeterName);
+    {
+        options.AddMeter(SampleApiMeters.MeterName);
+        options.AddOtlpExporter();
+    });
 
-    options.AddOtlpExporter();
-    options.AddConsoleExporter((exporterOptions, metricReaderOptions) =>
-        metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 10000
-    );
-});
 builder.Services.AddSingleton<SampleApiMeters>();
-builder.Services.AddSingleton((sp) =>
+builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
 {
     var meters = sp.GetRequiredService<SampleApiMeters>();
-
-    var customerResourceId = ServiceLevelIndicator.CreateCustomerResourceId("SampleServiceName", "SampleAPI");
-    var locationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-    return new ServiceLevelIndicator(customerResourceId, locationId, meters.Meter);
+    return new ServiceLevelIndicatorMeter(meters.Meter);
 });
+builder.Services.AddServiceLevelIndicator(options =>
+{
+    options.DefaultCustomerResourceId = "SampleCustomerResourceId";
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+});
+
 #endregion
 
 var app = builder.Build();
@@ -45,7 +49,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();
-
+app.UseServiceLevelIndicator();
 app.UseAuthorization();
 
 app.MapControllers();
