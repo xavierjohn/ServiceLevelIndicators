@@ -1,7 +1,7 @@
 ﻿namespace Asp.ServiceLevelIndicators;
 
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class ServiceLevelIndicatorAttribute : Attribute
 {
-    public string Operation { get; set; } = string.Empty;
+    public string? Operation { get; set; }
 }

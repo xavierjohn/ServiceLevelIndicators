@@ -21,18 +21,35 @@ internal sealed class ServiceLevelIndicatorMiddleware
     {
         var metaData = context.Features.Get<IEndpointFeature>()?.Endpoint?.Metadata;
         ArgumentNullException.ThrowIfNull(metaData);
+        if (!ShouldEmitMetrics(metaData))
+        {
+            await _next(context);
+            return;
+        }
 
-        AddSliFeature(context);
+        AddSliFeatureToHttpContext(context);
         var operation = GetOperation(context, metaData);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation);
 
         await _next(context);
+        UpdateOperationWithResponseStatus(context, measuredOperation);
+        RemoveSliFeatureFromHttpContext(context);
+    }
+
+    private static void UpdateOperationWithResponseStatus(HttpContext context, LatencyMeasureOperation measuredOperation)
+    {
         var statusCode = context.Response.StatusCode;
         measuredOperation.SetHttpStatusCode(statusCode);
         measuredOperation.SetState((statusCode >= 200 && statusCode < 300) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
         var customerResourceId = GetCustomerResourceId(context);
         measuredOperation.SetCustomerResourceId(customerResourceId);
     }
+
+    private bool ShouldEmitMetrics(EndpointMetadataCollection metaData) =>
+        _serviceLevelIndicator.ServiceLevelIndicatorOptions.AutomaticallyEmitted || GetSliAttribute(metaData) is not null;
+
+    private static ServiceLevelIndicatorAttribute? GetSliAttribute(EndpointMetadataCollection metaData) =>
+        metaData.GetMetadata<ServiceLevelIndicatorAttribute>();
 
     private static string GetCustomerResourceId(HttpContext context)
     {
@@ -43,8 +60,8 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
     private static string GetOperation(HttpContext context, EndpointMetadataCollection metaData)
     {
-        var attrib = metaData.GetMetadata<ServiceLevelIndicatorAttribute>();
-        if (attrib is null || attrib.Operation == string.Empty)
+        var attrib = GetSliAttribute(metaData);
+        if (attrib is null || string.IsNullOrEmpty(attrib.Operation))
         {
             var description = metaData.GetMetadata<ControllerActionDescriptor>();
             return context.Request.Method + " " + description.AttributeRouteInfo.Template;
@@ -53,11 +70,15 @@ internal sealed class ServiceLevelIndicatorMiddleware
         return attrib.Operation;
     }
 
-    private void AddSliFeature(HttpContext context)
+    private void AddSliFeatureToHttpContext(HttpContext context)
     {
         if (context.Features.Get<IServiceLevelIndicatorFeature>() != null)
             throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleware)} can be configured for an application.");
 
         context.Features.Set<IServiceLevelIndicatorFeature>(new ServiceLevelIndicatorFeature(_serviceLevelIndicator.ServiceLevelIndicatorOptions.DefaultCustomerResourceId));
     }
+
+    private static void RemoveSliFeatureFromHttpContext(HttpContext context) =>
+        context.Features.Set<IServiceLevelIndicatorFeature?>(null);
+
 }

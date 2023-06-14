@@ -23,10 +23,7 @@ public class WeatherForecastController : ControllerBase
     /// CustomerResourceId = "SampleCustomerResrouceId"
     /// </summary>
     [HttpGet]
-    public IEnumerable<WeatherForecast> Get()
-    {
-        return GetWeather();
-    }
+    public IEnumerable<WeatherForecast> Get() => GetWeather();
 
     /// <summary>
     /// Should emit SLI metrics
@@ -35,10 +32,7 @@ public class WeatherForecastController : ControllerBase
     /// </summary>
 
     [HttpGet("MyAction1")]
-    public IEnumerable<WeatherForecast> GetCustom()
-    {
-        return GetWeather();
-    }
+    public IEnumerable<WeatherForecast> GetCustom() => GetWeather();
 
     /// <summary>
     /// Should emit SLI metrics

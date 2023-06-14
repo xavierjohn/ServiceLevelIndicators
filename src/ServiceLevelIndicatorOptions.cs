@@ -9,6 +9,7 @@ using System.Diagnostics.Metrics;
 public class ServiceLevelIndicatorOptions
 {
     /// <summary>
+    /// CustomerResrouceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
     /// DefaultCustomerResourceId is used if CustomerResourceId is not set by the API.
     /// </summary>
     public string DefaultCustomerResourceId { get; set; } = string.Empty;
@@ -22,4 +23,10 @@ public class ServiceLevelIndicatorOptions
     /// The instrument name created on the given meter. Cannot be null.
     /// </summary>
     public string InstrumentName { get; set; } = "LatencySLI";
+
+    /// <summary>
+    /// Automatically emit for all API methods.
+    /// If false, use the ServiceLevelIndicator Attribute to emit.
+    /// </summary>
+    public bool AutomaticallyEmitted { get; set; } = true;
 }
