@@ -2,12 +2,9 @@
   <!-- Runtime -->
   <ItemGroup>
     <PackageVersion Include="DotNet.ReproducibleBuilds" Version="1.1.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="7.0.3" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.133" />
-    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.5.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.5.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.4" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.5.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
