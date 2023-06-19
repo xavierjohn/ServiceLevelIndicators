@@ -14,7 +14,7 @@ By default an instrument named `LatencySLI` is added to the service metrics and 
 * LocationId - The location id. Where is the service running? eg. Public cloud, West US 3 region.
 * Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information.
 * HttpStatusCode - The http status code.
-
+* api_version - If [API Versioning](https://github.com/dotnet/aspnet-api-versioning) is used, the version of the API.
 
 ## Prerequisites
 
@@ -68,6 +68,7 @@ eg GET WeatherForecast_Get_WeatherForecast/Action1
     ```
 
 2. To set the CustomerResourceId within an API method, get the `IServiceLevelIndicatorFeature` and set it.
+
     ``` csharp
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
@@ -102,5 +103,7 @@ To view the metrics locally.
 1. Run Docker Desktop
 2. Run [sample\DockerOpenTelemetry\run.cmd](sample\DockerOpenTelemetry\run.cmd) to download and run zipkin and prometheus.
 3. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-4. You should see the SLI metrics in prometheus under the meter `LatencySLI_bucket` where the `Operation = "GET WeatherForecase"`, `HttpStatusCode = 200`, `LocationId = "public_West US 3"`, `Status = Ok`
+4. You should see the SLI metrics in prometheus under the meter `LatencySLI_bucket` where the `Operation = "GET WeatherForeCase"`, `HttpStatusCode = 200`, `LocationId = "public_West US 3"`, `Status = Ok`
 ![SLI](assets/prometheus.jpg)
+5. If you run the sample with API Versioning, you will see something similar to the following.
+![SLI](assets/versioned.jpg)

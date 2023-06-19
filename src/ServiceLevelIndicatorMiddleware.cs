@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Asp.Versioning;
 
 internal sealed class ServiceLevelIndicatorMiddleware
 {
@@ -20,8 +21,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         var metaData = context.Features.Get<IEndpointFeature>()?.Endpoint?.Metadata;
-        ArgumentNullException.ThrowIfNull(metaData);
-        if (!ShouldEmitMetrics(metaData))
+        if (metaData == null || !ShouldEmitMetrics(metaData))
         {
             await _next(context);
             return;
@@ -30,7 +30,6 @@ internal sealed class ServiceLevelIndicatorMiddleware
         AddSliFeatureToHttpContext(context);
         var operation = GetOperation(context, metaData);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation);
-
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
         RemoveSliFeatureFromHttpContext(context);
@@ -40,8 +39,13 @@ internal sealed class ServiceLevelIndicatorMiddleware
     {
         var statusCode = context.Response.StatusCode;
         measuredOperation.SetHttpStatusCode(statusCode);
-        measuredOperation.SetState((statusCode >= 200 && statusCode < 300) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
+        measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
         var customerResourceId = GetCustomerResourceId(context);
+
+        var version = GetApiVersion(context);
+        if (!string.IsNullOrWhiteSpace(version))
+            measuredOperation.SetApiVersion(version);
+
         measuredOperation.SetCustomerResourceId(customerResourceId);
     }
 
@@ -57,6 +61,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         ArgumentNullException.ThrowIfNull(feature);
         return feature.CustomerResourceId;
     }
+    private static string? GetApiVersion(HttpContext context) => context.ApiVersioningFeature().RawRequestedApiVersion;
 
     private static string GetOperation(HttpContext context, EndpointMetadataCollection metaData)
     {

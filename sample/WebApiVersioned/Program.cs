@@ -2,6 +2,8 @@
 using OpenTelemetry.Resources;
 using SampleWebApplicationSLI;
 using Asp.ServiceLevelIndicators;
+using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,11 +12,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    var filePath = Path.Combine(AppContext.BaseDirectory, "Asp.SampleWebApplicationSLI.xml");
-    options.IncludeXmlComments(filePath);
-});
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerDefaultOptions>();
+builder.Services.AddSwaggerGen(
+            options =>
+            {
+                // add a custom operation filter which sets default values
+                options.OperationFilter<AddApiVersionMetadata>();
+
+                var fileName = typeof(Program).Assembly.GetName().Name + ".xml";
+                var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
+
+                // integrate xml comments
+                options.IncludeXmlComments(filePath);
+            });
+builder.Services.AddApiVersioning()
+        .AddMvc()
+        .AddApiExplorer();
+
 builder.Services.AddProblemDetails();
 #region OpenTelemetry
 // Build a resource configuration action to set service information.
@@ -39,7 +53,7 @@ builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
 builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";
-    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
 });
 
 #endregion
@@ -47,7 +61,20 @@ builder.Services.AddServiceLevelIndicator(options =>
 var app = builder.Build();
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(
+    options =>
+    {
+        options.RoutePrefix = string.Empty; // make home page the swagger UI
+        var descriptions = app.DescribeApiVersions();
+
+        // build a swagger endpoint for each discovered API version
+        foreach (var description in descriptions)
+        {
+            var url = $"/swagger/{description.GroupName}/swagger.json";
+            var name = description.GroupName.ToUpperInvariant();
+            options.SwaggerEndpoint(url, name);
+        }
+    });
 app.UseHttpsRedirection();
 app.UseServiceLevelIndicator();
 app.UseAuthorization();
