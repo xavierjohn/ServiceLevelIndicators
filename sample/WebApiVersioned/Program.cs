@@ -29,7 +29,7 @@ builder.Services.AddApiVersioning()
         .AddMvc()
         .AddApiExplorer();
 
-
+builder.Services.AddProblemDetails();
 #region OpenTelemetry
 // Build a resource configuration action to set service information.
 Action<ResourceBuilder> configureResource = r => r.AddService(

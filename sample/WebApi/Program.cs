@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen(options =>
     var filePath = Path.Combine(AppContext.BaseDirectory, "Asp.SampleWebApplicationSLI.xml");
     options.IncludeXmlComments(filePath);
 });
-
+builder.Services.AddProblemDetails();
 #region OpenTelemetry
 // Build a resource configuration action to set service information.
 Action<ResourceBuilder> configureResource = r => r.AddService(
