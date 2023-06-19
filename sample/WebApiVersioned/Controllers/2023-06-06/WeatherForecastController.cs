@@ -10,6 +10,7 @@ using Asp.Versioning;
 /// </summary>
 [ApiController]
 [ApiVersion("2023-06-06")]
+[ApiVersion("2023-08-06")]
 [Route("[controller]")]
 [Produces("application/json")]
 public class WeatherForecastController : ControllerBase

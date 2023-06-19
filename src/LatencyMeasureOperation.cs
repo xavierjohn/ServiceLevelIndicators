@@ -36,7 +36,7 @@ public class LatencyMeasureOperation : IDisposable
 
     public void SetCustomerResourceId(string customerResourceId) => _customerResourceId = customerResourceId;
 
-    public void SetApiVersion(string apiVersion) => _tags.Add(new KeyValuePair<string, object?>("api-version", apiVersion));
+    public void SetApiVersion(string apiVersion) => _tags.Add(new KeyValuePair<string, object?>("api_version", apiVersion));
 
     internal bool DoEmitMetrics { get; set; } = true;
 
