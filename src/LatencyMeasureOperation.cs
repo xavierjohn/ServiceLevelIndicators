@@ -17,7 +17,7 @@ public class LatencyMeasureOperation : IDisposable
     private int _httpStatusCode;
 
     public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] tags) :
-        this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.DefaultCustomerResourceId, tags)
+        this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId, tags)
     { }
 
     public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] tags)

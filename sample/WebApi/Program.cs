@@ -38,7 +38,7 @@ builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
 });
 builder.Services.AddServiceLevelIndicator(options =>
 {
-    options.DefaultCustomerResourceId = "SampleCustomerResourceId";
+    options.CustomerResourceId = "SampleCustomerResourceId";
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
 });
 

@@ -75,7 +75,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         if (context.Features.Get<IServiceLevelIndicatorFeature>() != null)
             throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleware)} can be configured for an application.");
 
-        context.Features.Set<IServiceLevelIndicatorFeature>(new ServiceLevelIndicatorFeature(_serviceLevelIndicator.ServiceLevelIndicatorOptions.DefaultCustomerResourceId));
+        context.Features.Set<IServiceLevelIndicatorFeature>(new ServiceLevelIndicatorFeature(_serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId));
     }
 
     private static void RemoveSliFeatureFromHttpContext(HttpContext context) =>
