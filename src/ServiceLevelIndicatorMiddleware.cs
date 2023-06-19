@@ -41,7 +41,11 @@ internal sealed class ServiceLevelIndicatorMiddleware
         measuredOperation.SetHttpStatusCode(statusCode);
         measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
         var customerResourceId = GetCustomerResourceId(context);
+
         var version = GetApiVersion(context);
+        if (!string.IsNullOrWhiteSpace(version))
+            measuredOperation.SetApiVersion(version);
+
         measuredOperation.SetCustomerResourceId(customerResourceId);
     }
 
@@ -57,12 +61,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         ArgumentNullException.ThrowIfNull(feature);
         return feature.CustomerResourceId;
     }
-    private static string? GetApiVersion(HttpContext context)
-    {
-        var feature = context.ApiVersioningFeature();
-
-        return feature.CustomerResourceId;
-    }
+    private static string? GetApiVersion(HttpContext context) => context.ApiVersioningFeature().RawRequestedApiVersion;
 
     private static string GetOperation(HttpContext context, EndpointMetadataCollection metaData)
     {

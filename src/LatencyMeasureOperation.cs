@@ -11,7 +11,7 @@ public class LatencyMeasureOperation : IDisposable
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly string _operation;
     private string _customerResourceId;
-    private readonly KeyValuePair<string, object?>[] _tags;
+    private readonly List<KeyValuePair<string, object?>> _tags;
     private readonly Stopwatch _stopWatch;
     private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
     private int _httpStatusCode;
@@ -25,7 +25,7 @@ public class LatencyMeasureOperation : IDisposable
         _serviceLevelIndicator = serviceLevelIndicator;
         _operation = operation;
         _customerResourceId = customerResourceId;
-        _tags = tags;
+        _tags = tags.ToList();
         _stopWatch = new Stopwatch();
         _stopWatch.Start();
     }
@@ -35,6 +35,8 @@ public class LatencyMeasureOperation : IDisposable
     public void SetHttpStatusCode(int httpStatusCode) => _httpStatusCode = httpStatusCode;
 
     public void SetCustomerResourceId(string customerResourceId) => _customerResourceId = customerResourceId;
+
+    public void SetApiVersion(string apiVersion) => _tags.Add(new KeyValuePair<string, object?>("api-version", apiVersion));
 
     internal bool DoEmitMetrics { get; set; } = true;
 
@@ -46,11 +48,10 @@ public class LatencyMeasureOperation : IDisposable
             {
                 _stopWatch.Stop();
                 var elapsedTime = _stopWatch.ElapsedMilliseconds;
-                var tags = _tags.ToList();
-                tags.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
+                _tags.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
                 if (_httpStatusCode > 0)
-                    tags.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
-                _serviceLevelIndicator.RecordLatency(_operation, _customerResourceId, elapsedTime, tags.ToArray());
+                    _tags.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
+                _serviceLevelIndicator.RecordLatency(_operation, _customerResourceId, elapsedTime, _tags.ToArray());
             }
 
             _disposedValue = true;
