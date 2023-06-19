@@ -10,9 +10,9 @@ public class ServiceLevelIndicatorOptions
 {
     /// <summary>
     /// CustomerResrouceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
-    /// DefaultCustomerResourceId is used if CustomerResourceId is not set by the API.
+    /// CustomerResourceId can be set for the entire service here or in each API method.
     /// </summary>
-    public string DefaultCustomerResourceId { get; set; } = string.Empty;
+    public string CustomerResourceId { get; set; } = string.Empty;
 
     /// <summary>
     /// Location where the service is running.

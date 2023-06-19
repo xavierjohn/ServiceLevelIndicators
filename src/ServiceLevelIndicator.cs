@@ -18,7 +18,7 @@ public class ServiceLevelIndicator
     }
 
     public void RecordLatency(string operation, long elapsedTime, params KeyValuePair<string, object?>[] tags) =>
-        RecordLatency(operation, ServiceLevelIndicatorOptions.DefaultCustomerResourceId, elapsedTime, tags);
+        RecordLatency(operation, ServiceLevelIndicatorOptions.CustomerResourceId, elapsedTime, tags);
 
     public void RecordLatency(string operation, string customerResourseId, long elapsedTime, params KeyValuePair<string, object?>[] tags)
     {
@@ -37,12 +37,16 @@ public class ServiceLevelIndicator
 
     public LatencyMeasureOperation StartLatencyMeasureOperation(string operation, params KeyValuePair<string, object?>[] tags) => new(this, operation, tags);
 
-    public static string CreateCustomerResourceId(string product, string serviceName) => product + "_" + serviceName;
-
-    public static string CreateLocationId(string cloud, string region, string? stamp = null)
+    public static string CreateCustomerResourceId(Guid serviceId)
     {
-        var id = cloud + "_" + region;
-        if (!string.IsNullOrWhiteSpace(stamp)) id += "_" + stamp;
+        if (serviceId == Guid.Empty) throw new ArgumentNullException(nameof(serviceId));
+        return "ServiceTreeId://" + serviceId.ToString();
+    }
+
+    public static string CreateLocationId(string cloud, string? region = null, string? zone = null)
+    {
+        var arr = new string?[] { "ms-loc://az", cloud, region, zone };
+        var id = string.Join("/", arr.Where(s => !string.IsNullOrEmpty(s)));
         return id;
     }
 }

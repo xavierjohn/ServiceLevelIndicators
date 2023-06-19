@@ -11,7 +11,7 @@ Service Level Indicator library will help emit latency metrics for each API oper
 By default an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following dimensions (Tags).
 
 * CustomerResourceId - The customer resource id.
-* LocationId - The location id. Where is the service running? eg. public cloud, West US 3 region.
+* LocationId - The location id. Where is the service running? eg. Public cloud, West US 3 region.
 * Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information.
 * HttpStatusCode - The http status code.
 
@@ -45,8 +45,8 @@ The library targets .net core and requires the service to use OpenTelemetry http
     });
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        options.DefaultCustomerResourceId = "SampleCustomerResourceId";
-        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
+        options.LocationId = ServiceLevelIndicator.CreateLocationId("Public", "eastus2");
     });
 
      ```
