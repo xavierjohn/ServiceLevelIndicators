@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Asp.Versioning;
 
 internal sealed class ServiceLevelIndicatorMiddleware
 {
@@ -40,6 +41,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         measuredOperation.SetHttpStatusCode(statusCode);
         measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
         var customerResourceId = GetCustomerResourceId(context);
+        var version = GetApiVersion(context);
         measuredOperation.SetCustomerResourceId(customerResourceId);
     }
 
@@ -53,6 +55,12 @@ internal sealed class ServiceLevelIndicatorMiddleware
     {
         var feature = context.Features.Get<IServiceLevelIndicatorFeature>();
         ArgumentNullException.ThrowIfNull(feature);
+        return feature.CustomerResourceId;
+    }
+    private static string? GetApiVersion(HttpContext context)
+    {
+        var feature = context.ApiVersioningFeature();
+
         return feature.CustomerResourceId;
     }
 

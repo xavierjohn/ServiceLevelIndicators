@@ -1,6 +1,8 @@
 <Project>
   <!-- Runtime -->
   <ItemGroup>
+    <PackageVersion Include="Asp.Versioning.Http.Client" Version="7.0.0" />
+    <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="7.0.0" />
     <PackageVersion Include="DotNet.ReproducibleBuilds" Version="1.1.1" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="7.0.3" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.133" />
