@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Asp.Versioning;
 
 internal sealed class ServiceLevelIndicatorMiddleware
 {
@@ -42,11 +41,20 @@ internal sealed class ServiceLevelIndicatorMiddleware
         measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
         var customerResourceId = GetCustomerResourceId(context);
 
+        AddApiVersionIfPresent(context, measuredOperation);
+        AddAdditionalOtelAttributes(context, measuredOperation);
+
+        measuredOperation.SetCustomerResourceId(customerResourceId);
+    }
+
+    private static void AddAdditionalOtelAttributes(HttpContext context, LatencyMeasureOperation measuredOperation) =>
+        measuredOperation.Attributes.AddRange(context.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>().Attributes);
+
+    private static void AddApiVersionIfPresent(HttpContext context, LatencyMeasureOperation measuredOperation)
+    {
         var version = GetApiVersion(context);
         if (!string.IsNullOrWhiteSpace(version))
             measuredOperation.SetApiVersion(version);
-
-        measuredOperation.SetCustomerResourceId(customerResourceId);
     }
 
     private bool ShouldEmitMetrics(EndpointMetadataCollection metaData) =>
@@ -55,12 +63,9 @@ internal sealed class ServiceLevelIndicatorMiddleware
     private static ServiceLevelIndicatorAttribute? GetSliAttribute(EndpointMetadataCollection metaData) =>
         metaData.GetMetadata<ServiceLevelIndicatorAttribute>();
 
-    private static string GetCustomerResourceId(HttpContext context)
-    {
-        var feature = context.Features.Get<IServiceLevelIndicatorFeature>();
-        ArgumentNullException.ThrowIfNull(feature);
-        return feature.CustomerResourceId;
-    }
+    private static string GetCustomerResourceId(HttpContext context) =>
+        context.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>().CustomerResourceId;
+
     private static string? GetApiVersion(HttpContext context) => context.ApiVersioningFeature().RawRequestedApiVersion;
 
     private static string GetOperation(HttpContext context, EndpointMetadataCollection metaData)

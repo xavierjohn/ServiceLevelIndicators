@@ -17,10 +17,10 @@ public class ServiceLevelIndicator
         _responseLatencyHistogram = meter.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName);
     }
 
-    public void RecordLatency(string operation, long elapsedTime, params KeyValuePair<string, object?>[] tags) =>
-        RecordLatency(operation, ServiceLevelIndicatorOptions.CustomerResourceId, elapsedTime, tags);
+    public void RecordLatency(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes) =>
+        RecordLatency(operation, ServiceLevelIndicatorOptions.CustomerResourceId, elapsedTime, attributes);
 
-    public void RecordLatency(string operation, string customerResourseId, long elapsedTime, params KeyValuePair<string, object?>[] tags)
+    public void RecordLatency(string operation, string customerResourseId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
     {
         var tagList = new TagList
         {
@@ -29,13 +29,13 @@ public class ServiceLevelIndicator
             { "Operation", operation }
         };
 
-        for (var i = 0; i < tags.Length; i++)
-            tagList.Add(tags[i]);
+        for (var i = 0; i < attributes.Length; i++)
+            tagList.Add(attributes[i]);
 
         _responseLatencyHistogram.Record(elapsedTime, tagList);
     }
 
-    public LatencyMeasureOperation StartLatencyMeasureOperation(string operation, params KeyValuePair<string, object?>[] tags) => new(this, operation, tags);
+    public LatencyMeasureOperation StartLatencyMeasureOperation(string operation, params KeyValuePair<string, object?>[] attributes) => new(this, operation, attributes);
 
     public static string CreateCustomerResourceId(Guid serviceId)
     {

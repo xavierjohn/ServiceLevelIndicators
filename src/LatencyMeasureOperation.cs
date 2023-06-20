@@ -11,24 +11,26 @@ public class LatencyMeasureOperation : IDisposable
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly string _operation;
     private string _customerResourceId;
-    private readonly List<KeyValuePair<string, object?>> _tags;
     private readonly Stopwatch _stopWatch;
     private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
     private int _httpStatusCode;
 
-    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] tags) :
-        this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId, tags)
+    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
+        this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId, attributes)
     { }
 
-    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] tags)
+    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
     {
         _serviceLevelIndicator = serviceLevelIndicator;
         _operation = operation;
         _customerResourceId = customerResourceId;
-        _tags = tags.ToList();
+        Attributes = attributes.ToList();
         _stopWatch = new Stopwatch();
         _stopWatch.Start();
     }
+
+    // OTEL Attributes to emit
+    public List<KeyValuePair<string, object?>> Attributes { get; }
 
     public void SetState(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
     public void SetState(HttpStatusCode httpStatusCode) => _httpStatusCode = (int)httpStatusCode;
@@ -36,22 +38,22 @@ public class LatencyMeasureOperation : IDisposable
 
     public void SetCustomerResourceId(string customerResourceId) => _customerResourceId = customerResourceId;
 
-    public void SetApiVersion(string apiVersion) => _tags.Add(new KeyValuePair<string, object?>("api_version", apiVersion));
+    public void SetApiVersion(string apiVersion) => AddAttribute("api_version", apiVersion);
 
-    internal bool DoEmitMetrics { get; set; } = true;
+    public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
 
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
         {
-            if (disposing && DoEmitMetrics)
+            if (disposing)
             {
                 _stopWatch.Stop();
                 var elapsedTime = _stopWatch.ElapsedMilliseconds;
-                _tags.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
+                Attributes.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
                 if (_httpStatusCode > 0)
-                    _tags.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
-                _serviceLevelIndicator.RecordLatency(_operation, _customerResourceId, elapsedTime, _tags.ToArray());
+                    Attributes.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
+                _serviceLevelIndicator.RecordLatency(_operation, _customerResourceId, elapsedTime, Attributes.ToArray());
             }
 
             _disposedValue = true;
