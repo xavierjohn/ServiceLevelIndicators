@@ -8,7 +8,7 @@ Tags: SLI, OpenTelemetry, Metrics.
 
 Service Level Indicator library will help emit latency metrics for each API operation. The metrics is emitted via OpenTelemetry and can be used to monitor service level agreements.
 
-By default an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following dimensions (Tags).
+By default an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 * CustomerResourceId - The customer resource id.
 * LocationId - The location id. Where is the service running? eg. Public cloud, West US 3 region.
@@ -73,24 +73,27 @@ eg GET WeatherForecast_Get_WeatherForecast/Action1
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
-        var sliFeature = HttpContext.Features.Get<IServiceLevelIndicatorFeature>();
-        if (sliFeature is not null)
-        {
-            sliFeature.CustomerResourceId = customerResourceId;
-        }
+        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
+        sliFeature.CustomerResourceId = customerResourceId;
         return GetWeather();
     }
     ```
 
-3. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
+3. To add custom Open Telemetry attributes.
+    ``` csharp 
+        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
+        sliFeature.AddAttribute("myAttribute", "myValue");
+    ```
+    
+4. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
 
    Example.
 
     ``` csharp
    public override async Task StoreItem(CaseEvent domainEvent, CancellationToken cancellationToken)
     {
-        var tags = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
-        using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", tags);
+        var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
+        using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", attribute);
         DoTheWork();
     ```
 
