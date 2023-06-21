@@ -9,7 +9,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
+    <ProjectReference Include="..\..\ServiceLevelIndicators.Asp\src\ServiceLevelIndicators.Asp.csproj" />
   </ItemGroup>
-
 </Project>

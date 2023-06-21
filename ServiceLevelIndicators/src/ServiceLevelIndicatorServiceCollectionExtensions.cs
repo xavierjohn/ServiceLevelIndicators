@@ -1,6 +1,5 @@
 ﻿namespace ServiceLevelIndicators;
 using System;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
@@ -22,16 +21,5 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         services.AddSingleton<ServiceLevelIndicator>();
         services.Configure(configureOptions);
         return services;
-    }
-
-    /// <summary>
-    /// Adds the <see cref="ServiceLevelIndicatorMiddleware"/> for emitting SLI metrics.
-    /// </summary>
-    /// <param name="app">The <see cref="IApplicationBuilder"/>.</param>
-    public static IApplicationBuilder UseServiceLevelIndicator(this IApplicationBuilder app)
-    {
-        ArgumentNullException.ThrowIfNull(app);
-
-        return app.UseMiddleware<ServiceLevelIndicatorMiddleware>();
     }
 }

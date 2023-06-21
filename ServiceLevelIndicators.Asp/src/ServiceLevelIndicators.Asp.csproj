@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Asp.Versioning.Http" />
+    </ItemGroup>
+    
+  <ItemGroup>
+    <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
+  </ItemGroup>
+   
+</Project>
