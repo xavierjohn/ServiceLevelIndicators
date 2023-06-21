@@ -32,11 +32,6 @@
 		<PackageReference Include="DotNet.ReproducibleBuilds" PrivateAssets="All"/>
 	</ItemGroup>
 
-  <PropertyGroup Condition=" '$(IsTestProject)' == 'false' ">
-    <RootNamespace>Asp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-    <AssemblyName>Asp.$(MSBuildProjectName)</AssemblyName>
-  </PropertyGroup>
-  
 	<!-- Test projects. -->
 	<ImportGroup Condition=" '$(IsTestProject)' == 'true' ">
 		<Import Project="$(MSBuildThisFileDirectory)build/test.props"/>

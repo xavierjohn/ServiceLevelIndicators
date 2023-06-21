@@ -1,7 +1,7 @@
 ﻿using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using SampleWebApplicationSLI;
-using Asp.ServiceLevelIndicators;
+using ServiceLevelIndicators;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 

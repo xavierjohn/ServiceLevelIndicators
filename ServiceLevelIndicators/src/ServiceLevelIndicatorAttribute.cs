@@ -1,4 +1,4 @@
-﻿namespace Asp.ServiceLevelIndicators;
+﻿namespace ServiceLevelIndicators;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class ServiceLevelIndicatorAttribute : Attribute

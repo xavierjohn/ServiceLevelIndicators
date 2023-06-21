@@ -8,9 +8,8 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ServiceLevelIndicators.csproj" />
+    <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
   </ItemGroup>
 
 </Project>

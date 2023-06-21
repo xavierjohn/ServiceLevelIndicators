@@ -1,4 +1,4 @@
-﻿namespace Asp.ServiceLevelIndicators;
+﻿namespace ServiceLevelIndicators;
 
 using System;
 using System.Threading.Tasks;
