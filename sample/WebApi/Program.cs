@@ -1,7 +1,7 @@
 ﻿using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using SampleWebApplicationSLI;
-using Asp.ServiceLevelIndicators;
+using ServiceLevelIndicators;
 
 var builder = WebApplication.CreateBuilder(args);
 

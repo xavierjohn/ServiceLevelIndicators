@@ -1,4 +1,4 @@
-﻿namespace Asp.ServiceLevelIndicators.Tests;
+﻿namespace ServiceLevelIndicators.Tests;
 
 using FluentAssertions;
 using Xunit;

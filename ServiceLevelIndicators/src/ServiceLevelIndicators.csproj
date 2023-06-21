@@ -6,9 +6,7 @@
         <None Include="../README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="Asp.Versioning.Http" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+      <PackageReference Include="Microsoft.Extensions.Options" />
     </ItemGroup>
 </Project>

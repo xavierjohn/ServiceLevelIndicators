@@ -1,4 +1,4 @@
-﻿namespace Asp.ServiceLevelIndicators;
+﻿namespace ServiceLevelIndicators;
 
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -1,7 +1,7 @@
 ﻿namespace SampleWebApplicationSLI.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-using Asp.ServiceLevelIndicators;
+using ServiceLevelIndicators;
 using Microsoft.AspNetCore.Http;
 
 /// <summary>
