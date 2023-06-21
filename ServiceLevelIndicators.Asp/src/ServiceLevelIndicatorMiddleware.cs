@@ -19,15 +19,15 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var metaData = context.Features.Get<IEndpointFeature>()?.Endpoint?.Metadata;
-        if (metaData == null || !ShouldEmitMetrics(metaData))
+        var metadata = context.Features.Get<IEndpointFeature>()?.Endpoint?.Metadata;
+        if (metadata == null || !ShouldEmitMetrics(metadata))
         {
             await _next(context);
             return;
         }
 
         AddSliFeatureToHttpContext(context);
-        var operation = GetOperation(context, metaData);
+        var operation = GetOperation(context, metadata);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation);
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
@@ -57,8 +57,8 @@ internal sealed class ServiceLevelIndicatorMiddleware
             measuredOperation.SetApiVersion(version);
     }
 
-    private bool ShouldEmitMetrics(EndpointMetadataCollection metaData) =>
-        _serviceLevelIndicator.ServiceLevelIndicatorOptions.AutomaticallyEmitted || GetSliAttribute(metaData) is not null;
+    private bool ShouldEmitMetrics(EndpointMetadataCollection metadata) =>
+        _serviceLevelIndicator.ServiceLevelIndicatorOptions.AutomaticallyEmitted || GetSliAttribute(metadata) is not null;
 
     private static ServiceLevelIndicatorAttribute? GetSliAttribute(EndpointMetadataCollection metaData) =>
         metaData.GetMetadata<ServiceLevelIndicatorAttribute>();
@@ -68,12 +68,12 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
     private static string? GetApiVersion(HttpContext context) => context.ApiVersioningFeature().RawRequestedApiVersion;
 
-    private static string GetOperation(HttpContext context, EndpointMetadataCollection metaData)
+    private static string GetOperation(HttpContext context, EndpointMetadataCollection metadata)
     {
-        var attrib = GetSliAttribute(metaData);
+        var attrib = GetSliAttribute(metadata);
         if (attrib is null || string.IsNullOrEmpty(attrib.Operation))
         {
-            var description = metaData.GetMetadata<ControllerActionDescriptor>();
+            var description = metadata.GetMetadata<ControllerActionDescriptor>();
             return context.Request.Method + " " + description?.AttributeRouteInfo?.Template;
         }
 
