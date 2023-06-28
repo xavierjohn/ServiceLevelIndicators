@@ -26,31 +26,24 @@ internal sealed class ServiceLevelIndicatorMiddleware
             return;
         }
 
-        AddSliFeatureToHttpContext(context);
         var operation = GetOperation(context, metadata);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation);
+        AddSliFeatureToHttpContext(context, measuredOperation);
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
         RemoveSliFeatureFromHttpContext(context);
     }
 
-    private static void UpdateOperationWithResponseStatus(HttpContext context, LatencyMeasureOperation measuredOperation)
+    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasureOperationLatency measuredOperation)
     {
         var statusCode = context.Response.StatusCode;
         measuredOperation.SetHttpStatusCode(statusCode);
         measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
-        var customerResourceId = GetCustomerResourceId(context);
 
         AddApiVersionIfPresent(context, measuredOperation);
-        AddAdditionalOtelAttributes(context, measuredOperation);
-
-        measuredOperation.SetCustomerResourceId(customerResourceId);
     }
 
-    private static void AddAdditionalOtelAttributes(HttpContext context, LatencyMeasureOperation measuredOperation) =>
-        measuredOperation.Attributes.AddRange(context.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>().Attributes);
-
-    private static void AddApiVersionIfPresent(HttpContext context, LatencyMeasureOperation measuredOperation)
+    private static void AddApiVersionIfPresent(HttpContext context, MeasureOperationLatency measuredOperation)
     {
         var version = GetApiVersion(context);
         if (!string.IsNullOrWhiteSpace(version))
@@ -62,9 +55,6 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
     private static ServiceLevelIndicatorAttribute? GetSliAttribute(EndpointMetadataCollection metaData) =>
         metaData.GetMetadata<ServiceLevelIndicatorAttribute>();
-
-    private static string GetCustomerResourceId(HttpContext context) =>
-        context.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>().CustomerResourceId;
 
     private static string? GetApiVersion(HttpContext context) => context.ApiVersioningFeature().RawRequestedApiVersion;
 
@@ -80,12 +70,12 @@ internal sealed class ServiceLevelIndicatorMiddleware
         return attrib.Operation;
     }
 
-    private void AddSliFeatureToHttpContext(HttpContext context)
+    private void AddSliFeatureToHttpContext(HttpContext context, MeasureOperationLatency measuredOperation)
     {
         if (context.Features.Get<IServiceLevelIndicatorFeature>() != null)
             throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleware)} can be configured for an application.");
 
-        context.Features.Set<IServiceLevelIndicatorFeature>(new ServiceLevelIndicatorFeature(_serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId));
+        context.Features.Set<IServiceLevelIndicatorFeature>(new ServiceLevelIndicatorFeature(measuredOperation));
     }
 
     private static void RemoveSliFeatureFromHttpContext(HttpContext context) =>

@@ -63,7 +63,7 @@ public class WeatherForecastController : ControllerBase
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
         var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.CustomerResourceId = customerResourceId;
+        sliFeature.MeasureOperationLatency.CustomerResourceId = customerResourceId;
 
         return GetWeather();
     }
@@ -92,7 +92,7 @@ public class WeatherForecastController : ControllerBase
     public int CustomAttribute(string attribute, string value)
     {
         var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.AddAttribute(attribute, value);
+        sliFeature.MeasureOperationLatency.AddAttribute(attribute, value);
         return 7;
     }
 

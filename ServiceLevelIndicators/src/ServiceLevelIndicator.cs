@@ -35,7 +35,7 @@ public class ServiceLevelIndicator
         _responseLatencyHistogram.Record(elapsedTime, tagList);
     }
 
-    public LatencyMeasureOperation StartLatencyMeasureOperation(string operation, params KeyValuePair<string, object?>[] attributes) => new(this, operation, attributes);
+    public MeasureOperationLatency StartLatencyMeasureOperation(string operation, params KeyValuePair<string, object?>[] attributes) => new(this, operation, attributes);
 
     public static string CreateCustomerResourceId(Guid serviceId)
     {

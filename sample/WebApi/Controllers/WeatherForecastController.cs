@@ -53,9 +53,7 @@ public class WeatherForecastController : ControllerBase
     {
         var sliFeature = HttpContext.Features.Get<IServiceLevelIndicatorFeature>();
         if (sliFeature is not null)
-        {
-            sliFeature.CustomerResourceId = customerResourceId;
-        }
+            sliFeature.MeasureOperationLatency.CustomerResourceId = customerResourceId;
         return GetWeather();
     }
 
