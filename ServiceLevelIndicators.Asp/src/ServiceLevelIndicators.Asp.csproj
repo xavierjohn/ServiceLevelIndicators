@@ -1,13 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="../../README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Asp.Versioning.Http" />
     </ItemGroup>
-    
-  <ItemGroup>
-    <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
-  </ItemGroup>
-   
+    <ItemGroup>
+        <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
+    </ItemGroup>
 </Project>

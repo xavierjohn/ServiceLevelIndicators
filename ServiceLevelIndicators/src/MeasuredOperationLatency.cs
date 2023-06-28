@@ -5,29 +5,30 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 
-public class LatencyMeasureOperation : IDisposable
+public class MeasuredOperationLatency : IDisposable
 {
-    private bool _disposedValue;
+    private bool _disposed;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
-    private readonly string _operation;
-    private string _customerResourceId;
     private readonly Stopwatch _stopWatch;
     private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
     private int _httpStatusCode;
+    private readonly object _disposeLock = new();
 
-    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
+    public MeasuredOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
         this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId, attributes)
     { }
 
-    public LatencyMeasureOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
+    public MeasuredOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
     {
         _serviceLevelIndicator = serviceLevelIndicator;
-        _operation = operation;
-        _customerResourceId = customerResourceId;
+        Operation = operation;
+        CustomerResourceId = customerResourceId;
         Attributes = attributes.ToList();
-        _stopWatch = new Stopwatch();
-        _stopWatch.Start();
+        _stopWatch = Stopwatch.StartNew();
     }
+
+    public string Operation { get; set; }
+    public string CustomerResourceId { get; set; }
 
     // OTEL Attributes to emit
     public List<KeyValuePair<string, object?>> Attributes { get; }
@@ -36,27 +37,28 @@ public class LatencyMeasureOperation : IDisposable
     public void SetState(HttpStatusCode httpStatusCode) => _httpStatusCode = (int)httpStatusCode;
     public void SetHttpStatusCode(int httpStatusCode) => _httpStatusCode = httpStatusCode;
 
-    public void SetCustomerResourceId(string customerResourceId) => _customerResourceId = customerResourceId;
-
     public void SetApiVersion(string apiVersion) => AddAttribute("api_version", apiVersion);
 
     public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposedValue)
+        lock (_disposeLock)
         {
-            if (disposing)
+            if (!_disposed)
             {
-                _stopWatch.Stop();
-                var elapsedTime = _stopWatch.ElapsedMilliseconds;
-                Attributes.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
-                if (_httpStatusCode > 0)
-                    Attributes.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
-                _serviceLevelIndicator.RecordLatency(_operation, _customerResourceId, elapsedTime, Attributes.ToArray());
-            }
+                if (disposing)
+                {
+                    _stopWatch.Stop();
+                    var elapsedTime = _stopWatch.ElapsedMilliseconds;
+                    Attributes.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
+                    if (_httpStatusCode > 0)
+                        Attributes.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
+                    _serviceLevelIndicator.RecordLatency(Operation, CustomerResourceId, elapsedTime, Attributes.ToArray());
+                }
 
-            _disposedValue = true;
+                _disposed = true;
+            }
         }
     }
 
