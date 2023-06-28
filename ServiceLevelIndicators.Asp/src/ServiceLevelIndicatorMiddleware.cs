@@ -34,7 +34,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         RemoveSliFeatureFromHttpContext(context);
     }
 
-    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasureOperationLatency measuredOperation)
+    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperationLatency measuredOperation)
     {
         var statusCode = context.Response.StatusCode;
         measuredOperation.SetHttpStatusCode(statusCode);
@@ -43,7 +43,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         AddApiVersionIfPresent(context, measuredOperation);
     }
 
-    private static void AddApiVersionIfPresent(HttpContext context, MeasureOperationLatency measuredOperation)
+    private static void AddApiVersionIfPresent(HttpContext context, MeasuredOperationLatency measuredOperation)
     {
         var version = GetApiVersion(context);
         if (!string.IsNullOrWhiteSpace(version))
@@ -70,7 +70,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         return attrib.Operation;
     }
 
-    private void AddSliFeatureToHttpContext(HttpContext context, MeasureOperationLatency measuredOperation)
+    private void AddSliFeatureToHttpContext(HttpContext context, MeasuredOperationLatency measuredOperation)
     {
         if (context.Features.Get<IServiceLevelIndicatorFeature>() != null)
             throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleware)} can be configured for an application.");

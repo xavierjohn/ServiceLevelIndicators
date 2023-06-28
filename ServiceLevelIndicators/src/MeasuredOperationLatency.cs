@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 
-public class MeasureOperationLatency : IDisposable
+public class MeasuredOperationLatency : IDisposable
 {
     private bool _disposed;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
@@ -14,11 +14,11 @@ public class MeasureOperationLatency : IDisposable
     private int _httpStatusCode;
     private readonly object _disposeLock = new();
 
-    public MeasureOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
+    public MeasuredOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
         this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId, attributes)
     { }
 
-    public MeasureOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
+    public MeasuredOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
     {
         _serviceLevelIndicator = serviceLevelIndicator;
         Operation = operation;

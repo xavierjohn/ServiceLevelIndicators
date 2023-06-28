@@ -4,5 +4,5 @@
 /// </summary>
 public interface IServiceLevelIndicatorFeature
 {
-    MeasureOperationLatency MeasureOperationLatency { get; }
+    MeasuredOperationLatency MeasureOperationLatency { get; }
 }
