@@ -5,6 +5,7 @@ using ServiceLevelIndicators;
 using Microsoft.AspNetCore.Http;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http.Features;
+using ServiceLevelIndicators.Asp;
 
 /// <summary>
 /// Weather forecast controller.
@@ -67,6 +68,14 @@ public class WeatherForecastController : ControllerBase
 
         return GetWeather();
     }
+
+    /// <summary>
+    /// Should emit SLI metrics
+    /// Operation: "GET WeatherForecast/{customerResourceId}"
+    /// CustomerResourceId = "Your input"
+    /// </summary>
+    [HttpGet("attrib/{customerResourceId}")]
+    public IEnumerable<WeatherForecast> GetAttrib([CustomerResourceId] string customerResourceId) => GetWeather();
 
     /// <summary>
     /// Background work for given seconds
