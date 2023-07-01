@@ -52,7 +52,8 @@ builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
 });
 builder.Services.AddServiceLevelIndicator(options =>
 {
-    options.CustomerResourceId = "SampleCustomerResourceId";
+    Guid serviceTree = Guid.NewGuid();
+    options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceTree);
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
 });
 

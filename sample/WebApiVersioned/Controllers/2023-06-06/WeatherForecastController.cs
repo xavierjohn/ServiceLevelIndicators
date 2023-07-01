@@ -1,11 +1,10 @@
-﻿namespace SampleWebApplicationSLI.Controllers;
+﻿namespace SampleVersionedWebApplicationSLI.Controllers._2023_06_06;
 
 using Microsoft.AspNetCore.Mvc;
 using ServiceLevelIndicators;
 using Microsoft.AspNetCore.Http;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http.Features;
-using ServiceLevelIndicators.Asp;
 
 /// <summary>
 /// Weather forecast controller.
@@ -13,7 +12,7 @@ using ServiceLevelIndicators.Asp;
 [ApiController]
 [ApiVersion("2023-06-06")]
 [ApiVersion("2023-08-06")]
-[Route("[controller]")]
+[Route("weather-forecast")]
 [Produces("application/json")]
 public class WeatherForecastController : ControllerBase
 {
@@ -56,7 +55,7 @@ public class WeatherForecastController : ControllerBase
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
 
     /// <summary>
-    /// Should emit SLI metrics
+    /// Use Feature to set CustomerResourceId
     /// Operation: "GET WeatherForecast/{customerResourceId}"
     /// CustomerResourceId = "Your input"
     /// </summary>
@@ -70,12 +69,21 @@ public class WeatherForecastController : ControllerBase
     }
 
     /// <summary>
-    /// Should emit SLI metrics
-    /// Operation: "GET WeatherForecast/{customerResourceId}"
-    /// CustomerResourceId = "Your input"
+    /// Use Attribute to set CustomerResourceId
+    /// Operation: "GET WeatherForecast/{zipcode}"
+    /// CustomerResourceId is setup to the zip code.
     /// </summary>
-    [HttpGet("attrib/{customerResourceId}")]
-    public IEnumerable<WeatherForecast> GetAttrib([CustomerResourceId] string customerResourceId) => GetWeather();
+    [HttpGet("get-by-city/{zipcode}")]
+    public IEnumerable<WeatherForecast> GetByCity([CustomerResourceId] string zipcode) => GetWeather();
+
+
+    /// <summary>
+    /// Use complex object to set CustomerResourceId
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost]
+    public IEnumerable<WeatherForecast> PostByCity([FromBody] ForecastRequest request) => GetWeather();
 
     /// <summary>
     /// Background work for given seconds
