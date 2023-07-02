@@ -3,8 +3,8 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Routing;
 
 internal sealed class ServiceLevelIndicatorMiddleware
 {
@@ -19,7 +19,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var metadata = context.Features.Get<IEndpointFeature>()?.Endpoint?.Metadata;
+        var metadata = context.GetEndpoint()?.Metadata;
         if (metadata == null || !ShouldEmitMetrics(metadata))
         {
             await _next(context);
@@ -28,10 +28,19 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
         var operation = GetOperation(context, metadata);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation);
+        SetCustomerResourceIdFromAttribute(context, metadata, measuredOperation);
         AddSliFeatureToHttpContext(context, measuredOperation);
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
         RemoveSliFeatureFromHttpContext(context);
+    }
+
+    private static void SetCustomerResourceIdFromAttribute(HttpContext context, EndpointMetadataCollection metadata, MeasuredOperationLatency measuredOperation)
+    {
+        var meta = metadata.GetMetadata<CustomerResourceId>();
+        var key = meta?.RouteParameterName;
+        if (!string.IsNullOrEmpty(key) && context.GetRouteValue(key) is string value)
+            measuredOperation.CustomerResourceId = value;
     }
 
     private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperationLatency measuredOperation)

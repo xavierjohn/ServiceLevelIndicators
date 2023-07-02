@@ -74,15 +74,29 @@ eg GET WeatherForecast_Get_WeatherForecast/Action1
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
         var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.CustomerResourceId = customerResourceId;
+        sliFeature.MeasureOperationLatency.CustomerResourceId = customerResourceId;
         return GetWeather();
     }
     ```
+    Or use `GetMeasuredOperationLatency` extension method.
+        
+    ``` csharp
+    [HttpGet("{customerResourceId}")]
+    public IEnumerable<WeatherForecast> Get(string customerResourceId)
+    {
+        HttpContext.GetMeasuredOperationLatency().CustomerResourceId = customerResourceId;
+        return GetWeather();
+    }
+    ```
+or mark the parameter with the attribute `[CustomerResourceId]`
+```csharp
+    [HttpGet("get-by-zip-code/{zipCode}")]
+    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
+```
 
 3. To add custom Open Telemetry attributes.
     ``` csharp 
-        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.AddAttribute("myAttribute", "myValue");
+        HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
     ```
     
 4. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.

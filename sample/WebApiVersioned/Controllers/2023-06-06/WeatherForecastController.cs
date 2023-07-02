@@ -1,10 +1,10 @@
-﻿namespace SampleWebApplicationSLI.Controllers;
+﻿namespace SampleVersionedWebApplicationSLI.Controllers._2023_06_06;
 
 using Microsoft.AspNetCore.Mvc;
 using ServiceLevelIndicators;
 using Microsoft.AspNetCore.Http;
 using Asp.Versioning;
-using Microsoft.AspNetCore.Http.Features;
+using System;
 
 /// <summary>
 /// Weather forecast controller.
@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http.Features;
 [ApiController]
 [ApiVersion("2023-06-06")]
 [ApiVersion("2023-08-06")]
-[Route("[controller]")]
+[Route("weather-forecast")]
 [Produces("application/json")]
 public class WeatherForecastController : ControllerBase
 {
@@ -30,7 +30,7 @@ public class WeatherForecastController : ControllerBase
 
     /// <summary>
     /// Should emit SLI metrics
-    /// Operation: "GET WeatherForecast"
+    /// Operation: "GET weather-forecast"
     /// CustomerResourceId = "SampleCustomerResrouceId"
     /// </summary>
     [HttpGet]
@@ -38,7 +38,7 @@ public class WeatherForecastController : ControllerBase
 
     /// <summary>
     /// Should emit SLI metrics
-    /// Operation: "GET WeatherForecast/MyAction1"
+    /// Operation: "GET weather-forecast/MyAction1"
     /// CustomerResourceId = "SampleCustomerResrouceId"
     /// </summary>
 
@@ -55,18 +55,33 @@ public class WeatherForecastController : ControllerBase
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
 
     /// <summary>
-    /// Should emit SLI metrics
-    /// Operation: "GET WeatherForecast/{customerResourceId}"
+    /// Use Feature to set CustomerResourceId
+    /// Operation: "GET weather-forecast/{customerResourceId}"
     /// CustomerResourceId = "Your input"
     /// </summary>
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
-        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.MeasureOperationLatency.CustomerResourceId = customerResourceId;
-
+        HttpContext.GetMeasuredOperationLatency().CustomerResourceId = customerResourceId;
         return GetWeather();
     }
+
+    /// <summary>
+    /// Use Attribute to set CustomerResourceId
+    /// Operation: "GET weather-forecast/get-by-zip-code/{zipCode}"
+    /// CustomerResourceId is setup to the zip code.
+    /// </summary>
+    [HttpGet("get-by-zip-code/{zipCode}")]
+    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
+
+    /// <summary>
+    /// Use Attribute to set CustomerResourceId
+    /// Operation: "GET weather-forecast/get-by-city/{city"
+    /// CustomerResourceId is setup to the zip code.
+    /// </summary>
+    [HttpGet("get-by-city/{city}")]
+    public IEnumerable<WeatherForecast> GetByCity([CustomerResourceId] string city) => GetWeather();
+
 
     /// <summary>
     /// Background work for given seconds
@@ -91,8 +106,7 @@ public class WeatherForecastController : ControllerBase
     [HttpGet("{attribute}/{value}")]
     public int CustomAttribute(string attribute, string value)
     {
-        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.MeasureOperationLatency.AddAttribute(attribute, value);
+        HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
         return 7;
     }
 
