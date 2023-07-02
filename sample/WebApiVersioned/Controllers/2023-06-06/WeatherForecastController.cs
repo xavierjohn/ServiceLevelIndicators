@@ -30,7 +30,7 @@ public class WeatherForecastController : ControllerBase
 
     /// <summary>
     /// Should emit SLI metrics
-    /// Operation: "GET WeatherForecast"
+    /// Operation: "GET weather-forecast"
     /// CustomerResourceId = "SampleCustomerResrouceId"
     /// </summary>
     [HttpGet]
@@ -38,7 +38,7 @@ public class WeatherForecastController : ControllerBase
 
     /// <summary>
     /// Should emit SLI metrics
-    /// Operation: "GET WeatherForecast/MyAction1"
+    /// Operation: "GET weather-forecast/MyAction1"
     /// CustomerResourceId = "SampleCustomerResrouceId"
     /// </summary>
 
@@ -56,7 +56,7 @@ public class WeatherForecastController : ControllerBase
 
     /// <summary>
     /// Use Feature to set CustomerResourceId
-    /// Operation: "GET WeatherForecast/{customerResourceId}"
+    /// Operation: "GET weather-forecast/{customerResourceId}"
     /// CustomerResourceId = "Your input"
     /// </summary>
     [HttpGet("{customerResourceId}")]
@@ -70,20 +70,20 @@ public class WeatherForecastController : ControllerBase
 
     /// <summary>
     /// Use Attribute to set CustomerResourceId
-    /// Operation: "GET WeatherForecast/{zipcode}"
+    /// Operation: "GET weather-forecast/get-by-zip-code/{zipCode}"
     /// CustomerResourceId is setup to the zip code.
     /// </summary>
-    [HttpGet("get-by-city/{zipcode}")]
-    public IEnumerable<WeatherForecast> GetByCity([CustomerResourceId] string zipcode) => GetWeather();
-
+    [HttpGet("get-by-zip-code/{zipCode}")]
+    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
 
     /// <summary>
-    /// Use complex object to set CustomerResourceId
+    /// Use Attribute to set CustomerResourceId
+    /// Operation: "GET weather-forecast/get-by-city/{city"
+    /// CustomerResourceId is setup to the zip code.
     /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    [HttpPost]
-    public IEnumerable<WeatherForecast> PostByCity([FromBody] ForecastRequest request) => GetWeather();
+    [HttpGet("get-by-city/{city}")]
+    public IEnumerable<WeatherForecast> GetByCity([CustomerResourceId] string city) => GetWeather();
+
 
     /// <summary>
     /// Background work for given seconds

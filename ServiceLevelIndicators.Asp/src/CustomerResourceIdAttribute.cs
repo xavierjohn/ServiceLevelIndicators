@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
-[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Parameter)]
 public class CustomerResourceIdAttribute : Attribute, IParameterModelConvention
 {
     public void Apply(ParameterModel parameter)
