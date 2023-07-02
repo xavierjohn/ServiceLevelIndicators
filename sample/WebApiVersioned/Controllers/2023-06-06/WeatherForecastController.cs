@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ServiceLevelIndicators;
 using Microsoft.AspNetCore.Http;
 using Asp.Versioning;
-using Microsoft.AspNetCore.Http.Features;
+using System;
 
 /// <summary>
 /// Weather forecast controller.
@@ -62,9 +62,7 @@ public class WeatherForecastController : ControllerBase
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
-        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.MeasureOperationLatency.CustomerResourceId = customerResourceId;
-
+        HttpContext.GetMeasuredOperationLatency().CustomerResourceId = customerResourceId;
         return GetWeather();
     }
 
@@ -108,8 +106,7 @@ public class WeatherForecastController : ControllerBase
     [HttpGet("{attribute}/{value}")]
     public int CustomAttribute(string attribute, string value)
     {
-        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.MeasureOperationLatency.AddAttribute(attribute, value);
+        HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
         return 7;
     }
 
