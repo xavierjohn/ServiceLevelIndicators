@@ -1,4 +1,6 @@
-﻿using OpenTelemetry.Metrics;
+﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using SampleWebApplicationSLI;
 using ServiceLevelIndicators;
@@ -12,7 +14,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    var filePath = Path.Combine(AppContext.BaseDirectory, "Asp.SampleWebApplicationSLI.xml");
+
+    var fileName = typeof(Program).Assembly.GetName().Name + ".xml";
+    var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
     options.IncludeXmlComments(filePath);
 });
 builder.Services.AddProblemDetails();
@@ -31,11 +35,7 @@ builder.Services.AddOpenTelemetry()
     });
 
 builder.Services.AddSingleton<SampleApiMeters>();
-builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
-{
-    var meters = sp.GetRequiredService<SampleApiMeters>();
-    return new ServiceLevelIndicatorMeter(meters.Meter);
-});
+builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
 builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";
