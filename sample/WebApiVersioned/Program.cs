@@ -4,6 +4,8 @@ using SampleWebApplicationSLI;
 using ServiceLevelIndicators;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using SampleVersionedWebApplicationSLI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,11 +47,8 @@ builder.Services.AddOpenTelemetry()
     });
 
 builder.Services.AddSingleton<SampleApiMeters>();
-builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
-{
-    var meters = sp.GetRequiredService<SampleApiMeters>();
-    return new ServiceLevelIndicatorMeter(meters.Meter);
-});
+builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
+
 builder.Services.AddServiceLevelIndicator(options =>
 {
     Guid serviceTree = Guid.NewGuid();

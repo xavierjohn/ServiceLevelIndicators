@@ -29,4 +29,9 @@ public class ServiceLevelIndicatorOptions
     /// If false, use the ServiceLevelIndicator Attribute to emit.
     /// </summary>
     public bool AutomaticallyEmitted { get; set; } = true;
+
+    /// <summary>
+    /// The meter that is used to create the histogram that reports the latency.
+    /// </summary>
+    public Meter Meter { get; set; } = null!;
 }

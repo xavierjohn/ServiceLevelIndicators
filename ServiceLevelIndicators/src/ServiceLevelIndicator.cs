@@ -11,10 +11,10 @@ public class ServiceLevelIndicator
 
     private readonly Histogram<long> _responseLatencyHistogram;
 
-    public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options, IServiceLevelIndicatorMeter meter)
+    public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options)
     {
         ServiceLevelIndicatorOptions = options.Value;
-        _responseLatencyHistogram = meter.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName);
+        _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName);
     }
 
     public void RecordLatency(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes) =>
