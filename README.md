@@ -32,24 +32,39 @@ The library targets .net core and requires the service to use OpenTelemetry http
     }
     builder.Services.AddSingleton<SampleApiMeters>();
     ```
+    
+2. Add a class to configure SLI
 
-2. Add ServiceLevelIndicator into the dependency injection.
+    Example.
+    ```csharp
+    internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
+    {
+        private readonly SampleApiMeters meters;
+
+        public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters) => this.meters = meters;
+
+        public void Configure(ServiceLevelIndicatorOptions options) => options.Meter = meters.Meter;
+    }
+    ```
+
+3. Add ServiceLevelIndicator into the dependency injection.
 
    Example.
 
     ``` csharp
-    builder.Services.AddSingleton<IServiceLevelIndicatorMeter>(sp =>
-    {
-        var meters = sp.GetRequiredService<SampleApiMeters>();
-        return new ServiceLevelIndicatorMeter(meters.Meter);
-    });
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
-        options.LocationId = ServiceLevelIndicator.CreateLocationId("Public", "eastus2");
+        Guid serviceTree = Guid.NewGuid();
+        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceTree);
+        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     });
+    ```
 
-     ```
+4.  Add the middleware to the pipeline.
+        
+   If API versioning is used, Use `app.UseServiceLevelIndicatorWithApiVersioning();`
+   Otherwise, `app.UseServiceLevelIndicator();`
+        
 
 ### Usage
 
