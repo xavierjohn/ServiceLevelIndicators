@@ -24,7 +24,7 @@ builder.Services.AddSwaggerGen(
                 var fileName = typeof(Program).Assembly.GetName().Name + ".xml";
                 var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
 
-                // integrate xml comments
+                // integrate XML comments
                 options.IncludeXmlComments(filePath);
             });
 builder.Services.AddApiVersioning()
@@ -76,7 +76,7 @@ app.UseSwaggerUI(
         }
     });
 app.UseHttpsRedirection();
-app.UseServiceLevelIndicator();
+app.UseServiceLevelIndicatorWithApiVersioning();
 app.UseAuthorization();
 
 app.MapControllers();

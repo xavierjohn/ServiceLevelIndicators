@@ -9,6 +9,9 @@
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
+        <PackageReference Include="Asp.Versioning.Http" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\ServiceLevelIndicators.Asp\src\ServiceLevelIndicators.Asp.csproj" />
     </ItemGroup>
 </Project>
