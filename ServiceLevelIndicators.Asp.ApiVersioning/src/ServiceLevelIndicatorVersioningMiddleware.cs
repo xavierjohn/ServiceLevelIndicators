@@ -8,10 +8,7 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
 {
     private readonly RequestDelegate _next;
 
-    public ServiceLevelIndicatorVersioningMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    public ServiceLevelIndicatorVersioningMiddleware(RequestDelegate next) => _next = next;
 
     public async Task InvokeAsync(HttpContext context)
     {
