@@ -48,24 +48,14 @@ internal sealed class ServiceLevelIndicatorMiddleware
         var statusCode = context.Response.StatusCode;
         measuredOperation.SetHttpStatusCode(statusCode);
         measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
-
-        AddApiVersionIfPresent(context, measuredOperation);
     }
 
-    private static void AddApiVersionIfPresent(HttpContext context, MeasuredOperationLatency measuredOperation)
-    {
-        var version = GetApiVersion(context);
-        if (!string.IsNullOrWhiteSpace(version))
-            measuredOperation.SetApiVersion(version);
-    }
 
     private bool ShouldEmitMetrics(EndpointMetadataCollection metadata) =>
         _serviceLevelIndicator.ServiceLevelIndicatorOptions.AutomaticallyEmitted || GetSliAttribute(metadata) is not null;
 
     private static ServiceLevelIndicatorAttribute? GetSliAttribute(EndpointMetadataCollection metaData) =>
         metaData.GetMetadata<ServiceLevelIndicatorAttribute>();
-
-    private static string? GetApiVersion(HttpContext context) => context.ApiVersioningFeature().RawRequestedApiVersion;
 
     private static string GetOperation(HttpContext context, EndpointMetadataCollection metadata)
     {

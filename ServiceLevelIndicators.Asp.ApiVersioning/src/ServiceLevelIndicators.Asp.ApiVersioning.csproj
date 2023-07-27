@@ -6,9 +6,9 @@
         <None Include="../../README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="Asp.Versioning.Http" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
+      <ProjectReference Include="..\..\ServiceLevelIndicators.Asp\src\ServiceLevelIndicators.Asp.csproj" />
     </ItemGroup>
 </Project>
