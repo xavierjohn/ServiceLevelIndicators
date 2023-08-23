@@ -45,6 +45,8 @@ The library targets .net core and requires the service to use OpenTelemetry http
 
         public void Configure(ServiceLevelIndicatorOptions options) => options.Meter = meters.Meter;
     }
+
+    builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
     ```
 
 3. Add ServiceLevelIndicator into the dependency injection.
@@ -113,8 +115,14 @@ or mark the parameter with the attribute `[CustomerResourceId]`
     ``` csharp 
         HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
     ```
+
+4. To prevent automatically emitting SLI information on all controllers, set the option.
+    ``` csharp 
+        ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
+    ```
+    In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
     
-4. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
+5. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
 
    Example.
 
