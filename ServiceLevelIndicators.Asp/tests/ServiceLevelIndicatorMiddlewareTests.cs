@@ -35,7 +35,7 @@ public class ServiceLevelIndicatorMiddlewareTests
                     .UseTestServer()
                     .ConfigureServices(services =>
                     {
-                        services.AddMvc();
+                        services.AddMvcCore();
                         services.AddServiceLevelIndicator(options =>
                         {
                             options.Meter = s_meter;
@@ -47,11 +47,13 @@ public class ServiceLevelIndicatorMiddlewareTests
                     .Configure(app =>
                     {
                         app.UseMiddleware<ServiceLevelIndicatorMiddleware>();
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints => endpoints.MapControllers());
                     });
             })
             .StartAsync();
 
-        var response = await host.GetTestClient().GetAsync("/test");
+        var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         static void OnMeasurementRecorded<T>(Instrument instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -61,7 +63,6 @@ public class ServiceLevelIndicatorMiddlewareTests
     }
 
     [ApiController]
-    [Route("[controller]")]
     public class TestController : ControllerBase
     {
         [HttpGet]
