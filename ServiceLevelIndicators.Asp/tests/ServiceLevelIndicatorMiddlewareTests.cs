@@ -3,6 +3,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -36,6 +37,8 @@ public class ServiceLevelIndicatorMiddlewareTests
                     .ConfigureServices(services =>
                     {
                         services.AddMvcCore();
+                        var partManager = GetApplicationPartManager(services);
+                        partManager.FeatureProviders.Add(new ExternalControllersFeatureProvider(typeof(TestController)));
                         services.AddServiceLevelIndicator(options =>
                         {
                             options.Meter = s_meter;
@@ -43,7 +46,6 @@ public class ServiceLevelIndicatorMiddlewareTests
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                         });
                     })
-                    .WithAdditionalControllers(typeof(TestController))
                     .Configure(app =>
                     {
                         app.UseMiddleware<ServiceLevelIndicatorMiddleware>();
@@ -60,6 +62,14 @@ public class ServiceLevelIndicatorMiddlewareTests
         {
             Console.WriteLine($"{instrument.Name} recorded measurement {measurement}");
         }
+    }
+
+    private static ApplicationPartManager GetApplicationPartManager(IServiceCollection services)
+    {
+        var partManager = services
+            .Last(descriptor => descriptor.ServiceType == typeof(ApplicationPartManager))
+            .ImplementationInstance;
+        return partManager as ApplicationPartManager ?? throw new InvalidOperationException("Unable to get ApplicationPartManager");
     }
 
     [ApiController]
