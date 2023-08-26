@@ -1,12 +1,9 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
 using Microsoft.AspNetCore.Mvc;
 
-[ApiController]
+[Route("[controller]")]
 public class TestController : ControllerBase
 {
     [HttpGet]
-    public static string Get()
-    {
-        return "Hello";
-    }
+    public IActionResult Get() => Ok("Hello World!");
 }

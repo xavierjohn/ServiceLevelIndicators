@@ -27,37 +27,31 @@ public partial class ServiceLevelIndicatorMiddlewareTests
         // Start the meterListener, enabling InstrumentPublished callbacks.
         meterListener.Start();
 
-        //using var host = await new HostBuilder()
-        //    .ConfigureWebHost(webBuilder =>
-        //    {
-        //        webBuilder
-        //            .UseTestServer()
-        //            .ConfigureServices(services =>
-        //            {
-        //                services.AddControllers();
-        //                services.AddRouting();
-        //                services.AddServiceLevelIndicator(options =>
-        //                {
-        //                    options.Meter = s_meter;
-        //                    options.CustomerResourceId = "SampleCustomerResourceId";
-        //                    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-        //                });
-        //                services.AddHostedService<ApplicationPartsLogger>();
-        //            })
-        //            .WithAdditionalControllers(typeof(TestController))
-        //            .Configure(app =>
-        //            {
-        //                app.UseRouting();
-        //                app.UseMiddleware<ServiceLevelIndicatorMiddleware>();
-        //                app.UseEndpoints(endpoints => endpoints.MapControllers());
-        //            });
-        //    })
-        //    .StartAsync();
+        using var host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder =>
+            {
+                webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                    {
+                        services.AddControllers();
+                        services.AddServiceLevelIndicator(options =>
+                        {
+                            options.Meter = s_meter;
+                            options.CustomerResourceId = "SampleCustomerResourceId";
+                            options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                        });
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.UseMiddleware<ServiceLevelIndicatorMiddleware>();
+                        app.UseEndpoints(endpoints => endpoints.MapControllers());
+                    });
+            })
+            .StartAsync();
 
-        var webBuilder = new WebHostBuilder();
-        webBuilder.UseStartup<Startup>();
-        var _testServer = new TestServer(webBuilder);
-        var response = await _testServer.CreateRequest("/test").SendAsync("GET");
+        var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var str = await response.Content.ReadAsStringAsync();
 
