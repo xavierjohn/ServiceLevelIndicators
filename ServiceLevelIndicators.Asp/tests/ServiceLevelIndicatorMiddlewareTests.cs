@@ -54,31 +54,12 @@ public partial class ServiceLevelIndicatorMiddlewareTests
         //    })
         //    .StartAsync();
 
-        using var host = new HostBuilder()
-            .ConfigureWebHost(webHostBuilder =>
-            {
-                webHostBuilder
-                    .Configure(app =>
-                    {
-                        app.UseRouting();
-                        app.UseEndpoints(endpoints => endpoints.MapControllers());
-
-                    })
-                    .UseTestServer();
-            })
-            .ConfigureServices(services =>
-            {
-                services.AddControllers();
-                services.AddMvcCore();
-                services.AddRouting();
-                services.AddHostedService<ApplicationPartsLogger>();
-
-            })
-            .Build();
-        await host.StartAsync();
-
-        var response = await host.GetTestClient().GetAsync("test");
+        var webBuilder = new WebHostBuilder();
+        webBuilder.UseStartup<Startup>();
+        var _testServer = new TestServer(webBuilder);
+        var response = await _testServer.CreateRequest("/test").SendAsync("GET");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var str = await response.Content.ReadAsStringAsync();
 
         static void OnMeasurementRecorded<T>(Instrument instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
         {
