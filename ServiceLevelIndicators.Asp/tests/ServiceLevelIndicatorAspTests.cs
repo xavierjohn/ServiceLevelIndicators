@@ -50,7 +50,6 @@ public partial class ServiceLevelIndicatorAspTests
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var str = await response.Content.ReadAsStringAsync();
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
         {
