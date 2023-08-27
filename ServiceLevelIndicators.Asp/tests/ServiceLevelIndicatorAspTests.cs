@@ -1,30 +1,27 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics.Metrics;
 using System.Net;
 
-public partial class ServiceLevelIndicatorMiddlewareTests
+public partial class ServiceLevelIndicatorAspTests
 {
     private static readonly Meter s_meter = new("SliTestMeter", "1.0.0");
+    private bool _callbackCalled;
 
     [Fact]
-    public async Task MiddlewareTest_ReturnsNotFoundForRequest()
+    public async Task Default_SLI_Metrics_is_emitted()
     {
         using MeterListener meterListener = new();
         meterListener.InstrumentPublished = (instrument, listener) =>
         {
             if (instrument.Meter.Name is "SliTestMeter")
-            {
                 listener.EnableMeasurementEvents(instrument);
-            }
         };
-        meterListener.SetMeasurementEventCallback<int>(OnMeasurementRecorded);
-        // Start the meterListener, enabling InstrumentPublished callbacks.
+        meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         meterListener.Start();
 
         using var host = await new HostBuilder()
@@ -38,7 +35,7 @@ public partial class ServiceLevelIndicatorMiddlewareTests
                         services.AddServiceLevelIndicator(options =>
                         {
                             options.Meter = s_meter;
-                            options.CustomerResourceId = "SampleCustomerResourceId";
+                            options.CustomerResourceId = "TestCustomerResourceId";
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                         });
                     })
@@ -55,9 +52,25 @@ public partial class ServiceLevelIndicatorMiddlewareTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var str = await response.Content.ReadAsStringAsync();
 
-        static void OnMeasurementRecorded<T>(Instrument instrument, T measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
         {
-            Console.WriteLine($"{instrument.Name} recorded measurement {measurement}");
+            _callbackCalled = true;
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET Test"),
+                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+            };
+
+            instrument.Name.Should().Be("LatencySLI");
+            instrument.Unit.Should().Be("ms");
+            measurement.Should().BeGreaterOrEqualTo(5);
+
+            tags.ToArray().Should().BeEquivalentTo(expectedTags);
         }
+
+        _callbackCalled.Should().BeTrue();
     }
 }
