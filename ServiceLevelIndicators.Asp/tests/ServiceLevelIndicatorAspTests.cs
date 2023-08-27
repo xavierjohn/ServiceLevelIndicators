@@ -41,9 +41,9 @@ public partial class ServiceLevelIndicatorAspTests
                     })
                     .Configure(app =>
                     {
-                        app.UseRouting();
-                        app.UseMiddleware<ServiceLevelIndicatorMiddleware>();
-                        app.UseEndpoints(endpoints => endpoints.MapControllers());
+                        app.UseRouting()
+                           .UseServiceLevelIndicator()
+                           .UseEndpoints(endpoints => endpoints.MapControllers());
                     });
             })
             .StartAsync();
