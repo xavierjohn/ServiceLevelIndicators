@@ -1,4 +1,7 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
+
+using System;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 
 [Route("[controller]")]
@@ -10,4 +13,14 @@ public class TestController : ControllerBase
     [HttpGet("operation")]
     [ServiceLevelIndicator(Operation = "TestOperation")]
     public IActionResult GetOperation() => Ok("Hello World!");
+
+    [HttpGet("customer_resourceid/{id}")]
+    public IActionResult GetCustomerResourceId([CustomerResourceId] string id) => Ok(id);
+
+    [HttpGet("custom_attribute/{value}")]
+    public IActionResult AddCustomAttribute(string value)
+    {
+        HttpContext.GetMeasuredOperationLatency().AddAttribute("CustomAttribute", value);
+        return Ok(value);
+    }
 }
