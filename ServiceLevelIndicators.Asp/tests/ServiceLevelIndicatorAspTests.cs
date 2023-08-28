@@ -37,7 +37,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateAndStartHost(_meter);
+        using var host = await CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -75,7 +75,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateAndStartHost(_meter);
+        using var host = await CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/operation");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -103,7 +103,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateAndStartHost(_meter);
+        using var host = await CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/customer_resourceid/myId");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -131,7 +131,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateAndStartHost(_meter);
+        using var host = await CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/custom_attribute/mickey");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -154,7 +154,59 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _callbackCalled.Should().BeTrue();
     }
 
-    private static async Task<IHost> CreateAndStartHost(Meter meter) =>
+    [Fact]
+    public async Task When_automitically_emit_SLI_is_Off_do_not_send_SLI()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHostWithoutSli();
+
+        var response = await host.GetTestClient().GetAsync("test");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task When_automitically_emit_SLI_is_Off_send_SLI_using_attribute()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHostWithoutSli();
+
+        var response = await host.GetTestClient().GetAsync("test/send_sli");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET Test/send_sli"),
+                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
+    }
+
+    private static async Task<IHost> CreateHostWithSli(Meter meter) =>
         await new HostBuilder()
             .ConfigureWebHost(webBuilder =>
             {
@@ -178,7 +230,33 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                     });
             })
             .StartAsync();
-
+    private async Task<IHost> CreateHostWithoutSli()
+    {
+        return await new HostBuilder()
+            .ConfigureWebHost(webBuilder =>
+            {
+                webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                    {
+                        services.AddControllers();
+                        services.AddServiceLevelIndicator(options =>
+                        {
+                            options.Meter = _meter;
+                            options.CustomerResourceId = "TestCustomerResourceId";
+                            options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                            options.AutomaticallyEmitted = false;
+                        });
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseRouting()
+                           .UseServiceLevelIndicator()
+                           .UseEndpoints(endpoints => endpoints.MapControllers());
+                    });
+            })
+            .StartAsync();
+    }
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)

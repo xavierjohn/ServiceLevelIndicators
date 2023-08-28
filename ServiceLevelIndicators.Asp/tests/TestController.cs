@@ -24,4 +24,12 @@ public class TestController : ControllerBase
         HttpContext.GetMeasuredOperationLatency().AddAttribute("CustomAttribute", value);
         return Ok(value);
     }
+
+    [HttpGet("send_sli")]
+    [ServiceLevelIndicator]
+    public async Task<IActionResult> SendSLI()
+    {
+        await Task.Delay(1);
+        return Ok("Hello");
+    }
 }
