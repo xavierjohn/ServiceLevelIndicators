@@ -9,16 +9,17 @@ using System.Net;
 
 public partial class ServiceLevelIndicatorAspTests
 {
-    private static readonly Meter s_meter = new("SliTestMeter", "1.0.0");
     private bool _callbackCalled;
 
     [Fact]
     public async Task Default_SLI_Metrics_is_emitted()
     {
+        const string meterName = "SliTestMeter";
+        using Meter meter = new(meterName, "1.0.0");
         using MeterListener meterListener = new();
         meterListener.InstrumentPublished = (instrument, listener) =>
         {
-            if (instrument.Meter.Name is "SliTestMeter")
+            if (instrument.Meter.Name is meterName)
                 listener.EnableMeasurementEvents(instrument);
         };
         meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
@@ -34,7 +35,7 @@ public partial class ServiceLevelIndicatorAspTests
                         services.AddControllers();
                         services.AddServiceLevelIndicator(options =>
                         {
-                            options.Meter = s_meter;
+                            options.Meter = meter;
                             options.CustomerResourceId = "TestCustomerResourceId";
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                         });
