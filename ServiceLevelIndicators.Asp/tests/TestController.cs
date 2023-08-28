@@ -1,14 +1,15 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
-
-using System;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 
 [Route("[controller]")]
 public class TestController : ControllerBase
 {
     [HttpGet]
-    public IActionResult Get() => Ok("Hello World!");
+    public async Task<IActionResult> Get()
+    {
+        await Task.Delay(1);
+        return Ok("Hello World!");
+    }
 
     [HttpGet("operation")]
     [ServiceLevelIndicator(Operation = "TestOperation")]
