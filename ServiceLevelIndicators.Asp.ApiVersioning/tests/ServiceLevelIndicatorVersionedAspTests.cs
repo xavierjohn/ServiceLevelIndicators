@@ -33,7 +33,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     }
 
     [Fact]
-    public async Task Default_SLI_Metrics_is_emitted()
+    public async Task Default_SLI_Metrics_is_emitted_with_API_version()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
