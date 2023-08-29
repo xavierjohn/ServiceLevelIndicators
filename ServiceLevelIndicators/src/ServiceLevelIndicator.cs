@@ -14,7 +14,10 @@ public class ServiceLevelIndicator
     public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options)
     {
         ServiceLevelIndicatorOptions = options.Value;
-        _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName);
+        if (ServiceLevelIndicatorOptions.Meter == null)
+            throw new ArgumentNullException(message: "Meter must be provided in options.", paramName: nameof(options));
+
+        _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName, "ms");
     }
 
     public void RecordLatency(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes) =>
