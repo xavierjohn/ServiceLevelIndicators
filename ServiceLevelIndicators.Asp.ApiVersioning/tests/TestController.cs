@@ -1,11 +1,10 @@
 ﻿namespace ServiceLevelIndicators.Asp.ApiVersioning.Tests;
 
-using Asp.Versioning;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using global::Asp.Versioning;
 
 [Route("[controller]")]
-[ApiVersion("2023-8-29")]
+[ApiVersion("2023-08-29")]
 public class TestController : ControllerBase
 {
     [HttpGet]
