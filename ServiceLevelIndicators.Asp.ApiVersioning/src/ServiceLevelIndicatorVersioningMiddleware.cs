@@ -12,7 +12,7 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var apiVersionfeature = context.Features.Get<IApiVersioningFeature>();
+        var apiVersionfeature = context.ApiVersioningFeature();
         var slifeature = context.Features.Get<IServiceLevelIndicatorFeature>();
 
         if (apiVersionfeature != null && slifeature != null)

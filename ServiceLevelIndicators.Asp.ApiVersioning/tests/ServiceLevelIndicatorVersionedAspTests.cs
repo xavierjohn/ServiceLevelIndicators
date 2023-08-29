@@ -40,7 +40,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 
         using var host = await CreateHost(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().GetAsync("test?api-version=2023-08-29");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -52,7 +52,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("Operation", "GET Test"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
-                new KeyValuePair<string, object?>("api-version", "2023-08-29"),
+                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
