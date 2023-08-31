@@ -5,7 +5,8 @@ using global::Asp.Versioning;
 
 [Route("[controller]")]
 [ApiVersion("2023-08-29")]
-public class TestController : ControllerBase
+[ApiVersion("2023-09-01")]
+public class TestDoubleController : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get()

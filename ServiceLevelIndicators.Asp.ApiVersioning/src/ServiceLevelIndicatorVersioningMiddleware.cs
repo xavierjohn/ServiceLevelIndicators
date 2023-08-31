@@ -1,7 +1,6 @@
 ﻿namespace ServiceLevelIndicators;
 
 using System.Threading.Tasks;
-using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
 internal sealed class ServiceLevelIndicatorVersioningMiddleware
@@ -12,15 +11,18 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        await _next(context);
         var apiVersionfeature = context.ApiVersioningFeature();
         var slifeature = context.Features.Get<IServiceLevelIndicatorFeature>();
 
         if (apiVersionfeature != null && slifeature != null)
         {
-            var version = context.ApiVersioningFeature().RawRequestedApiVersion;
-            if (!string.IsNullOrWhiteSpace(version))
+            var versions = context.ApiVersioningFeature().RawRequestedApiVersions;
+            if (versions.Count > 0)
+            {
+                var version = string.Join(',', versions);
                 slifeature.MeasuredOperationLatency.SetApiVersion(version);
+            }
         }
-        await _next(context);
     }
 }
