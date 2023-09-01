@@ -169,7 +169,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("api_version", "2023-08-29"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
+                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
             };
