@@ -1,11 +1,13 @@
 ﻿namespace ServiceLevelIndicators.Asp.ApiVersioning.Tests;
 
+using global::Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.Net;
 using Xunit.Abstractions;
 
@@ -149,6 +151,35 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         _callbackCalled.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_default_API_version()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHostWithDefaultApiVersion(_meter);
+
+        var response = await host.GetTestClient().GetAsync("testSingle");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
+                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
+    }
+
     private static async Task<IHost> CreateHost(Meter meter) =>
     await new HostBuilder()
         .ConfigureWebHost(webBuilder =>
@@ -159,6 +190,32 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 {
                     services.AddControllers();
                     services.AddApiVersioning().AddMvc();
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                    });
+                })
+                .Configure(app =>
+                {
+                    app.UseRouting()
+                       .UseServiceLevelIndicatorWithApiVersioning()
+                       .UseEndpoints(endpoints => endpoints.MapControllers());
+                });
+        })
+        .StartAsync();
+
+    private static async Task<IHost> CreateHostWithDefaultApiVersion(Meter meter) =>
+    await new HostBuilder()
+        .ConfigureWebHost(webBuilder =>
+        {
+            webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.AddControllers();
+                    services.AddApiVersioning(options => options.DefaultApiVersion = new ApiVersion(DateOnly.Parse("2023-08- 29", CultureInfo.InvariantCulture))).AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
                         options.Meter = meter;
