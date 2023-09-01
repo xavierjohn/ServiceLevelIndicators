@@ -16,6 +16,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
+    private KeyValuePair<string, object?>[] _actualTags;
+    private KeyValuePair<string, object?>[] _expectedTags;
     private bool _callbackCalled;
     private bool _disposedValue;
 
@@ -32,183 +34,153 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                     listener.EnableMeasurementEvents(instrument);
             }
         };
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        _actualTags = Array.Empty<KeyValuePair<string, object?>>();
+        _expectedTags = Array.Empty<KeyValuePair<string, object?>>();
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_API_version_as_query_parameter()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+            new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+            new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
+            new KeyValuePair<string, object?>("Status", "Ok"),
+            new KeyValuePair<string, object?>("HttpStatusCode", 200),
+            new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+        };
         using var host = await CreateHost(_meter);
 
+        // Act
         var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29");
+
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
-        {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 200),
-                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
-            };
-
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics();
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_API_version_as_header()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
-        using var host = await CreateHost(_meter);
-
-        var httpClient = host.GetTestClient();
-        httpClient.DefaultRequestHeaders.Add("api-version", "2023-08-29");
-        var response = await httpClient.GetAsync("testSingle");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
                 new KeyValuePair<string, object?>("api_version", "2023-08-29"),
-            };
+        };
+        using var host = await CreateHost(_meter);
+        var httpClient = host.GetTestClient();
+        httpClient.DefaultRequestHeaders.Add("api-version", "2023-08-29");
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
+        // Act
+        var response = await httpClient.GetAsync("testSingle");
 
-        _callbackCalled.Should().BeTrue();
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_multiple_API_versions_on_Request()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
-        using var host = await CreateHost(_meter);
-
-        var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29&api-version=2023-09-01");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
-        {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+{
                 new KeyValuePair<string, object?>("api_version", "2023-08-29"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
-            };
+        };
+        using var host = await CreateHost(_meter);
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
+        // Act
+        var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29&api-version=2023-09-01");
 
-        _callbackCalled.Should().BeTrue();
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_multiple_API_versions_on_Request_and_Controller()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
-        using var host = await CreateHost(_meter);
-
-        var response = await host.GetTestClient().GetAsync("testDouble?api-version=2023-08-29&api-version=2023-09-01");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
-        {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+          {
                 new KeyValuePair<string, object?>("api_version", "2023-08-29,2023-09-01"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestDouble"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
-            };
+          };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
+        using var host = await CreateHost(_meter);
 
-        _callbackCalled.Should().BeTrue();
+        // Act
+        var response = await host.GetTestClient().GetAsync("testDouble?api-version=2023-08-29&api-version=2023-09-01");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
     }
 
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_neutral_API_versions_on_Controller()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
-        using var host = await CreateHost(_meter);
-
-        var response = await host.GetTestClient().GetAsync("testNeutral");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
                 new KeyValuePair<string, object?>("api_version", "Neutral"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
-            };
+        };
+        using var host = await CreateHost(_meter);
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
+        // Act
+        var response = await host.GetTestClient().GetAsync("testNeutral");
 
-        _callbackCalled.Should().BeTrue();
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_default_API_version()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
-        using var host = await CreateHostWithDefaultApiVersion(_meter);
-
-        var response = await host.GetTestClient().GetAsync("testSingle");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
                 new KeyValuePair<string, object?>("api_version", "2023-08-29"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
-            };
+        };
+        using var host = await CreateHostWithDefaultApiVersion(_meter);
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
+        // Act
+        var response = await host.GetTestClient().GetAsync("testSingle");
 
-        _callbackCalled.Should().BeTrue();
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
     }
 
     private static async Task<IHost> CreateHost(Meter meter) =>
@@ -236,6 +208,11 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 {
                     app.UseRouting()
                        .UseServiceLevelIndicatorWithApiVersioning()
+                       .Use(async (context, next) =>
+                        {
+                            await Task.Delay(1);
+                            await next(context);
+                        })
                        .UseEndpoints(endpoints => endpoints.MapControllers());
                 });
         })
@@ -264,6 +241,11 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 {
                     app.UseRouting()
                        .UseServiceLevelIndicatorWithApiVersioning()
+                       .Use(async (context, next) =>
+                       {
+                           await Task.Delay(1);
+                           await next(context);
+                       })
                        .UseEndpoints(endpoints => endpoints.MapControllers());
                 });
         })
@@ -280,6 +262,23 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         measurement.Should().BeGreaterOrEqualTo(1);
         _output.WriteLine($"Measurement {measurement}");
         tags.ToArray().Should().BeEquivalentTo(expectedTags);
+    }
+
+    private void ValidateMetrics()
+    {
+        _callbackCalled.Should().BeTrue();
+        _actualTags.Should().BeEquivalentTo(_expectedTags);
+    }
+
+    private void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+    {
+        _actualTags = tags.ToArray();
+        _callbackCalled = true;
+
+        _output.WriteLine($"Measurement {measurement}");
+        instrument.Name.Should().Be("LatencySLI");
+        instrument.Unit.Should().Be("ms");
+        measurement.Should().BeGreaterOrEqualTo(1);
     }
 
     protected virtual void Dispose(bool disposing)

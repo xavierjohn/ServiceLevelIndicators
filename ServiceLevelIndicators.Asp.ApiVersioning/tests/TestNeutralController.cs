@@ -3,14 +3,11 @@
 using Microsoft.AspNetCore.Mvc;
 using global::Asp.Versioning;
 
+[ApiController]
 [Route("[controller]")]
 [ApiVersionNeutral]
 public class TestNeutralController : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Get()
-    {
-        await Task.Delay(1);
-        return Ok("Hello World!");
-    }
+    public IActionResult Get() => Ok("Hello World!");
 }
