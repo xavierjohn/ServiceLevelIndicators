@@ -215,7 +215,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 .ConfigureServices(services =>
                 {
                     services.AddControllers();
-                    services.AddApiVersioning(options => options.DefaultApiVersion = new ApiVersion(DateOnly.Parse("2023-08- 29", CultureInfo.InvariantCulture))).AddMvc();
+                    services.AddApiVersioning(options => options.DefaultApiVersion = new ApiVersion(DateOnly.Parse("2023-08-29", CultureInfo.InvariantCulture))).AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
                         options.Meter = meter;
