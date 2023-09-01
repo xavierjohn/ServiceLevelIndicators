@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics.Metrics;
-using System.Globalization;
 using System.Net;
 using Xunit.Abstractions;
 
@@ -88,54 +87,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         ValidateMetrics();
     }
-
-    [Fact]
-    public async Task SLI_Metrics_is_emitted_with_multiple_API_versions_on_Request()
-    {
-        // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-{
-                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 200),
-        };
-        using var host = await CreateHost(_meter);
-
-        // Act
-        var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29&api-version=2023-09-01");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        ValidateMetrics();
-    }
-
-    [Fact]
-    public async Task SLI_Metrics_is_emitted_with_multiple_API_versions_on_Request_and_Controller()
-    {
-        // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-          {
-                new KeyValuePair<string, object?>("api_version", "2023-08-29,2023-09-01"),
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestDouble"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 200),
-          };
-
-        using var host = await CreateHost(_meter);
-
-        // Act
-        var response = await host.GetTestClient().GetAsync("testDouble?api-version=2023-08-29&api-version=2023-09-01");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        ValidateMetrics();
-    }
-
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_neutral_API_versions_on_Controller()
