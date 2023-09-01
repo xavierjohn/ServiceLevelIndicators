@@ -251,19 +251,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         })
         .StartAsync();
 
-    private void ValidateMetrics(Instrument instrument,
-        long measurement,
-        ReadOnlySpan<KeyValuePair<string, object?>> tags,
-        KeyValuePair<string, object?>[] expectedTags)
-    {
-        _callbackCalled = true;
-        instrument.Name.Should().Be("LatencySLI");
-        instrument.Unit.Should().Be("ms");
-        measurement.Should().BeGreaterOrEqualTo(1);
-        _output.WriteLine($"Measurement {measurement}");
-        tags.ToArray().Should().BeEquivalentTo(expectedTags);
-    }
-
     private void ValidateMetrics()
     {
         _callbackCalled.Should().BeTrue();
