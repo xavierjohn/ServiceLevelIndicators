@@ -17,7 +17,8 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
 
         if (apiVersionfeature != null && slifeature != null)
         {
-            var versions = context.ApiVersioningFeature().RawRequestedApiVersions;
+            var apiFeature = context.ApiVersioningFeature();
+            var versions = apiFeature.RawRequestedApiVersions;
             if (versions.Count > 0)
             {
                 var version = string.Join(',', versions);

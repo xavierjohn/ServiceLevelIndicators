@@ -35,7 +35,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     }
 
     [Fact]
-    public async Task Default_SLI_Metrics_is_emitted_with_API_version()
+    public async Task SLI_Metrics_is_emitted_with_API_version_as_query_parameter()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
@@ -43,6 +43,37 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHost(_meter);
 
         var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
+                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_API_version_as_header()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHost(_meter);
+
+        var httpClient = host.GetTestClient();
+        httpClient.DefaultRequestHeaders.Add("api-version", "2023-08-29");
+        var response = await httpClient.GetAsync("testSingle");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
