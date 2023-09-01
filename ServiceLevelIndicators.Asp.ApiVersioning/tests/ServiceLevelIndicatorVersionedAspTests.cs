@@ -220,7 +220,11 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 .ConfigureServices(services =>
                 {
                     services.AddControllers();
-                    services.AddApiVersioning().AddMvc();
+                    services.AddApiVersioning(
+                        options => options.ApiVersionReader = ApiVersionReader.Combine(
+                            new QueryStringApiVersionReader(),
+                            new HeaderApiVersionReader() { HeaderNames = { "api-version" } }))
+                    .AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
                         options.Meter = meter;
@@ -247,7 +251,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 {
                     services.AddControllers();
                     services.AddApiVersioning(options
-                        => options.DefaultApiVersion = new ApiVersion(DateOnly.Parse("2023-08-29", CultureInfo.InvariantCulture)))
+                        => options.DefaultApiVersion = new ApiVersion(new DateOnly(2023, 8, 29)))
                     .AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
