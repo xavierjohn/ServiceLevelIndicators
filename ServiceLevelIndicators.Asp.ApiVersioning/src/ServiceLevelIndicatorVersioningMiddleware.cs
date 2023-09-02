@@ -17,21 +17,16 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
     }
 
     private static void AddApiVersionDimensionToSli(HttpContext context)
-    {
-        var apiVersionfeature = context.ApiVersioningFeature();
-        if (apiVersionfeature == null) return;
+        => context.GetMeasuredOperationLatency().SetApiVersion(GetApiVersion(context));
 
-        var measuredOperationLatency = context.GetMeasuredOperationLatency();
-        var version = "Unknown";
-        var versions = apiVersionfeature.RawRequestedApiVersions;
+    private static string GetApiVersion(HttpContext context)
+    {
+        var versions = context.ApiVersioningFeature().RawRequestedApiVersions;
         if (versions.Count > 0)
-            version = string.Join(',', versions);
-        else
-        {
-            var metadata = context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>();
-            if (metadata != null && metadata.IsApiVersionNeutral)
-                version = "Neutral";
-        }
-        measuredOperationLatency.SetApiVersion(version);
+            return string.Join(',', versions);
+        else if (context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>() is { IsApiVersionNeutral: true })
+            return "Neutral";
+
+        return "Unspecified";
     }
 }
