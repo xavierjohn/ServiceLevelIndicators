@@ -137,7 +137,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 
     [Theory]
     [InlineData("testSingle?api-version=invalid")]
-    [InlineData("testSingle?api-version=2023-08-29&api-version=2023-09-01")]
+    [InlineData("testDouble?api-version=2023-08-29&api-version=2023-09-01")]
     public async Task SLI_Metrics_is_emitted_when_invalid_api_version(string route)
     {
         // Arrange
