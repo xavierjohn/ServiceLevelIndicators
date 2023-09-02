@@ -5,7 +5,22 @@ Tags: SLI, OpenTelemetry, Metrics.
 ---
 
 # Service Level Indicators
+Service level indicators (SLIs) are metrics used to measure the performance of a service.
+They are typically used in the context of service level agreements (SLAs),
+which are contracts between a service provider and its customers that define the expected level of service.
+SLIs are used to track the actual performance of the service against the agreed-upon SLA.
 
+There are many different types of SLIs that can be used to measure the performance of a service. Some common examples include:
+
+- Availability: This measures the percentage of time that a service is available and functioning properly.
+- Response time: This measures the amount of time it takes for a service to respond to a request.
+- Throughput: This measures the amount of work that a service can handle in a given period of time.
+- Error rate: This measures the percentage of requests that result in errors.
+
+SLIs are important because they provide a way to objectively measure the performance of a service.
+By tracking SLIs over time, service providers can identify trends and make improvements to the service to ensure that it meets the needs of its customers.
+
+## Service Level Indicator Library
 Service Level Indicator library will help emit latency metrics for each API operation to help monitor the service performance over time.
 The metrics is emitted via standard [.Net Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-7.0).
 
