@@ -2,6 +2,8 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Asp.Versioning;
+using System;
 
 internal sealed class ServiceLevelIndicatorVersioningMiddleware
 {
@@ -23,6 +25,14 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
             {
                 var version = string.Join(',', versions);
                 slifeature.MeasuredOperationLatency.SetApiVersion(version);
+            }
+            else
+            {
+                var metadata = context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>()!; ;
+                if (metadata.IsApiVersionNeutral)
+                {
+                    slifeature.MeasuredOperationLatency.SetApiVersion("Neutral");
+                }
             }
         }
     }
