@@ -179,7 +179,11 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 {
                     services.AddControllers();
                     services.AddApiVersioning(options
-                        => options.DefaultApiVersion = new ApiVersion(new DateOnly(2023, 8, 29)))
+                        =>
+                    {
+                        options.AssumeDefaultVersionWhenUnspecified = true;
+                        options.DefaultApiVersion = new ApiVersion(new DateOnly(2023, 8, 29));
+                    })
                     .AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
