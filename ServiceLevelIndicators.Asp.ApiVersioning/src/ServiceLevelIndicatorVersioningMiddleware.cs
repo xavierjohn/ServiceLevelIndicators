@@ -24,9 +24,9 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
         var apiVersioningFeature = context.ApiVersioningFeature();
         var versions = apiVersioningFeature.RawRequestedApiVersions;
         if (versions.Count == 1)
-            return apiVersioningFeature.RequestedApiVersion?.ToString() ?? "NA";
+            return apiVersioningFeature.RequestedApiVersion?.ToString() ?? string.Empty;
         if (versions.Count > 0)
-            return "NA";
+            return string.Empty;
         if (context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>() is { IsApiVersionNeutral: true })
             return "Neutral";
 

@@ -143,7 +143,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         // Arrange
         _expectedTags = new KeyValuePair<string, object?>[]
         {
-                new KeyValuePair<string, object?>("api_version", "NA"),
+                new KeyValuePair<string, object?>("api_version", string.Empty),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET "),
