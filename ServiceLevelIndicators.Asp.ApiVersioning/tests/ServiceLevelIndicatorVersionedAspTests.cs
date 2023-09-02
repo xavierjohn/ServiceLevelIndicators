@@ -89,7 +89,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     }
 
     [Fact]
-    public async Task SLI_Metrics_is_emitted_with_neutral_API_versions_on_Controller()
+    public async Task SLI_Metrics_is_emitted_with_neutral_API_version()
     {
         // Arrange
         _expectedTags = new KeyValuePair<string, object?>[]
@@ -131,6 +131,29 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_double_API_versions()
+    {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+        {
+                new KeyValuePair<string, object?>("api_version", "2023-08-29,2023-09-01"),
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET "),
+                new KeyValuePair<string, object?>("Status", "Error"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 400),
+        };
+        using var host = await CreateHost(_meter);
+
+        // Act
+        var response = await host.GetTestClient().GetAsync("testDouble?api-version=2023-08-29&api-version=2023-09-01");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         ValidateMetrics();
     }
 
