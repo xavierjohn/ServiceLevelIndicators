@@ -21,10 +21,13 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
 
     private static string GetApiVersion(HttpContext context)
     {
-        var versions = context.ApiVersioningFeature().RawRequestedApiVersions;
+        var apiVersioningFeature = context.ApiVersioningFeature();
+        var versions = apiVersioningFeature.RawRequestedApiVersions;
+        if (versions.Count == 1)
+            return apiVersioningFeature.RequestedApiVersion?.ToString() ?? "NA";
         if (versions.Count > 0)
-            return string.Join(',', versions);
-        else if (context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>() is { IsApiVersionNeutral: true })
+            return "NA";
+        if (context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>() is { IsApiVersionNeutral: true })
             return "Neutral";
 
         return "Unspecified";

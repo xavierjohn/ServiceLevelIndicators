@@ -3,6 +3,7 @@
 using global::Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -134,13 +135,15 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         ValidateMetrics();
     }
 
-    [Fact]
-    public async Task SLI_Metrics_is_emitted_with_double_API_versions()
+    [Theory]
+    [InlineData("testSingle?api-version=invalid")]
+    [InlineData("testSingle?api-version=2023-08-29&api-version=2023-09-01")]
+    public async Task SLI_Metrics_is_emitted_when_invalid_api_version(string route)
     {
         // Arrange
         _expectedTags = new KeyValuePair<string, object?>[]
         {
-                new KeyValuePair<string, object?>("api_version", "2023-08-29,2023-09-01"),
+                new KeyValuePair<string, object?>("api_version", "NA"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET "),
@@ -150,7 +153,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHost(_meter);
 
         // Act
-        var response = await host.GetTestClient().GetAsync("testDouble?api-version=2023-08-29&api-version=2023-09-01");
+        var response = await host.GetTestClient().GetAsync(route);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -184,7 +187,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                        .UseServiceLevelIndicatorWithApiVersioning()
                        .Use(async (context, next) =>
                         {
-                            await Task.Delay(1);
+                            await Task.Delay(2);
                             await next(context);
                         })
                        .UseEndpoints(endpoints => endpoints.MapControllers());
@@ -221,7 +224,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                        .UseServiceLevelIndicatorWithApiVersioning()
                        .Use(async (context, next) =>
                        {
-                           await Task.Delay(1);
+                           await Task.Delay(2);
                            await next(context);
                        })
                        .UseEndpoints(endpoints => endpoints.MapControllers());
@@ -243,7 +246,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         _output.WriteLine($"Measurement {measurement}");
         instrument.Name.Should().Be("LatencySLI");
         instrument.Unit.Should().Be("ms");
-        measurement.Should().BeGreaterOrEqualTo(1);
+        measurement.Should().BeGreaterOrEqualTo(2);
     }
 
     protected virtual void Dispose(bool disposing)
