@@ -13,24 +13,25 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         await _next(context);
-        var apiVersionfeature = context.ApiVersioningFeature();
-        var slifeature = context.Features.Get<IServiceLevelIndicatorFeature>();
+        AddApiVersionDimensionToSli(context);
+    }
 
-        if (apiVersionfeature != null && slifeature != null)
+    private static void AddApiVersionDimensionToSli(HttpContext context)
+    {
+        var apiVersionfeature = context.ApiVersioningFeature();
+        if (apiVersionfeature == null) return;
+
+        var measuredOperationLatency = context.GetMeasuredOperationLatency();
+        var version = "Unknown";
+        var versions = apiVersionfeature.RawRequestedApiVersions;
+        if (versions.Count > 0)
+            version = string.Join(',', versions);
+        else
         {
-            var apiFeature = context.ApiVersioningFeature();
-            var versions = apiFeature.RawRequestedApiVersions;
-            if (versions.Count > 0)
-            {
-                var version = string.Join(',', versions);
-                slifeature.MeasuredOperationLatency.SetApiVersion(version);
-            }
-            else
-            {
-                var metadata = context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>();
-                if (metadata != null && metadata.IsApiVersionNeutral)
-                    slifeature.MeasuredOperationLatency.SetApiVersion("Neutral");
-            }
+            var metadata = context.GetEndpoint()?.Metadata.GetMetadata<ApiVersionMetadata>();
+            if (metadata != null && metadata.IsApiVersionNeutral)
+                version = "Neutral";
         }
+        measuredOperationLatency.SetApiVersion(version);
     }
 }
