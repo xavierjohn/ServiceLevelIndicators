@@ -133,7 +133,7 @@ eg GET WeatherForecast/Action1
    Example.
 
     ``` csharp
-   public override async Task StoreItem(CaseEvent domainEvent, CancellationToken cancellationToken)
+   public void StoreItem(MyDomainEvent domainEvent)
     {
         var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", attribute);
