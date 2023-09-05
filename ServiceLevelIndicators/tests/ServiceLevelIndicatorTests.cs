@@ -39,15 +39,11 @@ public class ServiceLevelIndicatorTests : IDisposable
 
 
     [Fact]
-    public void Record_latency_test()
+    public void Record_latency()
     {
         // Arrange
-        var serviceId = Guid.NewGuid();
-        var cloud = "Azure";
-        var region = "EastUS";
-        var zone = "Zone1";
-        var customerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
-        var locationId = ServiceLevelIndicator.CreateLocationId(cloud, region, zone);
+        var customerResourceId = "TestResourceId";
+        var locationId = "TestLocationId";
 
         var options = new ServiceLevelIndicatorOptions
         {
@@ -85,14 +81,10 @@ public class ServiceLevelIndicatorTests : IDisposable
     public void Customize_instrument_name()
     {
         // Arrange
-        var serviceId = Guid.NewGuid();
-        var cloud = "public";
-        var region = "EastUS";
-        var zone = "Zone1";
-        var customerResourceId = "TestResourceId";
-        var locationId = ServiceLevelIndicator.CreateLocationId(cloud, region, zone);
-
         const string InstrumentName = "CustomInstrumentName";
+        var customerResourceId = "TestResourceId";
+        var locationId = "TestLocationId";
+
         var options = new ServiceLevelIndicatorOptions
         {
             CustomerResourceId = customerResourceId,
@@ -103,24 +95,17 @@ public class ServiceLevelIndicatorTests : IDisposable
         var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
 
         var operation = "TestOperation";
-        var elapsedTime = 100;
-        var attributes = new KeyValuePair<string, object?>[]
-        {
-            new("Attribute1", "Value1"),
-            new("Attribute2", "Value2")
-        };
+        var elapsedTime = 30;
 
         // Act
-        serviceLevelIndicator.RecordLatency(operation, elapsedTime, attributes);
+        serviceLevelIndicator.RecordLatency(operation, elapsedTime);
 
         // Assert
         _expectedTags = new KeyValuePair<string, object?>[]
         {
             new KeyValuePair<string, object?> ( "CustomerResourceId", customerResourceId ),
             new KeyValuePair<string, object?> ( "LocationId", locationId ),
-            new KeyValuePair<string, object?> ( "Operation", operation ),
-            new KeyValuePair<string, object?> ( "Attribute1", "Value1" ),
-            new KeyValuePair<string, object?> ( "Attribute2", "Value2" )
+            new KeyValuePair<string, object?> ( "Operation", operation )
         };
 
         ValidateMetrics(elapsedTime, InstrumentName);
