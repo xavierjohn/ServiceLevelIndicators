@@ -8,7 +8,7 @@ Tags: SLI, OpenTelemetry, Metrics.
 Service level indicators (SLIs) are metrics used to measure the performance of a service.
 They are typically used in the context of service level agreements (SLAs),
 which are contracts between a service provider and its customers that define the expected level of service.
-SLIs are used to track the actual performance of the service against the agreed-upon SLA.
+SLIs are used to track the actual performance of the service against the agreed upon SLA.
 
 There are many different types of SLIs that can be used to measure the performance of a service. Some common examples include:
 
