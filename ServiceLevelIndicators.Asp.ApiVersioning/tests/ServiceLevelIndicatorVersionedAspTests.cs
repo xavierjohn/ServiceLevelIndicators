@@ -1,7 +1,9 @@
 ﻿namespace ServiceLevelIndicators.Asp.ApiVersioning.Tests;
 
+using global::Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +16,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
+    private KeyValuePair<string, object?>[] _actualTags;
+    private KeyValuePair<string, object?>[] _expectedTags;
     private bool _callbackCalled;
     private bool _disposedValue;
 
@@ -30,35 +34,130 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                     listener.EnableMeasurementEvents(instrument);
             }
         };
-    }
-
-    [Fact]
-    public async Task Default_SLI_Metrics_is_emitted_with_API_version()
-    {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
+        _actualTags = Array.Empty<KeyValuePair<string, object?>>();
+        _expectedTags = Array.Empty<KeyValuePair<string, object?>>();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_API_version_as_query_parameter()
+    {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+            new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+            new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
+            new KeyValuePair<string, object?>("Status", "Ok"),
+            new KeyValuePair<string, object?>("HttpStatusCode", 200),
+            new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+        };
         using var host = await CreateHost(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test?api-version=2023-08-29");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        // Act
+        var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29");
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_API_version_as_header()
+    {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET Test"),
+                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("HttpStatusCode", 200),
                 new KeyValuePair<string, object?>("api_version", "2023-08-29"),
-            };
+        };
+        using var host = await CreateHost(_meter);
+        var httpClient = host.GetTestClient();
+        httpClient.DefaultRequestHeaders.Add("api-version", "2023-08-29");
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
+        // Act
+        var response = await httpClient.GetAsync("testSingle");
 
-        _callbackCalled.Should().BeTrue();
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_neutral_API_version()
+    {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+        {
+                new KeyValuePair<string, object?>("api_version", "Neutral"),
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
+                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+        };
+        using var host = await CreateHost(_meter);
+
+        // Act
+        var response = await host.GetTestClient().GetAsync("testNeutral");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_default_API_version()
+    {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+        {
+                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
+                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+        };
+        using var host = await CreateHostWithDefaultApiVersion(_meter);
+
+        // Act
+        var response = await host.GetTestClient().GetAsync("testSingle");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        ValidateMetrics();
+    }
+
+    [Theory]
+    [InlineData("testSingle?api-version=invalid")]
+    [InlineData("testDouble?api-version=2023-08-29&api-version=2023-09-01")]
+    public async Task SLI_Metrics_is_emitted_when_invalid_api_version(string route)
+    {
+        // Arrange
+        _expectedTags = new KeyValuePair<string, object?>[]
+        {
+                new KeyValuePair<string, object?>("api_version", string.Empty),
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET "),
+                new KeyValuePair<string, object?>("Status", "Error"),
+                new KeyValuePair<string, object?>("HttpStatusCode", 400),
+        };
+        using var host = await CreateHost(_meter);
+
+        // Act
+        var response = await host.GetTestClient().GetAsync(route);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        ValidateMetrics();
     }
 
     private static async Task<IHost> CreateHost(Meter meter) =>
@@ -70,7 +169,11 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 .ConfigureServices(services =>
                 {
                     services.AddControllers();
-                    services.AddApiVersioning().AddMvc();
+                    services.AddApiVersioning(
+                        options => options.ApiVersionReader = ApiVersionReader.Combine(
+                            new QueryStringApiVersionReader(),
+                            new HeaderApiVersionReader() { HeaderNames = { "api-version" } }))
+                    .AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
                         options.Meter = meter;
@@ -82,22 +185,68 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 {
                     app.UseRouting()
                        .UseServiceLevelIndicatorWithApiVersioning()
+                       .Use(async (context, next) =>
+                        {
+                            await Task.Delay(2);
+                            await next(context);
+                        })
                        .UseEndpoints(endpoints => endpoints.MapControllers());
                 });
         })
         .StartAsync();
 
-    private void ValidateMetrics(Instrument instrument,
-        long measurement,
-        ReadOnlySpan<KeyValuePair<string, object?>> tags,
-        KeyValuePair<string, object?>[] expectedTags)
+    private static async Task<IHost> CreateHostWithDefaultApiVersion(Meter meter) =>
+    await new HostBuilder()
+        .ConfigureWebHost(webBuilder =>
+        {
+            webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.AddControllers();
+                    services.AddApiVersioning(options
+                        =>
+                    {
+                        options.AssumeDefaultVersionWhenUnspecified = true;
+                        options.DefaultApiVersion = new ApiVersion(new DateOnly(2023, 8, 29));
+                    })
+                    .AddMvc();
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                    });
+                })
+                .Configure(app =>
+                {
+                    app.UseRouting()
+                       .UseServiceLevelIndicatorWithApiVersioning()
+                       .Use(async (context, next) =>
+                       {
+                           await Task.Delay(2);
+                           await next(context);
+                       })
+                       .UseEndpoints(endpoints => endpoints.MapControllers());
+                });
+        })
+        .StartAsync();
+
+    private void ValidateMetrics()
     {
+        _callbackCalled.Should().BeTrue();
+        _actualTags.Should().BeEquivalentTo(_expectedTags);
+    }
+
+    private void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+    {
+        _actualTags = tags.ToArray();
         _callbackCalled = true;
+
+        _output.WriteLine($"Measurement {measurement}");
         instrument.Name.Should().Be("LatencySLI");
         instrument.Unit.Should().Be("ms");
-        measurement.Should().BeGreaterOrEqualTo(1);
-        _output.WriteLine($"Measurement {measurement}");
-        tags.ToArray().Should().BeEquivalentTo(expectedTags);
+        measurement.Should().BeGreaterOrEqualTo(2);
     }
 
     protected virtual void Dispose(bool disposing)

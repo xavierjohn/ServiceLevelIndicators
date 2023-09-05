@@ -5,20 +5,35 @@ Tags: SLI, OpenTelemetry, Metrics.
 ---
 
 # Service Level Indicators
+Service level indicators (SLIs) are metrics used to measure the performance of a service.
+They are typically used in the context of service level agreements (SLAs),
+which are contracts between a service provider and its customers that define the expected level of service.
+SLIs are used to track the actual performance of the service against the agreed upon SLA.
 
-Service Level Indicator library will help emit latency metrics for each API operation. The metrics is emitted via OpenTelemetry and can be used to monitor service level agreements.
+There are many different types of SLIs that can be used to measure the performance of a service. Some common examples include:
 
-By default an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
+- Availability: This measures the percentage of time that a service is available and functioning properly.
+- Response time: This measures the amount of time it takes for a service to respond to a request.
+- Throughput: This measures the amount of work that a service can handle in a given period of time.
+- Error rate: This measures the percentage of requests that result in errors.
+
+SLIs are important because they provide a way to objectively measure the performance of a service.
+By tracking SLIs over time, service providers can identify trends and make improvements to the service to ensure that it meets the needs of its customers.
+
+## Service Level Indicator Library
+Service Level Indicator library will help emit latency metrics for each API operation to help monitor the service performance over time.
+The metrics is emitted via standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-7.0).
+
+By default, an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 * CustomerResourceId - The customer resource id.
-* LocationId - The location id. Where is the service running? eg. Public cloud, West US 3 region.
-* Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information.
+* LocationId - The location id of where the service running. eg. Public cloud, West US 3 region.
+* Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
 * HttpStatusCode - The http status code.
 * api_version - If [API Versioning](https://github.com/dotnet/aspnet-api-versioning) is used, the version of the API.
 
-## Prerequisites
+## Usage
 
-The library targets .net core and requires the service to use OpenTelemetry https://opentelemetry.io/.
 
 1. Create and register a metrics meter with the dependency injection.
 
@@ -64,17 +79,18 @@ The library targets .net core and requires the service to use OpenTelemetry http
 
 4.  Add the middleware to the pipeline.
         
-   If API versioning is used, Use `app.UseServiceLevelIndicatorWithApiVersioning();`
+   If API versioning is used and want api_version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();`
+   
    Otherwise, `app.UseServiceLevelIndicator();`
         
 
-### Usage
+### Customizations
 
 Once the Prerequisites are done, all controllers will emit SLI information.
-The default operation name is in the format HTTP Method_Controller_Action. 
-eg GET WeatherForecast_Get_WeatherForecast/Action1
+The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;. 
+eg GET WeatherForecast/Action1
 
-1. To override the default operation name add the attribute `[ServiceLevelIndicator]` on the method.
+* To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
 
    Example.
 
@@ -84,17 +100,12 @@ eg GET WeatherForecast_Get_WeatherForecast/Action1
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
     ```
 
-2. To set the CustomerResourceId within an API method, get the `IServiceLevelIndicatorFeature` and set it.
-
-    ``` csharp
-    [HttpGet("{customerResourceId}")]
-    public IEnumerable<WeatherForecast> Get(string customerResourceId)
-    {
-        var sliFeature = HttpContext.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>();
-        sliFeature.MeasureOperationLatency.CustomerResourceId = customerResourceId;
-        return GetWeather();
-    }
+* To override the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
+    ```csharp
+        [HttpGet("get-by-zip-code/{zipCode}")]
+        public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
     ```
+ 
     Or use `GetMeasuredOperationLatency` extension method.
         
     ``` csharp
@@ -105,29 +116,24 @@ eg GET WeatherForecast_Get_WeatherForecast/Action1
         return GetWeather();
     }
     ```
-or mark the parameter with the attribute `[CustomerResourceId]`
-```csharp
-    [HttpGet("get-by-zip-code/{zipCode}")]
-    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
-```
 
-3. To add custom Open Telemetry attributes.
+* To add custom Open Telemetry attributes.
     ``` csharp 
         HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
     ```
 
-4. To prevent automatically emitting SLI information on all controllers, set the option.
+* To prevent automatically emitting SLI information on all controllers, set the option.
     ``` csharp 
         ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
     ```
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
     
-5. To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
+* To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
 
    Example.
 
     ``` csharp
-   public override async Task StoreItem(CaseEvent domainEvent, CancellationToken cancellationToken)
+   public void StoreItem(MyDomainEvent domainEvent)
     {
         var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", attribute);
