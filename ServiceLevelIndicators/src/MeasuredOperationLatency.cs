@@ -37,7 +37,7 @@ public class MeasuredOperationLatency : IDisposable
     public void SetState(HttpStatusCode httpStatusCode) => _httpStatusCode = (int)httpStatusCode;
     public void SetHttpStatusCode(int httpStatusCode) => _httpStatusCode = httpStatusCode;
 
-    public void SetApiVersion(string apiVersion) => AddAttribute("api_version", apiVersion);
+    public void SetApiVersion(string apiVersion) => AddAttribute(_serviceLevelIndicator.ServiceLevelIndicatorOptions.ApiVersionAttributeName, apiVersion);
 
     public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
 
