@@ -22,9 +22,9 @@ By tracking SLIs over time, service providers can identify trends and make impro
 
 ## Service Level Indicator Library
 Service Level Indicator library will help emit latency metrics for each API operation to help monitor the service performance over time.
-The metrics is emitted via standard [.Net Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-7.0).
+The metrics is emitted via standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-7.0).
 
-By default an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
+By default, an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 * CustomerResourceId - The customer resource id.
 * LocationId - The location id of where the service running. eg. Public cloud, West US 3 region.
