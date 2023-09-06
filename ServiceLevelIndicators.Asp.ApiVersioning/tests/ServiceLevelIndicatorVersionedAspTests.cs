@@ -50,7 +50,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
             new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
             new KeyValuePair<string, object?>("Status", "Ok"),
-            new KeyValuePair<string, object?>("HttpStatusCode", 200),
+            new KeyValuePair<string, object?>("http.response.status_code", 200),
             new KeyValuePair<string, object?>("api_version", "2023-08-29"),
         };
         using var host = await CreateHost();
@@ -73,7 +73,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+                new KeyValuePair<string, object?>("http.response.status_code", 200),
                 new KeyValuePair<string, object?>("api_version", "2023-08-29"),
         };
         using var host = await CreateHost();
@@ -99,7 +99,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+                new KeyValuePair<string, object?>("http.response.status_code", 200),
         };
         using var host = await CreateHost();
 
@@ -122,7 +122,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+                new KeyValuePair<string, object?>("http.response.status_code", 200),
         };
         using var host = await CreateHostWithDefaultApiVersion();
 
@@ -147,7 +147,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET "),
                 new KeyValuePair<string, object?>("Status", "Error"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 400),
+                new KeyValuePair<string, object?>("http.response.status_code", 400),
         };
         using var host = await CreateHost();
 
@@ -170,7 +170,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("HttpStatusCode", 200),
+                new KeyValuePair<string, object?>("http.response.status_code", 200),
         };
         using var host = await CreateHostWithCustomApiVersionAttribute();
 

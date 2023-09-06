@@ -11,7 +11,6 @@ public class MeasuredOperationLatency : IDisposable
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly Stopwatch _stopWatch;
     private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
-    private int _httpStatusCode;
     private readonly object _disposeLock = new();
 
     public MeasuredOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
@@ -34,9 +33,6 @@ public class MeasuredOperationLatency : IDisposable
     public List<KeyValuePair<string, object?>> Attributes { get; }
 
     public void SetState(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
-    public void SetState(HttpStatusCode httpStatusCode) => _httpStatusCode = (int)httpStatusCode;
-    public void SetHttpStatusCode(int httpStatusCode) => _httpStatusCode = httpStatusCode;
-
     public void SetApiVersion(string apiVersion) => AddAttribute(_serviceLevelIndicator.ServiceLevelIndicatorOptions.ApiVersionAttributeName, apiVersion);
 
     public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
@@ -52,8 +48,6 @@ public class MeasuredOperationLatency : IDisposable
                     _stopWatch.Stop();
                     var elapsedTime = _stopWatch.ElapsedMilliseconds;
                     Attributes.Add(new KeyValuePair<string, object?>("Status", _activityStatusCode.ToString()));
-                    if (_httpStatusCode > 0)
-                        Attributes.Add(new KeyValuePair<string, object?>("HttpStatusCode", _httpStatusCode));
                     _serviceLevelIndicator.RecordLatency(Operation, CustomerResourceId, elapsedTime, Attributes.ToArray());
                 }
 
