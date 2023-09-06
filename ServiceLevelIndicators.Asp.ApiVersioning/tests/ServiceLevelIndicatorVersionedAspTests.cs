@@ -51,7 +51,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
             new KeyValuePair<string, object?>("Status", "Ok"),
             new KeyValuePair<string, object?>("http.response.status_code", 200),
-            new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+            new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
         };
         using var host = await CreateHost();
 
@@ -74,7 +74,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
                 new KeyValuePair<string, object?>("Status", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
-                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+                new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
         };
         using var host = await CreateHost();
         var httpClient = host.GetTestClient();
@@ -94,7 +94,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         // Arrange
         _expectedTags = new KeyValuePair<string, object?>[]
         {
-                new KeyValuePair<string, object?>("api_version", "Neutral"),
+                new KeyValuePair<string, object?>("http.api.version", "Neutral"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
@@ -117,7 +117,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         // Arrange
         _expectedTags = new KeyValuePair<string, object?>[]
         {
-                new KeyValuePair<string, object?>("api_version", "2023-08-29"),
+                new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
@@ -142,7 +142,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         // Arrange
         _expectedTags = new KeyValuePair<string, object?>[]
         {
-                new KeyValuePair<string, object?>("api_version", string.Empty),
+                new KeyValuePair<string, object?>("http.api.version", string.Empty),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET "),
@@ -156,29 +156,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        ValidateMetrics();
-    }
-
-    [Fact]
-    public async Task SLI_Metrics_is_emitted_with_custom_API_version_attribute()
-    {
-        // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-                new KeyValuePair<string, object?>("CustomApiVersion", "2023-08-29"),
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
-        };
-        using var host = await CreateHostWithCustomApiVersionAttribute();
-
-        // Act
-        var response = await host.GetTestClient().GetAsync("testSingle");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
         ValidateMetrics();
     }
 
@@ -253,44 +230,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 });
         })
         .StartAsync();
-
-    private async Task<IHost> CreateHostWithCustomApiVersionAttribute() =>
-        await new HostBuilder()
-            .ConfigureWebHost(webBuilder =>
-            {
-                webBuilder
-                    .UseTestServer()
-                    .ConfigureServices(services =>
-                    {
-                        services.AddControllers();
-                        services.AddApiVersioning(options
-                            =>
-                        {
-                            options.AssumeDefaultVersionWhenUnspecified = true;
-                            options.DefaultApiVersion = new ApiVersion(new DateOnly(2023, 8, 29));
-                        })
-                        .AddMvc();
-                        services.AddServiceLevelIndicator(options =>
-                        {
-                            options.Meter = _meter;
-                            options.CustomerResourceId = "TestCustomerResourceId";
-                            options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-                            options.ApiVersionAttributeName = "CustomApiVersion";
-                        });
-                    })
-                    .Configure(app =>
-                    {
-                        app.UseRouting()
-                           .UseServiceLevelIndicatorWithApiVersioning()
-                           .Use(async (context, next) =>
-                           {
-                               await Task.Delay(2);
-                               await next(context);
-                           })
-                           .UseEndpoints(endpoints => endpoints.MapControllers());
-                    });
-            })
-            .StartAsync();
 
     private void ValidateMetrics()
     {

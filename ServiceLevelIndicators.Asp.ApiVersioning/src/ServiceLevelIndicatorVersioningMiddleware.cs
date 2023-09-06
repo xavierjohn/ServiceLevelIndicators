@@ -17,7 +17,7 @@ internal sealed class ServiceLevelIndicatorVersioningMiddleware
     }
 
     private static void AddApiVersionDimensionToSli(HttpContext context)
-        => context.GetMeasuredOperationLatency().SetApiVersion(GetApiVersion(context));
+        => context.GetMeasuredOperationLatency().AddAttribute("http.api.version", GetApiVersion(context));
 
     private static string GetApiVersion(HttpContext context)
     {

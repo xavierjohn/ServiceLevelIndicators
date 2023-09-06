@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
 
 public class MeasuredOperationLatency : IDisposable
 {
@@ -33,7 +32,6 @@ public class MeasuredOperationLatency : IDisposable
     public List<KeyValuePair<string, object?>> Attributes { get; }
 
     public void SetState(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
-    public void SetApiVersion(string apiVersion) => AddAttribute(_serviceLevelIndicator.ServiceLevelIndicatorOptions.ApiVersionAttributeName, apiVersion);
 
     public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
 

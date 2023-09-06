@@ -34,10 +34,4 @@ public class ServiceLevelIndicatorOptions
     /// If false, use the ServiceLevelIndicator Attribute to emit.
     /// </summary>
     public bool AutomaticallyEmitted { get; set; } = true;
-
-    /// <summary>
-    /// The attribute that will contain the API version information.
-    /// </summary>
-    public string ApiVersionAttributeName { get; set; } = "api_version";
-
 }
