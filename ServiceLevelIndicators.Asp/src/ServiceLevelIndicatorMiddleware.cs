@@ -46,7 +46,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
     private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperationLatency measuredOperation)
     {
         var statusCode = context.Response.StatusCode;
-        measuredOperation.SetHttpStatusCode(statusCode);
+        measuredOperation.AddAttribute("http.response.status_code", statusCode);
         measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
     }
 
