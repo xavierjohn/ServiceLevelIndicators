@@ -72,8 +72,7 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     ``` csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        Guid serviceTree = Guid.NewGuid();
-        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceTree);
+        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId); // Override with calling service id or customer Id.
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     });
     ```
