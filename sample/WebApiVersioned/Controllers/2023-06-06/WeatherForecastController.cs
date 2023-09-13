@@ -94,7 +94,7 @@ public class WeatherForecastController : ControllerBase
         var attribute = new KeyValuePair<string, object?>("wait_seconds", seconds);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("background_work", attribute);
         await Task.Delay(TimeSpan.FromSeconds(seconds));
-        measuredOperation.SetState(System.Diagnostics.ActivityStatusCode.Ok);
+        measuredOperation.SetStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
     }
 
     /// <summary>

@@ -49,7 +49,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };
 
@@ -87,7 +87,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "TestOperation"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };
 
@@ -115,7 +115,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("CustomerResourceId", "myId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test/customer_resourceid/{id}"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };
 
@@ -143,7 +143,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test/custom_attribute/{value}"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
                 new KeyValuePair<string, object?>("CustomAttribute", "mickey"),
             };
@@ -196,7 +196,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test/send_sli"),
-                new KeyValuePair<string, object?>("Status", "Ok"),
+                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };
 
