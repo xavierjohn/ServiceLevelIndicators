@@ -254,6 +254,11 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                     {
                         app.UseRouting()
                            .UseServiceLevelIndicator()
+                           .Use(async (context, next) =>
+                           {
+                               await Task.Delay(2);
+                               await next(context);
+                           })
                            .UseEndpoints(endpoints => endpoints.MapControllers());
                     });
             })

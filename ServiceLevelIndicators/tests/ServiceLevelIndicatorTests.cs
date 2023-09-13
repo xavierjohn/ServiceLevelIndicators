@@ -77,6 +77,47 @@ public class ServiceLevelIndicatorTests : IDisposable
         ValidateMetrics(elapsedTime);
     }
 
+
+    [Fact]
+    public async Task Will_measure_code_block()
+    {
+        // Arrange
+        var customerResourceId = "TestResourceId";
+        var locationId = "TestLocationId";
+        int sleepTime = 1000;
+
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = customerResourceId,
+            LocationId = locationId,
+            Meter = _meter
+        };
+        var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
+
+
+        // Act
+        await MeasureCodeBlock(serviceLevelIndicator);
+
+        // Assert
+        _expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new KeyValuePair<string, object?> ( "CustomerResourceId", customerResourceId ),
+            new KeyValuePair<string, object?> ( "LocationId", locationId ),
+            new KeyValuePair<string, object?> ( "Operation", "SleepWorker" ),
+            new KeyValuePair<string, object?> ( "activity.status_code", nameof(System.Diagnostics.ActivityStatusCode.Ok)),
+        };
+
+        ValidateMetrics(sleepTime, approx: 50);
+
+        async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
+        {
+            using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("SleepWorker");
+            await Task.Delay(sleepTime);
+            measuredOperation.SetStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+        }
+    }
+
+
     [Fact]
     public void Customize_instrument_name()
     {
@@ -111,13 +152,17 @@ public class ServiceLevelIndicatorTests : IDisposable
         ValidateMetrics(elapsedTime, InstrumentName);
     }
 
-    private void ValidateMetrics(long elapsedTime, string instrumentName = "LatencySLI")
+    private void ValidateMetrics(int elapsedTime, string instrumentName = "LatencySLI", int? approx = null)
     {
         _callbackCalled.Should().BeTrue();
         _actualTags.Should().BeEquivalentTo(_expectedTags);
         _instrument!.Name.Should().Be(instrumentName);
         _instrument.Unit.Should().Be("ms");
-        _measurement.Should().Be(elapsedTime);
+
+        if (approx.HasValue)
+            _measurement.Should().BeInRange(elapsedTime, elapsedTime + approx.Value);
+        else
+            _measurement.Should().Be(elapsedTime);
     }
 
     private void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
