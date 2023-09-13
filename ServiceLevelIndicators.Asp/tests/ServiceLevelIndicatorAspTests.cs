@@ -32,7 +32,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task Default_SLI_Metrics_is_emitted()
+    public async Task SLI_Metrics_is_emitted_for_successful_API_call()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
@@ -51,6 +51,34 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("Operation", "GET Test"),
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_for_failed_API_call()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHostWithSli(_meter);
+
+        var response = await host.GetTestClient().GetAsync("test/bad_request");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET Test/bad_request"),
+                new KeyValuePair<string, object?>("activity.status_code", "Error"),
+                new KeyValuePair<string, object?>("http.response.status_code", 400),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -252,6 +280,11 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                     {
                         app.UseRouting()
                            .UseServiceLevelIndicator()
+                           .Use(async (context, next) =>
+                           {
+                               await Task.Delay(2);
+                               await next(context);
+                           })
                            .UseEndpoints(endpoints => endpoints.MapControllers());
                     });
             })
