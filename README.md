@@ -29,8 +29,9 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 * CustomerResourceId - The customer resource id.
 * LocationId - The location id of where the service running. eg. Public cloud, West US 3 region.
 * Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
-* http.response.status.code - The http status code.
-* http.api.version - If [API Versioning](https://github.com/dotnet/aspnet-api-versioning) is used, the version of the API.
+* activity.status.code - The activity status code tells if the operation succeeded or failed. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
+* http.response.status.code - The http status code is added when ServiceLevelIndicators.Asp package is used. 
+* http.api.version - API Version is added when ServiceLevelIndicators.Asp.Versioning is used in conjuction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
 
 ## Usage
 
@@ -61,7 +62,8 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
         public void Configure(ServiceLevelIndicatorOptions options) => options.Meter = meters.Meter;
     }
 
-    builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
+    builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
+        ConfigureServiceLevelIndicatorOptions>());
     ```
 
 3. Add ServiceLevelIndicator into the dependency injection.
@@ -71,8 +73,9 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     ``` csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        Guid serviceTree = Guid.NewGuid();
-        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceTree);
+        // Override with calling service id or customer Id.
+        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
+        
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     });
     ```
@@ -149,7 +152,7 @@ To view the metrics locally.
 1. Run Docker Desktop
 2. Run [sample\DockerOpenTelemetry\run.cmd](sample\DockerOpenTelemetry\run.cmd) to download and run zipkin and prometheus.
 3. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-4. You should see the SLI metrics in prometheus under the meter `LatencySLI_bucket` where the `Operation = "GET WeatherForeCase"`, `http.response.status.code = 200`, `LocationId = "public_West US 3"`, `Status = Ok`
+4. You should see the SLI metrics in prometheus under the meter `LatencySLI_bucket` where the `Operation = "GET WeatherForeCase"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status_code = Ok`
 ![SLI](assets/prometheus.jpg)
 5. If you run the sample with API Versioning, you will see something similar to the following.
 ![SLI](assets/versioned.jpg)

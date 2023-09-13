@@ -47,7 +47,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
     {
         var statusCode = context.Response.StatusCode;
         measuredOperation.AddAttribute("http.response.status_code", statusCode);
-        measuredOperation.SetState((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
+        measuredOperation.SetStatusCode((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
     }
 
 

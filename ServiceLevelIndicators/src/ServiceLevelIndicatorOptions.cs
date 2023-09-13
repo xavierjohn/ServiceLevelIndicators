@@ -30,6 +30,12 @@ public class ServiceLevelIndicatorOptions
     public string InstrumentName { get; set; } = "LatencySLI";
 
     /// <summary>
+    /// Activity Status Code attribute name.
+    /// [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0)
+    /// </summary>
+    public string ActivityStatusCodeAttributeName { get; set; } = "activity.status_code";
+
+    /// <summary>
     /// Automatically emit for all API methods.
     /// If false, use the ServiceLevelIndicator Attribute to emit.
     /// </summary>

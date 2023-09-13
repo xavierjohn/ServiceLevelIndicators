@@ -6,11 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 public class TestController : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> Get()
-    {
-        await Task.Delay(1);
-        return Ok("Hello World!");
-    }
+    public IActionResult Get() => Ok("Hello World!");
+
+    [HttpGet("bad_request")]
+    public IActionResult Bad() => BadRequest("Sad World!");
 
     [HttpGet("operation")]
     [ServiceLevelIndicator(Operation = "TestOperation")]
@@ -28,9 +27,5 @@ public class TestController : ControllerBase
 
     [HttpGet("send_sli")]
     [ServiceLevelIndicator]
-    public async Task<IActionResult> SendSLI()
-    {
-        await Task.Delay(1);
-        return Ok("Hello");
-    }
+    public IActionResult SendSLI() => Ok("Hello");
 }
