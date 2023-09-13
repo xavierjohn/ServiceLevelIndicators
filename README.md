@@ -62,7 +62,8 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
         public void Configure(ServiceLevelIndicatorOptions options) => options.Meter = meters.Meter;
     }
 
-    builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
+    builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
+        ConfigureServiceLevelIndicatorOptions>());
     ```
 
 3. Add ServiceLevelIndicator into the dependency injection.
@@ -72,7 +73,9 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     ``` csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId); // Override with calling service id or customer Id.
+        // Override with calling service id or customer Id.
+        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
+        
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     });
     ```
