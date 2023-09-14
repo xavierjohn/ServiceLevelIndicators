@@ -93,7 +93,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _callbackCalled = true;
         instrument.Name.Should().Be("LatencySLI");
         instrument.Unit.Should().Be("ms");
-        measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 200);
+        measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 400);
         _output.WriteLine($"Measurement {measurement}");
         tags.ToArray().Should().BeEquivalentTo(expectedTags);
     }

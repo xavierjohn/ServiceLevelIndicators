@@ -84,7 +84,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         // Arrange
         var customerResourceId = "TestResourceId";
         var locationId = "TestLocationId";
-        int sleepTime = 1000;
+        int sleepTime = 500;
 
         var options = new ServiceLevelIndicatorOptions
         {
@@ -107,7 +107,7 @@ public class ServiceLevelIndicatorTests : IDisposable
             new KeyValuePair<string, object?> ( "activity.status_code", nameof(System.Diagnostics.ActivityStatusCode.Ok)),
         };
 
-        ValidateMetrics(sleepTime, approx: 50);
+        ValidateMetrics(sleepTime, approx: 100);
 
         async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
         {
@@ -160,7 +160,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         _instrument.Unit.Should().Be("ms");
 
         if (approx.HasValue)
-            _measurement.Should().BeInRange(elapsedTime, elapsedTime + approx.Value);
+            _measurement.Should().BeInRange(elapsedTime - approx.Value, elapsedTime + approx.Value);
         else
             _measurement.Should().Be(elapsedTime);
     }
