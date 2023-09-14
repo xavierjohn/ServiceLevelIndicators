@@ -12,6 +12,7 @@ using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 {
+    private const int MillisecondsDelay = 200;
     private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
@@ -186,7 +187,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                        .UseServiceLevelIndicatorWithApiVersioning()
                        .Use(async (context, next) =>
                         {
-                            await Task.Delay(2);
+                            await Task.Delay(MillisecondsDelay);
                             await next(context);
                         })
                        .UseEndpoints(endpoints => endpoints.MapControllers());
@@ -223,7 +224,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                        .UseServiceLevelIndicatorWithApiVersioning()
                        .Use(async (context, next) =>
                        {
-                           await Task.Delay(2);
+                           await Task.Delay(MillisecondsDelay);
                            await next(context);
                        })
                        .UseEndpoints(endpoints => endpoints.MapControllers());
@@ -245,7 +246,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         _output.WriteLine($"Measurement {measurement}");
         instrument.Name.Should().Be("LatencySLI");
         instrument.Unit.Should().Be("ms");
-        measurement.Should().BeGreaterOrEqualTo(2);
+        measurement.Should().BeGreaterOrEqualTo(MillisecondsDelay);
     }
 
     protected virtual void Dispose(bool disposing)
