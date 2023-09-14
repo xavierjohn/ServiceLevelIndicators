@@ -10,6 +10,7 @@ using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorAspTests : IDisposable
 {
+    private const int MillisecondsDelay = 200;
     private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
@@ -92,7 +93,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _callbackCalled = true;
         instrument.Name.Should().Be("LatencySLI");
         instrument.Unit.Should().Be("ms");
-        measurement.Should().BeGreaterOrEqualTo(1);
+        measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 200);
         _output.WriteLine($"Measurement {measurement}");
         tags.ToArray().Should().BeEquivalentTo(expectedTags);
     }
@@ -256,7 +257,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                            .UseServiceLevelIndicator()
                            .Use(async (context, next) =>
                            {
-                               await Task.Delay(2);
+                               await Task.Delay(MillisecondsDelay);
                                await next(context);
                            })
                            .UseEndpoints(endpoints => endpoints.MapControllers());
@@ -287,7 +288,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                            .UseServiceLevelIndicator()
                            .Use(async (context, next) =>
                            {
-                               await Task.Delay(2);
+                               await Task.Delay(MillisecondsDelay);
                                await next(context);
                            })
                            .UseEndpoints(endpoints => endpoints.MapControllers());
