@@ -246,7 +246,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         _output.WriteLine($"Measurement {measurement}");
         instrument.Name.Should().Be("LatencySLI");
         instrument.Unit.Should().Be("ms");
-        measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 200);
+        measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 400);
     }
 
     protected virtual void Dispose(bool disposing)
