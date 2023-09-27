@@ -113,7 +113,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         {
             using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("SleepWorker");
             await Task.Delay(sleepTime);
-            measuredOperation.SetStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+            measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
         }
     }
 

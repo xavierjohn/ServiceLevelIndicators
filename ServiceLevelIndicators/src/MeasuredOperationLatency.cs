@@ -31,7 +31,7 @@ public class MeasuredOperationLatency : IDisposable
     // OTEL Attributes to emit
     public List<KeyValuePair<string, object?>> Attributes { get; }
 
-    public void SetStatusCode(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
+    public void SetActivityStatusCode(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
 
     public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
 

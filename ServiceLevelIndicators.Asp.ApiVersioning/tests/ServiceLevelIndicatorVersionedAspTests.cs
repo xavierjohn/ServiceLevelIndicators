@@ -151,7 +151,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET "),
-                new KeyValuePair<string, object?>("activity.status_code", "Error"),
+                new KeyValuePair<string, object?>("activity.status_code", "Unset"),
                 new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("http.response.status_code", 400),
         };
