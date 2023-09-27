@@ -1,6 +1,7 @@
 ﻿namespace ServiceLevelIndicators;
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -48,7 +49,13 @@ internal sealed class ServiceLevelIndicatorMiddleWare
     {
         var statusCode = context.Response.StatusCode;
         measuredOperation.AddAttribute("http.response.status_code", statusCode);
-        measuredOperation.SetStatusCode((statusCode < StatusCodes.Status400BadRequest) ? System.Diagnostics.ActivityStatusCode.Ok : System.Diagnostics.ActivityStatusCode.Error);
+        var activityCode = statusCode switch
+        {
+            >= StatusCodes.Status500InternalServerError => ActivityStatusCode.Error,
+            >= StatusCodes.Status200OK and < StatusCodes.Status300MultipleChoices => ActivityStatusCode.Ok,
+            _ => ActivityStatusCode.Unset,
+        };
+        measuredOperation.SetActivityStatusCode(activityCode);
     }
 
 
