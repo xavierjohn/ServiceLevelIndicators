@@ -29,8 +29,9 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 * CustomerResourceId - The customer resource id.
 * LocationId - The location id of where the service running. eg. Public cloud, West US 3 region.
 * Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
-* activity.status.code - The activity status code tells if the operation succeeded or failed. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
-* http.response.status.code - The http status code is added when ServiceLevelIndicators.Asp package is used. 
+* activity.status_code - The activity status code tells if the operation succeeded or failed. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
+* http.response.status_code - The http status code is added when ServiceLevelIndicators.Asp package is used. 
+* http.request.method - The http request method (GET, POST, etc) is added when ServiceLevelIndicators.Asp package is used. 
 * http.api.version - API Version is added when ServiceLevelIndicators.Asp.Versioning is used in conjuction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
 
 ## Usage
