@@ -6,12 +6,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 
-internal sealed class ServiceLevelIndicatorMiddleware
+internal sealed class ServiceLevelIndicatorMiddleWare
 {
     private readonly RequestDelegate _next;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
 
-    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator)
+    public ServiceLevelIndicatorMiddleWare(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator)
     {
         _next = next;
         _serviceLevelIndicator = serviceLevelIndicator;
@@ -32,6 +32,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         AddSliFeatureToHttpContext(context, measuredOperation);
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
+        measuredOperation.AddAttribute("http.request.method", context.Request.Method);
         RemoveSliFeatureFromHttpContext(context);
     }
 
@@ -72,7 +73,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
     private void AddSliFeatureToHttpContext(HttpContext context, MeasuredOperationLatency measuredOperation)
     {
         if (context.Features.Get<IServiceLevelIndicatorFeature>() != null)
-            throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleware)} can be configured for an application.");
+            throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleWare)} can be configured for an application.");
 
         context.Features.Set<IServiceLevelIndicatorFeature>(new ServiceLevelIndicatorFeature(measuredOperation));
     }

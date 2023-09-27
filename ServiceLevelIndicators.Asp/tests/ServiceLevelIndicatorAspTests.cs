@@ -51,6 +51,36 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test"),
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+                new KeyValuePair<string, object?>("http.request.method", "GET"),
+                new KeyValuePair<string, object?>("http.response.status_code", 200),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_for_successful_POST_API_call()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHostWithSli(_meter);
+
+        var response = await host.GetTestClient().PostAsync("test", new StringContent("Hi"));
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "POST Test"),
+                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+                new KeyValuePair<string, object?>("http.request.method", "POST"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };
 
@@ -79,6 +109,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test/bad_request"),
                 new KeyValuePair<string, object?>("activity.status_code", "Error"),
+                new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("http.response.status_code", 400),
             };
 
@@ -117,6 +148,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "TestOperation"),
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+                new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };
 
@@ -145,6 +177,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test/customer_resourceid/{id}"),
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+                new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };
 
@@ -173,6 +206,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test/custom_attribute/{value}"),
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+                new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
                 new KeyValuePair<string, object?>("CustomAttribute", "mickey"),
             };
@@ -184,7 +218,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task When_automitically_emit_SLI_is_Off_do_not_send_SLI()
+    public async Task When_automatically_emit_SLI_is_Off_do_not_send_SLI()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
@@ -208,7 +242,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task When_automitically_emit_SLI_is_Off_send_SLI_using_attribute()
+    public async Task When_automatically_emit_SLI_is_Off_send_SLI_using_attribute()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
@@ -225,6 +259,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
                 new KeyValuePair<string, object?>("Operation", "GET Test/send_sli"),
+                new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
             };

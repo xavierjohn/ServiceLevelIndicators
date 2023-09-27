@@ -8,6 +8,9 @@ public class TestController : ControllerBase
     [HttpGet]
     public IActionResult Get() => Ok("Hello World!");
 
+    [HttpPost]
+    public IActionResult Post() => Ok("Hello World!");
+
     [HttpGet("bad_request")]
     public IActionResult Bad() => BadRequest("Sad World!");
 
