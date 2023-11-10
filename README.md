@@ -62,7 +62,6 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 
 ## Usage
 
-
 1. Create and register a metrics meter with the dependency injection.
 
    Example.
@@ -75,10 +74,11 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     }
     builder.Services.AddSingleton<SampleApiMeters>();
     ```
-    
+
 2. Add a class to configure SLI
 
     Example.
+
     ```csharp
     internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
     {
@@ -107,12 +107,8 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     });
     ```
 
-4.  Add the middleware to the pipeline.
-        
-   If API versioning is used and want http.api.version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();`
-   
-   Otherwise, `app.UseServiceLevelIndicator();`
-        
+4. Add the middleware to the pipeline.
+   If API versioning is used and want http.api.version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();` else, `app.UseServiceLevelIndicator();`
 
 ### Customizations
 
@@ -120,7 +116,7 @@ Once the Prerequisites are done, all controllers will emit SLI information.
 The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;. 
 eg GET WeatherForecast/Action1
 
-* To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
+- To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
 
    Example.
 
@@ -130,14 +126,15 @@ eg GET WeatherForecast/Action1
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
     ```
 
-* To override the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
+- To override the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
+
     ```csharp
         [HttpGet("get-by-zip-code/{zipCode}")]
         public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
     ```
- 
+
     Or use `GetMeasuredOperationLatency` extension method.
-        
+
     ``` csharp
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
@@ -147,18 +144,30 @@ eg GET WeatherForecast/Action1
     }
     ```
 
-* To add custom Open Telemetry attributes.
-    ``` csharp 
+- To add custom Open Telemetry attributes.  
+
+    ``` csharp
         HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
     ```
 
-* To prevent automatically emitting SLI information on all controllers, set the option.
-    ``` csharp 
+    GetMeasuredOperationLatency will **throw** if the route is not configured to emit SLI.
+
+    When used in a middleware or scenarios where a route may not be configured to emit SLI.
+
+    ``` csharp
+        if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
+            measuredOperationLatency.AddAttribute("CustomAttribute", value);
+    ```
+
+- To prevent automatically emitting SLI information on all controllers, set the option,
+
+    ``` csharp
         ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
     ```
+
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
-    
-* To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
+
+- To measure a process, run it within a `using StartLatencyMeasureOperation` block.
 
    Example.
 
