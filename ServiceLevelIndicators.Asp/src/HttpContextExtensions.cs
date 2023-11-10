@@ -1,5 +1,6 @@
 ﻿namespace ServiceLevelIndicators;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 
@@ -28,7 +29,7 @@ public static class HttpContextExtensions
     /// <param name="measuredOperationLatency"></param>
     /// <returns>true if MeasuredOperationLatency exists.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public static bool TryGetMeasuredOperationLatency(this HttpContext context, out MeasuredOperationLatency measuredOperationLatency)
+    public static bool TryGetMeasuredOperationLatency(this HttpContext context, [MaybeNullWhen(false)] out MeasuredOperationLatency measuredOperationLatency)
     {
         if (context == null)
             throw new ArgumentNullException(nameof(context));
@@ -39,7 +40,7 @@ public static class HttpContextExtensions
             return true;
         }
 
-        measuredOperationLatency = null!;
+        measuredOperationLatency = null;
         return false;
     }
 }

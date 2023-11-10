@@ -31,12 +31,12 @@ public class TestController : ControllerBase
     [HttpGet("try_get_measured_operation_latency/{value}")]
     public IActionResult TryGetMeasuredOperationLatency(string value)
     {
-        var result = HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency);
-        if (result)
+        if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
         {
             measuredOperationLatency.AddAttribute("CustomAttribute", value);
+            return Ok(true);
         }
-        return Ok(HttpContext.TryGetMeasuredOperationLatency(out _));
+        return Ok(false);
     }
 
     [HttpGet("send_sli")]
