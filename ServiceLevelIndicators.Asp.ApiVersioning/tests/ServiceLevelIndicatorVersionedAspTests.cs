@@ -153,9 +153,9 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     }
 
     [Theory]
-    [InlineData("testSingle?api-version=invalid")]
-    [InlineData("testDouble?api-version=2023-08-29&api-version=2023-09-01")]
-    public async Task SLI_Metrics_is_emitted_when_invalid_api_version(string route)
+    [InlineData("testSingle", "api-version=invalid")]
+    [InlineData("testDouble", "api-version=2023-08-29&api-version=2023-09-01")]
+    public async Task SLI_Metrics_is_emitted_when_invalid_api_version(string route, string version)
     {
         // Arrange
         _expectedTags = new KeyValuePair<string, object?>[]
@@ -163,15 +163,16 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                 new KeyValuePair<string, object?>("http.api.version", string.Empty),
                 new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
                 new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET "),
+                new KeyValuePair<string, object?>("Operation", "GET /" + route),
                 new KeyValuePair<string, object?>("activity.status_code", "Unset"),
                 new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("http.response.status_code", 400),
         };
+        var routeWithVersion = route + "?" + version;
         using var host = await CreateHost();
 
         // Act
-        var response = await host.GetTestClient().GetAsync(route);
+        var response = await host.GetTestClient().GetAsync(routeWithVersion);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
