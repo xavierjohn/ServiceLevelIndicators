@@ -71,7 +71,8 @@ internal sealed class ServiceLevelIndicatorMiddleWare
         if (attrib is null || string.IsNullOrEmpty(attrib.Operation))
         {
             var description = metadata.GetMetadata<ControllerActionDescriptor>();
-            return context.Request.Method + " " + description?.AttributeRouteInfo?.Template;
+            var path = description?.AttributeRouteInfo?.Template ?? context.Request.Path;
+            return context.Request.Method + " " + path;
         }
 
         return attrib.Operation;
