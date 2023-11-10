@@ -28,6 +28,17 @@ public class TestController : ControllerBase
         return Ok(value);
     }
 
+    [HttpGet("try_get_measured_operation_latency/{value}")]
+    public IActionResult TryGetMeasuredOperationLatency(string value)
+    {
+        var result = HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency);
+        if (result)
+        {
+            measuredOperationLatency.AddAttribute("CustomAttribute", value);
+        }
+        return Ok(HttpContext.TryGetMeasuredOperationLatency(out _));
+    }
+
     [HttpGet("send_sli")]
     [ServiceLevelIndicator]
     public IActionResult SendSLI() => Ok("Hello");

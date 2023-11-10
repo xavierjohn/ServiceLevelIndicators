@@ -195,7 +195,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/custom_attribute/mickey");
+        var response = await host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -208,7 +208,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
-                new KeyValuePair<string, object?>("CustomAttribute", "mickey"),
+                new KeyValuePair<string, object?>("CustomAttribute", "Mickey"),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -223,7 +223,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithoutSli();
+        using var host = await CreateHostWithoutAutomaticSli();
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -242,12 +242,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task When_automatically_emit_SLI_is_Off_send_SLI_using_attribute()
+    public async Task When_automatically_emit_SLI_is_Off_X2C_send_SLI_using_attribute()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithoutSli();
+        using var host = await CreateHostWithoutAutomaticSli();
 
         var response = await host.GetTestClient().GetAsync("test/send_sli");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -262,6 +262,64 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new KeyValuePair<string, object?>("http.request.method", "GET"),
                 new KeyValuePair<string, object?>("activity.status_code", "Ok"),
                 new KeyValuePair<string, object?>("http.response.status_code", 200),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetMeasuredOperationLatency_will_throw_if_route_does_not_emit_SLI()
+    {
+        using var host = await CreateHostWithoutSli();
+
+        var response = await host.GetTestClient().GetAsync("test");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        Func<Task> getMeasuredOperationLatency = () => host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
+
+        await getMeasuredOperationLatency.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task TryGetMeasuredOperationLatency_will_return_false_if_route_does_not_emit_SLI()
+    {
+        using var host = await CreateHostWithoutSli();
+
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation_latency/Donald");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+
+        content.Should().Be("false");
+    }
+
+    [Fact]
+    public async Task TryGetMeasuredOperationLatency_will_return_true_if_route_emits_SLI()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHostWithSli(_meter);
+
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation_latency/Goofy");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+
+        content.Should().Be("true");
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+                new KeyValuePair<string, object?>("Operation", "GET Test/try_get_measured_operation_latency/{value}"),
+                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+                new KeyValuePair<string, object?>("http.request.method", "GET"),
+                new KeyValuePair<string, object?>("http.response.status_code", 200),
+                new KeyValuePair<string, object?>("CustomAttribute", "Goofy"),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -299,7 +357,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                     });
             })
             .StartAsync();
-    private async Task<IHost> CreateHostWithoutSli()
+    private async Task<IHost> CreateHostWithoutAutomaticSli()
     {
         return await new HostBuilder()
             .ConfigureWebHost(webBuilder =>
@@ -331,6 +389,32 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             })
             .StartAsync();
     }
+
+    private static async Task<IHost> CreateHostWithoutSli()
+    {
+        return await new HostBuilder()
+            .ConfigureWebHost(webBuilder =>
+            {
+                webBuilder
+                    .UseTestServer()
+                    .ConfigureServices(services =>
+                    {
+                        services.AddControllers();
+                    })
+                    .Configure(app =>
+                    {
+                        app.UseRouting()
+                           .Use(async (context, next) =>
+                           {
+                               await Task.Delay(MillisecondsDelay);
+                               await next(context);
+                           })
+                           .UseEndpoints(endpoints => endpoints.MapControllers());
+                    });
+            })
+            .StartAsync();
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
