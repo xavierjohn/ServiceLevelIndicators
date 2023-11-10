@@ -108,8 +108,7 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     ```
 
 4. Add the middleware to the pipeline.
-   If API versioning is used and want http.api.version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();`  
-   Otherwise, `app.UseServiceLevelIndicator();`
+   If API versioning is used and want http.api.version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();` else, `app.UseServiceLevelIndicator();`
 
 ### Customizations
 
@@ -157,13 +156,10 @@ eg GET WeatherForecast/Action1
 
     ``` csharp
         if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
-        {
             measuredOperationLatency.AddAttribute("CustomAttribute", value);
-            return Ok(true);
-        }
     ```
 
-- To prevent automatically emitting SLI information on all controllers, set the option.
+- To prevent automatically emitting SLI information on all controllers, set the option,
 
     ``` csharp
         ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
@@ -171,7 +167,7 @@ eg GET WeatherForecast/Action1
 
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
 
-- To measure a process, run it withing a `StartLatencyMeasureOperation` using block.
+- To measure a process, run it within a `using StartLatencyMeasureOperation` block.
 
    Example.
 
