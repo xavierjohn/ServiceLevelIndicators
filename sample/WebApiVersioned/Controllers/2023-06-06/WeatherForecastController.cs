@@ -110,7 +110,7 @@ public class WeatherForecastController : ControllerBase
         return 7;
     }
 
-    private static IEnumerable<WeatherForecast> GetWeather()
+    private static WeatherForecast[] GetWeather()
     {
         return Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
