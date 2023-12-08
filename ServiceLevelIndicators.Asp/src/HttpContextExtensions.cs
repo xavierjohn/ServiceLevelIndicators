@@ -16,8 +16,7 @@ public static class HttpContextExtensions
     /// <exception cref="InvalidOperationException">If the route does not emit SLI information and therefore MeasuredOperationLatency does not exist.</exception>
     public static MeasuredOperationLatency GetMeasuredOperationLatency(this HttpContext context)
     {
-        if (context == null)
-            throw new ArgumentNullException(nameof(context));
+        ArgumentNullException.ThrowIfNull(context);
 
         return context.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>().MeasuredOperationLatency;
     }
@@ -31,8 +30,7 @@ public static class HttpContextExtensions
     /// <exception cref="ArgumentNullException"></exception>
     public static bool TryGetMeasuredOperationLatency(this HttpContext context, [MaybeNullWhen(false)] out MeasuredOperationLatency measuredOperationLatency)
     {
-        if (context == null)
-            throw new ArgumentNullException(nameof(context));
+        ArgumentNullException.ThrowIfNull(context);
 
         if (context.Features.Get<IServiceLevelIndicatorFeature>() is IServiceLevelIndicatorFeature feature)
         {
