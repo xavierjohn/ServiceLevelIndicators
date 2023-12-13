@@ -139,6 +139,19 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         ValidateMetrics();
     }
 
+    [Fact]
+    public async Task Will_handle_bad_URL()
+    {
+        // Arrange
+        using var host = await CreateHost();
+
+        // Act
+        var response = await host.GetTestClient().GetAsync("does-not-exist?api-version=2023-08-29");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
     [Theory]
     [InlineData("testSingle?api-version=invalid")]
     [InlineData("testDouble?api-version=2023-08-29&api-version=2023-09-01")]
