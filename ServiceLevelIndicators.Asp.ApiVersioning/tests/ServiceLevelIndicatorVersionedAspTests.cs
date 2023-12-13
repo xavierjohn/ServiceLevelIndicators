@@ -140,7 +140,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     }
 
     [Fact]
-    public async Task Will_handle_bad_URL()
+    public async Task Middleware_should_not_emit_metrics_for_nonexistent_route()
     {
         // Arrange
         using var host = await CreateHost();
