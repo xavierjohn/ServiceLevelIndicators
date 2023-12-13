@@ -146,8 +146,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHost();
 
         // Act
-        // Bad URL: Note the ' before the ?
-        var response = await host.GetTestClient().GetAsync("testSingle'?api-version=2023-08-29");
+        var response = await host.GetTestClient().GetAsync("does-not-exist?api-version=2023-08-29");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
