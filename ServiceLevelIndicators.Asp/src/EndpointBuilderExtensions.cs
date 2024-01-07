@@ -7,15 +7,7 @@ public static class EndpointBuilderExtensions
 {
     public static IEndpointConventionBuilder AddServiceLevelIndicator(this IEndpointConventionBuilder builder, string? operation = default)
     {
-        if (string.IsNullOrEmpty(operation))
-        {
-            builder.WithMetadata(new ServiceLevelIndicatorAttribute());
-        }
-        else
-        {
-            builder.WithMetadata(new ServiceLevelIndicatorAttribute(operation));
-        }
-
+        builder.WithMetadata(new ServiceLevelIndicatorAttribute() { Operation = operation });
         builder.Finally(AddSliMetadata);
         return builder;
     }
