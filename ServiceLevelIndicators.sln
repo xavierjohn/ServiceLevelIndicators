@@ -35,6 +35,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceLevelIndicators.Asp.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceLevelIndicators.Asp.ApiVersioning.Tests", "ServiceLevelIndicators.Asp.ApiVersioning\tests\ServiceLevelIndicators.Asp.ApiVersioning.Tests.csproj", "{A776B107-2730-4EB6-B481-7F3EFAC2A2A8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleMinimalApiSli", "sample\MinApi\SampleMinimalApiSli.csproj", "{D25F951D-CE1A-47D1-8421-F71BEBF3A356}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,10 @@ Global
 		{A776B107-2730-4EB6-B481-7F3EFAC2A2A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A776B107-2730-4EB6-B481-7F3EFAC2A2A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A776B107-2730-4EB6-B481-7F3EFAC2A2A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D25F951D-CE1A-47D1-8421-F71BEBF3A356}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D25F951D-CE1A-47D1-8421-F71BEBF3A356}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D25F951D-CE1A-47D1-8421-F71BEBF3A356}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D25F951D-CE1A-47D1-8421-F71BEBF3A356}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +92,7 @@ Global
 		{808C8C7F-5FFF-4476-8A93-BF6CC95222CA} = {74558EE8-938D-41C2-8EB8-DC993ECB8A1F}
 		{B3F4A43C-64C1-4A41-99DC-0864BB30479C} = {2C6E9F62-8968-455A-AD02-DC795296471A}
 		{A776B107-2730-4EB6-B481-7F3EFAC2A2A8} = {2C6E9F62-8968-455A-AD02-DC795296471A}
+		{D25F951D-CE1A-47D1-8421-F71BEBF3A356} = {A7D8DEF7-8D37-4DE9-B935-7D9FF571132B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5C1087B8-93AA-4847-9D18-6A16E754593F}

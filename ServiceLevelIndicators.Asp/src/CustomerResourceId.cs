@@ -1,6 +1,6 @@
 ﻿namespace ServiceLevelIndicators;
-public class CustomerResourceId
+
+public class CustomerResourceId(string routeParameterName)
 {
-    public CustomerResourceId(string routeParameterName) => RouteParameterName = routeParameterName;
-    public string RouteParameterName { get; }
+    public string RouteParameterName { get; } = routeParameterName;
 }

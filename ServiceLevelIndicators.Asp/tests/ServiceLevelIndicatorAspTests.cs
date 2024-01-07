@@ -342,7 +342,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                             options.Meter = meter;
                             options.CustomerResourceId = "TestCustomerResourceId";
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-                        });
+                        }).AddMvc();
                     })
                     .Configure(app =>
                     {
@@ -373,7 +373,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                             options.CustomerResourceId = "TestCustomerResourceId";
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                             options.AutomaticallyEmitted = false;
-                        });
+                        }).AddMvc();
                     })
                     .Configure(app =>
                     {

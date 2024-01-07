@@ -8,13 +8,13 @@ using Microsoft.AspNetCore.Builder;
 public static class ServiceLevelIndicatorApplicationBuilderExtensions
 {
     /// <summary>
-    /// Adds the <see cref="ServiceLevelIndicatorMiddleWare"/> for emitting SLI metrics.
+    /// Adds the <see cref="ServiceLevelIndicatorMiddleware"/> for emitting SLI metrics.
     /// </summary>
     /// <param name="app">The <see cref="IApplicationBuilder"/>.</param>
     public static IApplicationBuilder UseServiceLevelIndicator(this IApplicationBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        return app.UseMiddleware<ServiceLevelIndicatorMiddleWare>();
+        return app.UseMiddleware<ServiceLevelIndicatorMiddleware>();
     }
 }
