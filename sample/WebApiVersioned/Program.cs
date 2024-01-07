@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SampleVersionedWebApplicationSLI;
+using ServiceLevelIndicators.Asp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +33,7 @@ builder.Services.AddApiVersioning()
         .AddApiExplorer();
 
 builder.Services.AddProblemDetails();
-#region OpenTelemetry
+
 // Build a resource configuration action to set service information.
 Action<ResourceBuilder> configureResource = r => r.AddService(
     serviceName: "SampleServiceName",
@@ -54,9 +55,7 @@ builder.Services.AddServiceLevelIndicator(options =>
     Guid serviceTree = Guid.NewGuid();
     options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceTree);
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
-});
-
-#endregion
+}).AddMvc();
 
 var app = builder.Build();
 

@@ -2,7 +2,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Asp.Versioning;
+using global::Asp.Versioning;
 
 internal sealed class ServiceLevelIndicatorVersioningMiddleware
 {

@@ -1,10 +1,9 @@
 ﻿namespace SampleVersionedWebApplicationSLI.Controllers._2023_06_06;
 
+using Asp.Versioning;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ServiceLevelIndicators;
-using Microsoft.AspNetCore.Http;
-using Asp.Versioning;
-using System;
 
 /// <summary>
 /// Weather forecast controller.
@@ -60,11 +59,7 @@ public class WeatherForecastController : ControllerBase
     /// CustomerResourceId = "Your input"
     /// </summary>
     [HttpGet("{customerResourceId}")]
-    public IEnumerable<WeatherForecast> Get(string customerResourceId)
-    {
-        HttpContext.GetMeasuredOperationLatency().CustomerResourceId = customerResourceId;
-        return GetWeather();
-    }
+    public IEnumerable<WeatherForecast> Get([CustomerResourceId] string customerResourceId) => GetWeather();
 
     /// <summary>
     /// Use Attribute to set CustomerResourceId
@@ -82,20 +77,14 @@ public class WeatherForecastController : ControllerBase
     [HttpGet("get-by-city/{city}")]
     public IEnumerable<WeatherForecast> GetByCity([CustomerResourceId] string city) => GetWeather();
 
-
     /// <summary>
     /// Background work for given seconds
     /// </summary>
     /// <param name="seconds">Seconds to wait.</param>
     /// <returns></returns>
     [HttpGet("background/{seconds}")]
-    public async Task BackgroundProcess(int seconds)
-    {
-        var attribute = new KeyValuePair<string, object?>("wait_seconds", seconds);
-        using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("background_work", attribute);
-        await Task.Delay(TimeSpan.FromSeconds(seconds));
-        measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
-    }
+    [ServiceLevelIndicator("background_work")]
+    public Task BackgroundProcess([Measure("wait_seconds")] int seconds) => Task.Delay(TimeSpan.FromSeconds(seconds));
 
     /// <summary>
     /// Add custom attribute to SLI metrics.
