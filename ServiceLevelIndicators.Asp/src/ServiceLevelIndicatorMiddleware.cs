@@ -29,7 +29,9 @@ internal sealed class ServiceLevelIndicatorMiddleware
             return;
         }
 
-        var (operation, attributes) = GetOperation(context, metadata);
+        var operation = GetOperation(context, metadata);
+        var attributes = GetMeasuredAttributes(context, metadata);
+
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation, attributes);
         SetCustomerResourceIdFromAttribute(context, metadata, measuredOperation);
         AddSliFeatureToHttpContext(context, measuredOperation);
@@ -69,10 +71,9 @@ internal sealed class ServiceLevelIndicatorMiddleware
     private static ServiceLevelIndicatorAttribute? GetSliAttribute(EndpointMetadataCollection metaData) =>
         metaData.GetMetadata<ServiceLevelIndicatorAttribute>();
 
-    private static (string, KeyValuePair<string, object?>[]) GetOperation(HttpContext context, EndpointMetadataCollection metadata)
+    private static string GetOperation(HttpContext context, EndpointMetadataCollection metadata)
     {
         var sli = GetSliAttribute(metadata);
-        var attributes = GetAttributes(context, metadata);
         string operation;
 
         if (sli is null || string.IsNullOrEmpty(sli.Operation))
@@ -82,22 +83,18 @@ internal sealed class ServiceLevelIndicatorMiddleware
             operation = context.Request.Method + " " + path;
         }
         else
-        {
             operation = sli.Operation;
-        }
 
-        return (operation, attributes);
+        return operation;
     }
 
-    private static KeyValuePair<string, object?>[] GetAttributes(HttpContext context, EndpointMetadataCollection metadata)
+    private static KeyValuePair<string, object?>[] GetMeasuredAttributes(HttpContext context, EndpointMetadataCollection metadata)
     {
         var measures = metadata.OfType<MeasureMetadata>().ToArray();
         var count = measures.Length;
 
         if (count == 0)
-        {
-            return Array.Empty<KeyValuePair<string, object?>>();
-        }
+            return [];
 
         var values = context.Request.RouteValues;
         var attributes = new KeyValuePair<string, object?>[count];
