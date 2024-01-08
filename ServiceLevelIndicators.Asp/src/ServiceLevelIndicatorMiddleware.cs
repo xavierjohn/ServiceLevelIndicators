@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -44,7 +43,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SetCustomerResourceIdFromAttribute(HttpContext context, EndpointMetadataCollection metadata, MeasuredOperationLatency measuredOperation)
     {
-        if (metadata.GetMetadata<CustomerResourceId>()?.RouteParameterName is { } key &&
+        if (metadata.GetMetadata<CustomerResourceIdMetadata>()?.RouteValueName is { } key &&
             context.GetRouteValue(key) is string value)
         {
             measuredOperation.CustomerResourceId = value;

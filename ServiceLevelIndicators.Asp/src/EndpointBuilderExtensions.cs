@@ -32,7 +32,7 @@ public static class EndpointBuilderExtensions
                 {
                     case CustomerResourceIdAttribute:
                         // TODO: what happens if there is more than one?
-                        endpoint.Metadata.Add(new CustomerResourceId(parameter.Name!));
+                        endpoint.Metadata.Add(new CustomerResourceIdMetadata(parameter.Name!));
                         break;
                     case MeasureAttribute measure:
                         endpoint.Metadata.Add(new MeasureMetadata(parameter.Name!, measure.Name));

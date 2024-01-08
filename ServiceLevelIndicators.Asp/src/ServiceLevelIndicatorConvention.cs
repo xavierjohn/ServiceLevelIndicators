@@ -24,7 +24,7 @@ internal sealed class ServiceLevelIndicatorConvention : IParameterModelConventio
             {
                 case CustomerResourceIdAttribute:
                     // TODO: what happens if there is more than one?
-                    selector.EndpointMetadata.Add(new CustomerResourceId(parameter.Name));
+                    selector.EndpointMetadata.Add(new CustomerResourceIdMetadata(parameter.Name));
                     break;
                 case MeasureAttribute measure:
                     selector.EndpointMetadata.Add(new MeasureMetadata(parameter.Name, measure.Name));
