@@ -328,6 +328,37 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _callbackCalled.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task SLI_Measure_is_emitted()
+    {
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await CreateHostWithSli(_meter);
+
+        var response = await host.GetTestClient().GetAsync("test/name/Xavier/Jon/25");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new("CustomerResourceId", "Jon"),
+                new("first", "Xavier"),
+                new("age", "25"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test/name/{first}/{surname}/{age}"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 200),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
+    }
+
     private static async Task<IHost> CreateHostWithSli(Meter meter) =>
         await new HostBuilder()
             .ConfigureWebHost(webBuilder =>

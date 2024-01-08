@@ -42,4 +42,7 @@ public class TestController : ControllerBase
     [HttpGet("send_sli")]
     [ServiceLevelIndicator]
     public IActionResult SendSLI() => Ok("Hello");
+
+    [HttpGet("name/{first}/{surname}/{age}")]
+    public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string last, [Measure] int age) => Ok(first + " " + last + " " + age);
 }
