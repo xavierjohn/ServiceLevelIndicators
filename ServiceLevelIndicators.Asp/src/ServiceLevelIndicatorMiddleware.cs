@@ -93,7 +93,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
             return null;
 
         if (count > 1)
-            throw new InvalidOperationException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined.");
+            throw new ArgumentException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined.");
 
         var values = context.Request.RouteValues;
         var measure = measures[0];

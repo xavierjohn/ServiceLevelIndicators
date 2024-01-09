@@ -202,13 +202,13 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET Test/custom_attribute/{value}"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
-                new KeyValuePair<string, object?>("CustomAttribute", "Mickey"),
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test/custom_attribute/{value}"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 200),
+                new("CustomAttribute", "Mickey"),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -256,12 +256,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET Test/send_sli"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test/send_sli"),
+                new("http.request.method", "GET"),
+                new("activity.status_code", "Ok"),
+                new("http.response.status_code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -313,13 +313,13 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET Test/try_get_measured_operation_latency/{value}"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
-                new KeyValuePair<string, object?>("CustomAttribute", "Goofy"),
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test/try_get_measured_operation_latency/{value}"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 200),
+                new("CustomAttribute", "Goofy"),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -357,6 +357,15 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         }
 
         _callbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SLI_multiple_CustomerResourceId_will_fail()
+    {
+        using var host = await CreateHostWithSli(_meter);
+
+        Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon");
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     private static async Task<IHost> CreateHostWithSli(Meter meter) =>

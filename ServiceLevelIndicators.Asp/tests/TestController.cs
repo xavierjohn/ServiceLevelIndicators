@@ -45,4 +45,7 @@ public class TestController : ControllerBase
 
     [HttpGet("name/{first}/{surname}/{age}")]
     public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string surname, [Measure] int age) => Ok(first + " " + surname + " " + age);
+
+    [HttpGet("multiple_customer_resource_id/{first}/{surname}")]
+    public IActionResult MultipleCustomerResourceId([CustomerResourceId] string first, [CustomerResourceId] string surname) => Ok(first + " " + surname);
 }
