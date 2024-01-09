@@ -44,5 +44,5 @@ public class TestController : ControllerBase
     public IActionResult SendSLI() => Ok("Hello");
 
     [HttpGet("name/{first}/{surname}/{age}")]
-    public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string last, [Measure] int age) => Ok(first + " " + last + " " + age);
+    public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string surname, [Measure] int age) => Ok(first + " " + surname + " " + age);
 }

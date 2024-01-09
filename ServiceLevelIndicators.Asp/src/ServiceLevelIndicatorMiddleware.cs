@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Routing;
 
 internal sealed class ServiceLevelIndicatorMiddleware
 {
@@ -43,11 +42,9 @@ internal sealed class ServiceLevelIndicatorMiddleware
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SetCustomerResourceIdFromAttribute(HttpContext context, EndpointMetadataCollection metadata, MeasuredOperationLatency measuredOperation)
     {
-        if (metadata.GetMetadata<CustomerResourceIdMetadata>()?.RouteValueName is { } key &&
-            context.GetRouteValue(key) is string value)
-        {
-            measuredOperation.CustomerResourceId = value;
-        }
+        var customerResourceId = GetCustomerResourceIdAttributes(context, metadata);
+        if (customerResourceId is not null)
+            measuredOperation.CustomerResourceId = customerResourceId;
     }
 
     private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperationLatency measuredOperation)
@@ -85,6 +82,23 @@ internal sealed class ServiceLevelIndicatorMiddleware
             operation = sli.Operation;
 
         return operation;
+    }
+
+    private static string? GetCustomerResourceIdAttributes(HttpContext context, EndpointMetadataCollection metadata)
+    {
+        var measures = metadata.OfType<CustomerResourceIdMetadata>().ToArray();
+        var count = measures.Length;
+
+        if (count == 0)
+            return null;
+
+        if (count > 1)
+            throw new InvalidOperationException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined.");
+
+        var values = context.Request.RouteValues;
+        var measure = measures[0];
+        var value = values.TryGetValue(measure.RouteValueName, out var val) ? val : default;
+        return value?.ToString();
     }
 
     private static KeyValuePair<string, object?>[] GetMeasuredAttributes(HttpContext context, EndpointMetadataCollection metadata)
