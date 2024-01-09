@@ -173,6 +173,13 @@ eg GET WeatherForecast/Action1
             measuredOperationLatency.AddAttribute("CustomAttribute", value);
     ```
 
+    You can add additional dimensions to the SLI data by using the `Measure` attribute.
+
+    ```csharp
+    [HttpGet("name/{first}/{surname}")]
+    public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string surname) => Ok(first + " " + surname);
+    ```
+
 - To prevent automatically emitting SLI information on all controllers, set the option,
 
     ``` csharp
