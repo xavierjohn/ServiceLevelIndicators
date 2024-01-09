@@ -60,7 +60,7 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 
   [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning)
 
-## Usage
+## Usage for Web API
 
 1. Create and register a metrics meter with the dependency injection.
 
@@ -109,6 +109,20 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 
 4. Add the middleware to the pipeline.
    If API versioning is used and want http.api.version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();` else, `app.UseServiceLevelIndicator();`
+
+## Usage for background jobs
+
+You can measure a block of code by boxing it in a using clause of MeasuredOperation.
+Example.
+
+```csharp
+    async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
+    {
+        using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("SleepWorker");
+        // Do Work.
+        measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+    }
+```
 
 ### Customizations
 
