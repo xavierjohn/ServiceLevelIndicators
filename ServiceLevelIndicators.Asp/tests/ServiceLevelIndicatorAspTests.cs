@@ -47,12 +47,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET Test"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -76,12 +76,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "POST Test"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "POST"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "POST Test"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "POST"),
+                new("http.response.status_code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -105,12 +105,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET Test/bad_request"),
-                new KeyValuePair<string, object?>("activity.status_code", "Unset"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 400),
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test/bad_request"),
+                new("activity.status_code", "Unset"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 400),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -144,12 +144,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "TestOperation"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "TestOperation"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -173,12 +173,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new KeyValuePair<string, object?>("CustomerResourceId", "myId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET Test/customer_resourceid/{id}"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
+                new("CustomerResourceId", "myId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test/customer_resourceid/{id}"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
