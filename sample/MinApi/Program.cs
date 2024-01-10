@@ -30,10 +30,10 @@ Action<ResourceBuilder> configureResource = r => r.AddService(
 
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
-    .WithMetrics(options =>
+    .WithMetrics(builder =>
     {
-        options.AddMeter(Sample.Meter.Name);
-        options.AddOtlpExporter();
+        builder.AddMeter(Sample.Meter.Name);
+        builder.AddOtlpExporter();
     });
 
 
