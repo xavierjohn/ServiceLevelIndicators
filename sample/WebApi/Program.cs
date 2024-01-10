@@ -4,6 +4,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using SampleWebApplicationSLI;
 using ServiceLevelIndicators;
+using ServiceLevelIndicators.Asp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,7 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(filePath);
 });
 builder.Services.AddProblemDetails();
-#region OpenTelemetry
+
 // Build a resource configuration action to set service information.
 Action<ResourceBuilder> configureResource = r => r.AddService(
     serviceName: "SampleServiceName",
@@ -40,9 +41,7 @@ builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-});
-
-#endregion
+}).AddMvc();
 
 var app = builder.Build();
 

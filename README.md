@@ -60,7 +60,7 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 
   [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning)
 
-## Usage
+## Usage for Web API MVC
 
 1. Create and register a metrics meter with the dependency injection.
 
@@ -110,6 +110,63 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 4. Add the middleware to the pipeline.
    If API versioning is used and want http.api.version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();` else, `app.UseServiceLevelIndicator();`
 
+## Usage for Minimal API
+
+1. Create the metrics meter.
+
+    Example.
+
+    ```csharp
+    internal sealed class Sample
+    {
+        public static Meter Meter { get; } = new(nameof(Sample));
+    }
+    ```
+
+2. Add ServiceLevelIndicator into the dependency injection.
+
+   Example.
+
+    ``` csharp
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        // Override with calling service id or customer resource Id.
+        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
+        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
+    });
+    ```
+
+3. Add the middleware to the ASP.NET core pipeline.
+
+   Example.
+
+    ``` csharp
+    app.UseServiceLevelIndicator();
+    ```
+
+4. To each API route mapping, add `AddServiceLevelIndicator()`
+
+   Example.
+
+    ``` csharp
+    app.MapGet("/hello", () => "Hello World!")
+       .AddServiceLevelIndicator();
+    ```
+
+### Usage for background jobs
+
+You can measure a block of code by boxing it in a using clause of MeasuredOperation.
+Example.
+
+```csharp
+    async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
+    {
+        using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("OperationName");
+        // Do Work.
+        measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+    }
+```
+
 ### Customizations
 
 Once the Prerequisites are done, all controllers will emit SLI information.
@@ -157,6 +214,13 @@ eg GET WeatherForecast/Action1
     ``` csharp
         if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
             measuredOperationLatency.AddAttribute("CustomAttribute", value);
+    ```
+
+    You can add additional dimensions to the SLI data by using the `Measure` attribute.
+
+    ```csharp
+    [HttpGet("name/{first}/{surname}")]
+    public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string surname) => Ok(first + " " + surname);
     ```
 
 - To prevent automatically emitting SLI information on all controllers, set the option,

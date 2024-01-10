@@ -2,7 +2,6 @@
 
 using Microsoft.AspNetCore.Mvc;
 using ServiceLevelIndicators;
-using Microsoft.AspNetCore.Http;
 
 /// <summary>
 /// Weather forecast controller.
@@ -49,13 +48,7 @@ public class WeatherForecastController : ControllerBase
     /// CustomerResourceId = "Your input"
     /// </summary>
     [HttpGet("{customerResourceId}")]
-    public IEnumerable<WeatherForecast> Get(string customerResourceId)
-    {
-        var sliFeature = HttpContext.Features.Get<IServiceLevelIndicatorFeature>();
-        if (sliFeature is not null)
-            sliFeature.MeasuredOperationLatency.CustomerResourceId = customerResourceId;
-        return GetWeather();
-    }
+    public IEnumerable<WeatherForecast> Get([CustomerResourceId] string customerResourceId) => GetWeather();
 
     private static WeatherForecast[] GetWeather()
     {

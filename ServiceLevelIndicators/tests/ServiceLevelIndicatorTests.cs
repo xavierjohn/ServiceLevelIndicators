@@ -33,8 +33,8 @@ public class ServiceLevelIndicatorTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        _actualTags = Array.Empty<KeyValuePair<string, object?>>();
-        _expectedTags = Array.Empty<KeyValuePair<string, object?>>();
+        _actualTags = [];
+        _expectedTags = [];
     }
 
 
@@ -65,14 +65,14 @@ public class ServiceLevelIndicatorTests : IDisposable
         serviceLevelIndicator.RecordLatency(operation, elapsedTime, attributes);
 
         // Assert
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-            new KeyValuePair<string, object?> ( "CustomerResourceId", customerResourceId ),
-            new KeyValuePair<string, object?> ( "LocationId", locationId ),
-            new KeyValuePair<string, object?> ( "Operation", operation ),
-            new KeyValuePair<string, object?> ( "Attribute1", "Value1" ),
-            new KeyValuePair<string, object?> ( "Attribute2", "Value2" )
-        };
+        _expectedTags =
+        [
+            new("CustomerResourceId", customerResourceId),
+            new("LocationId", locationId),
+            new("Operation", operation),
+            new("Attribute1", "Value1"),
+            new("Attribute2", "Value2")
+        ];
 
         ValidateMetrics(elapsedTime);
     }
@@ -99,13 +99,13 @@ public class ServiceLevelIndicatorTests : IDisposable
         await MeasureCodeBlock(serviceLevelIndicator);
 
         // Assert
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-            new KeyValuePair<string, object?> ( "CustomerResourceId", customerResourceId ),
-            new KeyValuePair<string, object?> ( "LocationId", locationId ),
-            new KeyValuePair<string, object?> ( "Operation", "SleepWorker" ),
-            new KeyValuePair<string, object?> ( "activity.status_code", nameof(System.Diagnostics.ActivityStatusCode.Ok)),
-        };
+        _expectedTags =
+        [
+            new("CustomerResourceId", customerResourceId),
+            new("LocationId", locationId),
+            new("Operation", "SleepWorker"),
+            new("activity.status_code", nameof(System.Diagnostics.ActivityStatusCode.Ok)),
+        ];
 
         ValidateMetrics(sleepTime, approx: 100);
 
@@ -142,12 +142,12 @@ public class ServiceLevelIndicatorTests : IDisposable
         serviceLevelIndicator.RecordLatency(operation, elapsedTime);
 
         // Assert
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-            new KeyValuePair<string, object?> ( "CustomerResourceId", customerResourceId ),
-            new KeyValuePair<string, object?> ( "LocationId", locationId ),
-            new KeyValuePair<string, object?> ( "Operation", operation )
-        };
+        _expectedTags =
+        [
+            new("CustomerResourceId", customerResourceId),
+            new("LocationId", locationId),
+            new("Operation", operation)
+        ];
 
         ValidateMetrics(elapsedTime, InstrumentName);
     }

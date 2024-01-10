@@ -2,17 +2,17 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Routing;
 
-internal sealed class ServiceLevelIndicatorMiddleWare
+internal sealed class ServiceLevelIndicatorMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
 
-    public ServiceLevelIndicatorMiddleWare(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator)
+    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator)
     {
         _next = next;
         _serviceLevelIndicator = serviceLevelIndicator;
@@ -28,7 +28,9 @@ internal sealed class ServiceLevelIndicatorMiddleWare
         }
 
         var operation = GetOperation(context, metadata);
-        using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation);
+        var attributes = GetMeasuredAttributes(context, metadata);
+
+        using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation, attributes);
         SetCustomerResourceIdFromAttribute(context, metadata, measuredOperation);
         AddSliFeatureToHttpContext(context, measuredOperation);
         await _next(context);
@@ -37,12 +39,12 @@ internal sealed class ServiceLevelIndicatorMiddleWare
         RemoveSliFeatureFromHttpContext(context);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SetCustomerResourceIdFromAttribute(HttpContext context, EndpointMetadataCollection metadata, MeasuredOperationLatency measuredOperation)
     {
-        var meta = metadata.GetMetadata<CustomerResourceId>();
-        var key = meta?.RouteParameterName;
-        if (!string.IsNullOrEmpty(key) && context.GetRouteValue(key) is string value)
-            measuredOperation.CustomerResourceId = value;
+        var customerResourceId = GetCustomerResourceIdAttributes(context, metadata);
+        if (customerResourceId is not null)
+            measuredOperation.CustomerResourceId = customerResourceId;
     }
 
     private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperationLatency measuredOperation)
@@ -67,21 +69,63 @@ internal sealed class ServiceLevelIndicatorMiddleWare
 
     private static string GetOperation(HttpContext context, EndpointMetadataCollection metadata)
     {
-        var attrib = GetSliAttribute(metadata);
-        if (attrib is null || string.IsNullOrEmpty(attrib.Operation))
+        var sli = GetSliAttribute(metadata);
+        string operation;
+
+        if (sli is null || string.IsNullOrEmpty(sli.Operation))
         {
             var description = metadata.GetMetadata<ControllerActionDescriptor>();
             var path = description?.AttributeRouteInfo?.Template ?? context.Request.Path;
-            return context.Request.Method + " " + path;
+            operation = context.Request.Method + " " + path;
+        }
+        else
+            operation = sli.Operation;
+
+        return operation;
+    }
+
+    private static string? GetCustomerResourceIdAttributes(HttpContext context, EndpointMetadataCollection metadata)
+    {
+        var measures = metadata.OfType<CustomerResourceIdMetadata>().ToArray();
+        var count = measures.Length;
+
+        if (count == 0)
+            return null;
+
+        if (count > 1)
+            throw new ArgumentException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined.");
+
+        var values = context.Request.RouteValues;
+        var measure = measures[0];
+        var value = values.TryGetValue(measure.RouteValueName, out var val) ? val : default;
+        return value?.ToString();
+    }
+
+    private static KeyValuePair<string, object?>[] GetMeasuredAttributes(HttpContext context, EndpointMetadataCollection metadata)
+    {
+        var measures = metadata.OfType<MeasureMetadata>().ToArray();
+        var count = measures.Length;
+
+        if (count == 0)
+            return [];
+
+        var values = context.Request.RouteValues;
+        var attributes = new KeyValuePair<string, object?>[count];
+
+        for (var i = 0; i < count; i++)
+        {
+            var measure = measures[i];
+            var value = values.TryGetValue(measure.RouteValueName, out var val) ? val : default;
+            attributes[i] = KeyValuePair.Create(measure.AttributeName, value);
         }
 
-        return attrib.Operation;
+        return attributes;
     }
 
     private void AddSliFeatureToHttpContext(HttpContext context, MeasuredOperationLatency measuredOperation)
     {
         if (context.Features.Get<IServiceLevelIndicatorFeature>() != null)
-            throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleWare)} can be configured for an application.");
+            throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleware)} can be configured for an application.");
 
         context.Features.Set<IServiceLevelIndicatorFeature>(new ServiceLevelIndicatorFeature(measuredOperation));
     }
