@@ -114,14 +114,35 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _callbackCalled.Should().BeTrue();
     }
 
-    private void ValidateMetrics(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, KeyValuePair<string, object?>[] expectedTags)
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_with_enrichment()
     {
-        _callbackCalled = true;
-        instrument.Name.Should().Be("LatencySLI");
-        instrument.Unit.Should().Be("ms");
-        measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
-        _output.WriteLine($"Measurement {measurement}");
-        tags.ToArray().Should().BeEquivalentTo(expectedTags);
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
+
+        using var host = await TestHostBuilder.CreateHostWithSliEnriched(_meter);
+
+        var response = await host.GetTestClient().GetAsync("test");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            var expectedTags = new KeyValuePair<string, object?>[]
+            {
+                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("LocationId", "ms-loc://az/public/West US 3"),
+                new("Operation", "GET Test"),
+                new("activity.status_code", "Ok"),
+                new("http.request.method", "GET"),
+                new("http.response.status_code", 200),
+                new("foo", "bar"),
+                new("test", "again"),
+            };
+
+            ValidateMetrics(instrument, measurement, tags, expectedTags);
+        }
+
+        _callbackCalled.Should().BeTrue();
     }
 
     [Fact]
@@ -383,4 +404,15 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+
+    private void ValidateMetrics(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, KeyValuePair<string, object?>[] expectedTags)
+    {
+        _callbackCalled = true;
+        instrument.Name.Should().Be("LatencySLI");
+        instrument.Unit.Should().Be("ms");
+        measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
+        _output.WriteLine($"Measurement {measurement}");
+        tags.ToArray().Should().BeEquivalentTo(expectedTags);
+    }
+
 }

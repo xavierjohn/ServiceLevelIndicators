@@ -1,4 +1,4 @@
-﻿namespace ServiceLevelIndicators.Asp;
+﻿namespace ServiceLevelIndicators;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

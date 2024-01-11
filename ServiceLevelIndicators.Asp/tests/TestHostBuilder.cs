@@ -41,6 +41,39 @@ internal class TestHostBuilder
             })
             .StartAsync();
 
+    public static async Task<IHost> CreateHostWithSliEnriched(Meter meter) =>
+    await new HostBuilder()
+        .ConfigureWebHost(webBuilder =>
+        {
+            webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.AddControllers();
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                    })
+                    .AddMvc()
+                    .AddTestEnrichment("foo", "bar")
+                    .AddTestEnrichment("test", "again");
+                })
+                .Configure(app =>
+                {
+                    app.UseRouting()
+                       .UseServiceLevelIndicator()
+                       .Use(async (context, next) =>
+                       {
+                           await Task.Delay(MillisecondsDelay);
+                           await next(context);
+                       })
+                       .UseEndpoints(endpoints => endpoints.MapControllers());
+                });
+        })
+        .StartAsync();
+
     public static async Task<IHost> CreateHostWithoutAutomaticSli(Meter meter)
     {
         return await new HostBuilder()

@@ -1,4 +1,4 @@
-﻿namespace ServiceLevelIndicators.Asp;
+﻿namespace ServiceLevelIndicators;
 
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
