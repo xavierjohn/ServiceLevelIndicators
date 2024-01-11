@@ -1,16 +1,11 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using System.Diagnostics.Metrics;
 using System.Net;
 using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorAspTests : IDisposable
 {
-    private const int MillisecondsDelay = 200;
     private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
@@ -38,7 +33,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -67,7 +62,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().PostAsync("test", new StringContent("Hi"));
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -96,7 +91,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/bad_request");
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -124,7 +119,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _callbackCalled = true;
         instrument.Name.Should().Be("LatencySLI");
         instrument.Unit.Should().Be("ms");
-        measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 400);
+        measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
         _output.WriteLine($"Measurement {measurement}");
         tags.ToArray().Should().BeEquivalentTo(expectedTags);
     }
@@ -135,7 +130,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/operation");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -164,7 +159,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/customer_resourceid/myId");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -193,7 +188,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -223,7 +218,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithoutAutomaticSli();
+        using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -247,7 +242,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithoutAutomaticSli();
+        using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/send_sli");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -273,7 +268,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     [Fact]
     public async Task GetMeasuredOperationLatency_will_throw_if_route_does_not_emit_SLI()
     {
-        using var host = await CreateHostWithoutSli();
+        using var host = await TestHostBuilder.CreateHostWithoutSli();
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -286,7 +281,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     [Fact]
     public async Task TryGetMeasuredOperationLatency_will_return_false_if_route_does_not_emit_SLI()
     {
-        using var host = await CreateHostWithoutSli();
+        using var host = await TestHostBuilder.CreateHostWithoutSli();
 
         var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation_latency/Donald");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -301,7 +296,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation_latency/Goofy");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -334,7 +329,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         var response = await host.GetTestClient().GetAsync("test/name/Xavier/Jon/25");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -362,98 +357,12 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     [Fact]
     public async Task SLI_multiple_CustomerResourceId_will_fail()
     {
-        using var host = await CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
         Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon");
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
-    private static async Task<IHost> CreateHostWithSli(Meter meter) =>
-        await new HostBuilder()
-            .ConfigureWebHost(webBuilder =>
-            {
-                webBuilder
-                    .UseTestServer()
-                    .ConfigureServices(services =>
-                    {
-                        services.AddControllers();
-                        services.AddServiceLevelIndicator(options =>
-                        {
-                            options.Meter = meter;
-                            options.CustomerResourceId = "TestCustomerResourceId";
-                            options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-                        }).AddMvc();
-                    })
-                    .Configure(app =>
-                    {
-                        app.UseRouting()
-                           .UseServiceLevelIndicator()
-                           .Use(async (context, next) =>
-                           {
-                               await Task.Delay(MillisecondsDelay);
-                               await next(context);
-                           })
-                           .UseEndpoints(endpoints => endpoints.MapControllers());
-                    });
-            })
-            .StartAsync();
-    private async Task<IHost> CreateHostWithoutAutomaticSli()
-    {
-        return await new HostBuilder()
-            .ConfigureWebHost(webBuilder =>
-            {
-                webBuilder
-                    .UseTestServer()
-                    .ConfigureServices(services =>
-                    {
-                        services.AddControllers();
-                        services.AddServiceLevelIndicator(options =>
-                        {
-                            options.Meter = _meter;
-                            options.CustomerResourceId = "TestCustomerResourceId";
-                            options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-                            options.AutomaticallyEmitted = false;
-                        }).AddMvc();
-                    })
-                    .Configure(app =>
-                    {
-                        app.UseRouting()
-                           .UseServiceLevelIndicator()
-                           .Use(async (context, next) =>
-                           {
-                               await Task.Delay(MillisecondsDelay);
-                               await next(context);
-                           })
-                           .UseEndpoints(endpoints => endpoints.MapControllers());
-                    });
-            })
-            .StartAsync();
-    }
-
-    private static async Task<IHost> CreateHostWithoutSli()
-    {
-        return await new HostBuilder()
-            .ConfigureWebHost(webBuilder =>
-            {
-                webBuilder
-                    .UseTestServer()
-                    .ConfigureServices(services =>
-                    {
-                        services.AddControllers();
-                    })
-                    .Configure(app =>
-                    {
-                        app.UseRouting()
-                           .Use(async (context, next) =>
-                           {
-                               await Task.Delay(MillisecondsDelay);
-                               await next(context);
-                           })
-                           .UseEndpoints(endpoints => endpoints.MapControllers());
-                    });
-            })
-            .StartAsync();
-    }
 
     protected virtual void Dispose(bool disposing)
     {
