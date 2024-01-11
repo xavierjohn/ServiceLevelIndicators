@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 
 public interface IEnrichMeasuredOperationLatency
 {
-    void EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation);
+    ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, CancellationToken cancellationToken);
 }

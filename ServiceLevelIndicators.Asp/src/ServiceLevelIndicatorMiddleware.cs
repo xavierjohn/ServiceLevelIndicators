@@ -41,7 +41,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         if (_enrichMeasuredOperationLatencies is not null)
         {
             foreach (var enrichMeasuredOperationLatency in _enrichMeasuredOperationLatencies)
-                enrichMeasuredOperationLatency.EnrichMeasuredOperation(measuredOperation);
+                await enrichMeasuredOperationLatency.EnrichMeasuredOperation(measuredOperation, context.RequestAborted);
         }
         RemoveSliFeatureFromHttpContext(context);
     }

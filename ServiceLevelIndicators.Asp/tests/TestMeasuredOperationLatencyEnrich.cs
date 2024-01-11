@@ -4,8 +4,9 @@ internal class TestMeasuredOperationLatencyEnrich(string key, string value) : IE
     private readonly string _key = key;
     private readonly string _value = value;
 
-    public void EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation)
+    public ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, CancellationToken cancellationToken)
     {
         measuredOperation.AddAttribute(_key, _value);
+        return ValueTask.CompletedTask;
     }
 }
