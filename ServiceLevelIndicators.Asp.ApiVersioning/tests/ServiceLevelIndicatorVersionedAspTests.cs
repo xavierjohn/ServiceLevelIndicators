@@ -45,8 +45,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     public async Task SLI_Metrics_is_emitted_with_API_version_as_query_parameter()
     {
         // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
+        _expectedTags =
+        [
             new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
             new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
             new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
@@ -54,7 +54,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new KeyValuePair<string, object?>("http.request.method", "GET"),
             new KeyValuePair<string, object?>("http.response.status_code", 200),
             new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
-        };
+        ];
         using var host = await CreateHost();
 
         // Act
@@ -69,16 +69,16 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     public async Task SLI_Metrics_is_emitted_with_API_version_as_header()
     {
         // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
-                new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
-        };
+        _expectedTags =
+        [
+            new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+            new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+            new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
+            new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+            new KeyValuePair<string, object?>("http.request.method", "GET"),
+            new KeyValuePair<string, object?>("http.response.status_code", 200),
+            new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
+        ];
         using var host = await CreateHost();
         var httpClient = host.GetTestClient();
         httpClient.DefaultRequestHeaders.Add("api-version", "2023-08-29");
@@ -95,16 +95,16 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     public async Task SLI_Metrics_is_emitted_with_neutral_API_version()
     {
         // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-                new KeyValuePair<string, object?>("http.api.version", "Neutral"),
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
-        };
+        _expectedTags =
+        [
+            new KeyValuePair<string, object?>("http.api.version", "Neutral"),
+            new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+            new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+            new KeyValuePair<string, object?>("Operation", "GET TestNeutral"),
+            new KeyValuePair<string, object?>("http.request.method", "GET"),
+            new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+            new KeyValuePair<string, object?>("http.response.status_code", 200),
+        ];
         using var host = await CreateHost();
 
         // Act
@@ -119,16 +119,16 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     public async Task SLI_Metrics_is_emitted_with_default_API_version()
     {
         // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-                new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
-                new KeyValuePair<string, object?>("activity.status_code", "Ok"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 200),
-        };
+        _expectedTags =
+        [
+            new KeyValuePair<string, object?>("http.api.version", "2023-08-29"),
+            new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+            new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+            new KeyValuePair<string, object?>("Operation", "GET TestSingle"),
+            new KeyValuePair<string, object?>("activity.status_code", "Ok"),
+            new KeyValuePair<string, object?>("http.request.method", "GET"),
+            new KeyValuePair<string, object?>("http.response.status_code", 200),
+        ];
         using var host = await CreateHostWithDefaultApiVersion();
 
         // Act
@@ -158,16 +158,16 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     public async Task SLI_Metrics_is_emitted_when_invalid_api_version(string route, string version)
     {
         // Arrange
-        _expectedTags = new KeyValuePair<string, object?>[]
-        {
-                new KeyValuePair<string, object?>("http.api.version", string.Empty),
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-                new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
-                new KeyValuePair<string, object?>("Operation", "GET /" + route),
-                new KeyValuePair<string, object?>("activity.status_code", "Unset"),
-                new KeyValuePair<string, object?>("http.request.method", "GET"),
-                new KeyValuePair<string, object?>("http.response.status_code", 400),
-        };
+        _expectedTags =
+        [
+            new KeyValuePair<string, object?>("http.api.version", string.Empty),
+            new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
+            new KeyValuePair<string, object?>("LocationId", "ms-loc://az/public/West US 3"),
+            new KeyValuePair<string, object?>("Operation", "GET /" + route),
+            new KeyValuePair<string, object?>("activity.status_code", "Unset"),
+            new KeyValuePair<string, object?>("http.request.method", "GET"),
+            new KeyValuePair<string, object?>("http.response.status_code", 400),
+        ];
         var routeWithVersion = route + "?" + version;
         using var host = await CreateHost();
 
@@ -198,12 +198,14 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                         options.Meter = _meter;
                         options.CustomerResourceId = "TestCustomerResourceId";
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-                    });
+                    })
+                    .AddMvc()
+                    .AddApiVersion();
                 })
                 .Configure(app =>
                 {
                     app.UseRouting()
-                       .UseServiceLevelIndicatorWithApiVersioning()
+                       .UseServiceLevelIndicator()
                        .Use(async (context, next) =>
                         {
                             await Task.Delay(MillisecondsDelay);
@@ -235,12 +237,14 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                         options.Meter = _meter;
                         options.CustomerResourceId = "TestCustomerResourceId";
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-                    });
+                    })
+                    .AddMvc()
+                    .AddApiVersion();
                 })
                 .Configure(app =>
                 {
                     app.UseRouting()
-                       .UseServiceLevelIndicatorWithApiVersioning()
+                       .UseServiceLevelIndicator()
                        .Use(async (context, next) =>
                        {
                            await Task.Delay(MillisecondsDelay);
