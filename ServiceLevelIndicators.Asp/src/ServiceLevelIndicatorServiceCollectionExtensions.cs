@@ -1,6 +1,7 @@
 ﻿namespace ServiceLevelIndicators;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using ServiceLevelIndicators.Asp;
 
 /// <summary>
@@ -23,6 +24,13 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         services.Configure(configureOptions);
 
         return new ServiceLevelIndicatorBuilder(services);
+    }
+
+    public static IServiceLevelIndicatorBuilder AddHttpMethodEnrichment(this IServiceLevelIndicatorBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment, HttpMethodEnrichment>());
+        return builder;
     }
 }
 

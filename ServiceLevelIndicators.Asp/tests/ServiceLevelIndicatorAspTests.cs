@@ -46,7 +46,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test"),
                 new("activity.status_code", "Ok"),
-                new("http.request.method", "GET"),
                 new("http.response.status_code", 200),
             };
 
@@ -75,7 +74,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "POST Test"),
                 new("activity.status_code", "Ok"),
-                new("http.request.method", "POST"),
                 new("http.response.status_code", 200),
             };
 
@@ -104,7 +102,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/bad_request"),
                 new("activity.status_code", "Unset"),
-                new("http.request.method", "GET"),
                 new("http.response.status_code", 400),
             };
 
@@ -164,7 +161,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "TestOperation"),
                 new("activity.status_code", "Ok"),
-                new("http.request.method", "GET"),
                 new("http.response.status_code", 200),
             };
 
@@ -193,7 +189,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/customer_resourceid/{id}"),
                 new("activity.status_code", "Ok"),
-                new("http.request.method", "GET"),
                 new("http.response.status_code", 200),
             };
 
@@ -222,7 +217,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/custom_attribute/{value}"),
                 new("activity.status_code", "Ok"),
-                new("http.request.method", "GET"),
                 new("http.response.status_code", 200),
                 new("CustomAttribute", "Mickey"),
             };
@@ -275,7 +269,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/send_sli"),
-                new("http.request.method", "GET"),
                 new("activity.status_code", "Ok"),
                 new("http.response.status_code", 200),
             };
@@ -333,7 +326,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/try_get_measured_operation_latency/{value}"),
                 new("activity.status_code", "Ok"),
-                new("http.request.method", "GET"),
                 new("http.response.status_code", 200),
                 new("CustomAttribute", "Goofy"),
             };
@@ -365,7 +357,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/name/{first}/{surname}/{age}"),
                 new("activity.status_code", "Ok"),
-                new("http.request.method", "GET"),
                 new("http.response.status_code", 200),
             };
 

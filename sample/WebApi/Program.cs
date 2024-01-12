@@ -41,7 +41,9 @@ builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
-}).AddMvc();
+})
+.AddMvc()
+.AddHttpMethodEnrichment();
 
 var app = builder.Build();
 

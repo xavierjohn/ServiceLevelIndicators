@@ -37,7 +37,6 @@ internal sealed class ServiceLevelIndicatorMiddleware
         AddSliFeatureToHttpContext(context, measuredOperation);
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
-        measuredOperation.AddAttribute("http.request.method", context.Request.Method);
         foreach (var enrichMeasuredOperationLatency in _enrichMeasuredOperationLatencies)
             await enrichMeasuredOperationLatency.Enrich(measuredOperation, context);
         RemoveSliFeatureFromHttpContext(context);

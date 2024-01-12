@@ -3,9 +3,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-public static class IServiceCollectionExtensions
+public static class ServiceLevelIndicatorServiceCollectionExtensions
 {
-    public static IServiceLevelIndicatorBuilder AddApiVersion(this IServiceLevelIndicatorBuilder builder)
+    public static IServiceLevelIndicatorBuilder AddApiVersionEnrichment(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment, ApiVersionEnrichment>());
