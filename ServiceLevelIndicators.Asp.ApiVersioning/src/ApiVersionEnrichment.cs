@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 using global::Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
-public class EnrichApiVersion : IMeasuredOperationEnrichment
+public sealed class ApiVersionEnrichment : IMeasuredOperationEnrichment
 {
 
-    public ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
+    public ValueTask Enrich(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
     {
         measuredOperation.AddAttribute("http.api.version", GetApiVersion(httpContext));
         return ValueTask.CompletedTask;

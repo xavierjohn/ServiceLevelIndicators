@@ -2,12 +2,12 @@
 
 using Microsoft.AspNetCore.Http;
 
-internal class TestMeasuredOperationLatencyEnrich(string key, string value) : IMeasuredOperationEnrichment
+internal class TestMeasuredOperationLatencyEnrichment(string key, string value) : IMeasuredOperationEnrichment
 {
     private readonly string _key = key;
     private readonly string _value = value;
 
-    public ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
+    public ValueTask Enrich(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
     {
         measuredOperation.AddAttribute(_key, _value);
         return ValueTask.CompletedTask;

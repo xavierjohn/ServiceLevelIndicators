@@ -19,7 +19,6 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configureOptions);
 
-        services.AddSingleton<IMeasuredOperationEnrichment, EnrichMeasuredOperationLatency>();
         services.AddSingleton<ServiceLevelIndicator>();
         services.Configure(configureOptions);
 

@@ -4,5 +4,5 @@ using Microsoft.AspNetCore.Http;
 
 public interface IMeasuredOperationEnrichment
 {
-    ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, HttpContext httpContext);
+    ValueTask Enrich(MeasuredOperationLatency measuredOperation, HttpContext httpContext);
 }

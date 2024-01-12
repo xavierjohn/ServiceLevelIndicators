@@ -11,7 +11,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
-    private readonly IEnumerable<IMeasuredOperationEnrichment>? _enrichMeasuredOperationLatencies;
+    private readonly IEnumerable<IMeasuredOperationEnrichment> _enrichMeasuredOperationLatencies;
 
     public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IMeasuredOperationEnrichment> enrichMeasuredOperationLatencies)
     {
@@ -38,11 +38,8 @@ internal sealed class ServiceLevelIndicatorMiddleware
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
         measuredOperation.AddAttribute("http.request.method", context.Request.Method);
-        if (_enrichMeasuredOperationLatencies is not null)
-        {
-            foreach (var enrichMeasuredOperationLatency in _enrichMeasuredOperationLatencies)
-                await enrichMeasuredOperationLatency.EnrichMeasuredOperation(measuredOperation, context);
-        }
+        foreach (var enrichMeasuredOperationLatency in _enrichMeasuredOperationLatencies)
+            await enrichMeasuredOperationLatency.Enrich(measuredOperation, context);
         RemoveSliFeatureFromHttpContext(context);
     }
 
