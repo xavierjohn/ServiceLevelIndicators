@@ -19,6 +19,7 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configureOptions);
 
         services.AddSingleton<ServiceLevelIndicator>();
+        services.AddScoped<IMeasurementContext, WebMeasurementContext>();
         services.Configure(configureOptions);
 
         return new ServiceLevelIndicatorBuilder(services);
