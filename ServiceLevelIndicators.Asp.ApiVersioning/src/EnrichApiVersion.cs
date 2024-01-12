@@ -1,18 +1,14 @@
 ﻿namespace ServiceLevelIndicators;
-using System.Threading;
 using System.Threading.Tasks;
 using global::Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
 public class EnrichApiVersion : IEnrichMeasuredOperationLatency
 {
-    private readonly HttpContext _httpContext;
 
-    public EnrichApiVersion(HttpContext httpContext) => _httpContext = httpContext;
-
-    public ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, CancellationToken cancellationToken)
+    public ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
     {
-        measuredOperation.AddAttribute("http.api.version", GetApiVersion(_httpContext));
+        measuredOperation.AddAttribute("http.api.version", GetApiVersion(httpContext));
         return ValueTask.CompletedTask;
     }
 
