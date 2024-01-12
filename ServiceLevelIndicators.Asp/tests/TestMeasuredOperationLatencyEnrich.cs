@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Http;
 
-internal class TestMeasuredOperationLatencyEnrich(string key, string value) : IEnrichMeasuredOperationLatency
+internal class TestMeasuredOperationLatencyEnrich(string key, string value) : IMeasuredOperationEnrichment
 {
     private readonly string _key = key;
     private readonly string _value = value;

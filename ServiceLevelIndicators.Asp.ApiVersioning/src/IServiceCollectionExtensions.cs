@@ -7,7 +7,7 @@ public static class IServiceCollectionExtensions
     public static IServiceLevelIndicatorBuilder AddApiVersion(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.AddSingleton<IEnrichMeasuredOperationLatency, EnrichApiVersion>();
+        builder.Services.AddSingleton<IMeasuredOperationEnrichment, EnrichApiVersion>();
         return builder;
     }
 }

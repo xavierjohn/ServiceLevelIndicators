@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-public interface IEnrichMeasuredOperationLatency
+public interface IMeasuredOperationEnrichment
 {
     ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, HttpContext httpContext);
 }

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using global::Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
-public class EnrichApiVersion : IEnrichMeasuredOperationLatency
+public class EnrichApiVersion : IMeasuredOperationEnrichment
 {
 
     public ValueTask EnrichMeasuredOperation(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
