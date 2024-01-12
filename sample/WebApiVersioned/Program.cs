@@ -55,7 +55,9 @@ builder.Services.AddServiceLevelIndicator(options =>
     Guid serviceTree = Guid.NewGuid();
     options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceTree);
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
-}).AddMvc();
+})
+.AddMvc()
+.AddApiVersion();
 
 var app = builder.Build();
 
@@ -75,7 +77,7 @@ app.UseSwaggerUI(
         }
     });
 app.UseHttpsRedirection();
-app.UseServiceLevelIndicatorWithApiVersioning();
+app.UseServiceLevelIndicator();
 app.UseAuthorization();
 
 app.MapControllers();

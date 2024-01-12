@@ -1,6 +1,7 @@
 ﻿namespace ServiceLevelIndicators;
 
 using Microsoft.Extensions.DependencyInjection;
+using ServiceLevelIndicators.Asp;
 
 /// <summary>
 /// Extension methods for the ServiceLevelIndicator middleware.
@@ -18,6 +19,7 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configureOptions);
 
+        services.AddScoped<IEnrichMeasuredOperationLatency, EnrichMeasuredOperationLatency>();
         services.AddSingleton<ServiceLevelIndicator>();
         services.Configure(configureOptions);
 

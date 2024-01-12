@@ -13,7 +13,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly IEnumerable<IEnrichMeasuredOperationLatency>? _enrichMeasuredOperationLatencies;
 
-    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IEnrichMeasuredOperationLatency>? enrichMeasuredOperationLatencies = null)
+    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IEnrichMeasuredOperationLatency> enrichMeasuredOperationLatencies)
     {
         _next = next;
         _serviceLevelIndicator = serviceLevelIndicator;
