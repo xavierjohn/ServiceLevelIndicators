@@ -5,10 +5,13 @@ using Microsoft.AspNetCore.Http;
 
 internal sealed class Enrich : IMeasuredOperationEnrichment
 {
-    private readonly Func<HttpContext, MeasuredOperationLatency, ValueTask> _func;
+    private readonly Action<HttpContext, MeasuredOperationLatency> _action;
 
-    public Enrich(Func<HttpContext, MeasuredOperationLatency, ValueTask> func) => _func = func;
+    public Enrich(Action<HttpContext, MeasuredOperationLatency> func) => _action = func;
 
     ValueTask IMeasuredOperationEnrichment.EnrichAsync(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
-        => _func(httpContext, measuredOperation);
+    {
+        _action(httpContext, measuredOperation);
+        return ValueTask.CompletedTask;
+    }
 }

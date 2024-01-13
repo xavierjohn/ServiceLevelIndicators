@@ -138,6 +138,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("http.response.status_code", 200),
                 new("foo", "bar"),
                 new("test", "again"),
+                new("enrichAsync", "async"),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);

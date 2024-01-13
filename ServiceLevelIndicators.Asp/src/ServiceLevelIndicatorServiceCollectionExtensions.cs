@@ -23,11 +23,19 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         return builder;
     }
 
-    public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Func<HttpContext, MeasuredOperationLatency, ValueTask> func)
+    public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Action<HttpContext, MeasuredOperationLatency> action)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(action);
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment>(new Enrich(action)));
+        return builder;
+    }
+
+    public static IServiceLevelIndicatorBuilder EnrichAsync(this IServiceLevelIndicatorBuilder builder, Func<HttpContext, MeasuredOperationLatency, ValueTask> func)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(func);
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment>(new Enrich(func)));
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment>(new EnrichAsync(func)));
         return builder;
     }
 }

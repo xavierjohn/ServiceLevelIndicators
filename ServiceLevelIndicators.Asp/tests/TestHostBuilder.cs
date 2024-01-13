@@ -65,7 +65,10 @@ internal class TestHostBuilder
                     {
                         if (context.Request.Headers.TryGetValue("from", out var from))
                             m.CustomerResourceId = from!;
-
+                    })
+                    .EnrichAsync((context, m) =>
+                    {
+                        m.AddAttribute("enrichAsync", "async");
                         return ValueTask.CompletedTask;
                     });
                 })
