@@ -33,12 +33,15 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
 - Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
 - activity.status_code - The activity status code tells if the operation succeeded or failed. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
 
-    If ServiceLevelIndicators.Asp is utilized, the activity status code will be designated as "Ok" when the http response status code is in the 2xx range,
-    "Error" when the http response status code is in the 5xx range,
-    and "Unset" for any other status code.
-- http.response.status_code - The http status code is added when ServiceLevelIndicators.Asp package is used. 
-- http.request.method - The http request method (GET, POST, etc) is added when ServiceLevelIndicators.Asp package is used. 
-- http.api.version - API Version is added when ServiceLevelIndicators.Asp.Versioning is used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
+ServiceLevelIndicators.Asp adds the following dimensions.
+
+- The activity status code will be
+   "Ok" when the http response status code is in the 2xx range,
+   "Error" when the http response status code is in the 5xx range,
+   "Unset" for any other status code.
+- http.response.status_code - The http status code.
+- http.request.method (Optional)- The http request method (GET, POST, etc) is added.
+- http.api.version (Optional)- API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
 
 ## NuGet Packages
 
@@ -83,9 +86,7 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
     {
         private readonly SampleApiMeters meters;
-
         public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters) => this.meters = meters;
-
         public void Configure(ServiceLevelIndicatorOptions options) => options.Meter = meters.Meter;
     }
 
@@ -93,7 +94,7 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
         ConfigureServiceLevelIndicatorOptions>());
     ```
 
-3. Add ServiceLevelIndicator into the dependency injection.
+3. Add ServiceLevelIndicator with MVC, into the dependency injection.
 
    Example.
 
@@ -102,13 +103,16 @@ By default, an instrument named `LatencySLI` is added to the service metrics and
     {
         // Override with calling service id or customer Id.
         options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
-        
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
-    });
+    })
+    .AddMvc();
     ```
 
 4. Add the middleware to the pipeline.
-   If API versioning is used and want http.api.version as a SLI metric dimension, Use `app.UseServiceLevelIndicatorWithApiVersioning();` else, `app.UseServiceLevelIndicator();`
+
+    ``` csharp
+    app.UseServiceLevelIndicator();
+    ```
 
 ## Usage for Minimal API
 
@@ -170,8 +174,34 @@ Example.
 ### Customizations
 
 Once the Prerequisites are done, all controllers will emit SLI information.
-The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;. 
+The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;.
 eg GET WeatherForecast/Action1
+
+- To add API versioning as a dimension use package `ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersionEnrichment`.
+
+   Example.
+
+    ``` csharp
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        /// Options
+    })
+    .AddMvc()
+    .AddApiVersionEnrichment();
+    ```
+
+- To add HTTP method as a dimension, add `AddHttpMethodEnrichment` to Service Level Indicator.
+
+   Example.
+
+    ``` csharp
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        /// Options
+    })
+    .AddMvc()
+    .AddHttpMethodEnrichment();
+    ```
 
 - To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
 
