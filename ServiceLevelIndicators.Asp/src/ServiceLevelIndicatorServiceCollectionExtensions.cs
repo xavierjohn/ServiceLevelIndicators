@@ -23,7 +23,7 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         return builder;
     }
 
-    public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Func<MeasuredOperationLatency, HttpContext, ValueTask> func)
+    public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Func<HttpContext, MeasuredOperationLatency, ValueTask> func)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(func);

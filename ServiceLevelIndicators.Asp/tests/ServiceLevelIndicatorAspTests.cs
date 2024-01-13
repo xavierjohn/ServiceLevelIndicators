@@ -119,7 +119,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
         HttpRequestMessage request = new(HttpMethod.Get, "test");
-        request.Headers.Add("upn", "xavier@somewhere.com");
+        request.Headers.Add("from", "xavier@somewhere.com");
 
         using var host = await TestHostBuilder.CreateHostWithSliEnriched(_meter);
 

@@ -61,11 +61,10 @@ internal class TestHostBuilder
                     .AddHttpMethodEnrichment()
                     .AddTestEnrichment("foo", "bar")
                     .AddTestEnrichment("test", "again")
-                    .Enrich((mol, context) =>
+                    .Enrich((context, m) =>
                     {
-                        if (context.Request.Headers.TryGetValue("upn", out var upn)
-                        && !StringValues.IsNullOrEmpty(upn))
-                            mol.CustomerResourceId = upn!;
+                        if (context.Request.Headers.TryGetValue("from", out var from))
+                            m.CustomerResourceId = from!;
 
                         return ValueTask.CompletedTask;
                     });
