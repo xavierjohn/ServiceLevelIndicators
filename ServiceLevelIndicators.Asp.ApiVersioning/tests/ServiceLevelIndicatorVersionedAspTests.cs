@@ -51,7 +51,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
             new("activity.status_code", "Ok"),
-            new("http.request.method", "GET"),
             new("http.response.status_code", 200),
             new("http.api.version", "2023-08-29"),
         ];
@@ -75,7 +74,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
             new("activity.status_code", "Ok"),
-            new("http.request.method", "GET"),
             new("http.response.status_code", 200),
             new("http.api.version", "2023-08-29"),
         ];
@@ -101,7 +99,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestNeutral"),
-            new("http.request.method", "GET"),
             new("activity.status_code", "Ok"),
             new("http.response.status_code", 200),
         ];
@@ -126,7 +123,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
             new("activity.status_code", "Ok"),
-            new("http.request.method", "GET"),
             new("http.response.status_code", 200),
         ];
         using var host = await CreateHostWithDefaultApiVersion();
@@ -155,7 +151,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     [Theory]
     [InlineData("testSingle", "api-version=invalid")]
     [InlineData("testDouble", "api-version=2023-08-29&api-version=2023-09-01")]
-    public async Task SLI_Metrics_is_emitted_when_invalid_api_version(string route, string version)
+    public async Task SLI_Metrics_is_emitted_when_api_version_is_invalid(string route, string version)
     {
         // Arrange
         _expectedTags =
@@ -165,7 +161,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET /" + route),
             new("activity.status_code", "Unset"),
-            new("http.request.method", "GET"),
             new("http.response.status_code", 400),
         ];
         var routeWithVersion = route + "?" + version;

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Primitives;
 
 internal class TestHostBuilder
 {
@@ -59,7 +60,15 @@ internal class TestHostBuilder
                     .AddMvc()
                     .AddHttpMethodEnrichment()
                     .AddTestEnrichment("foo", "bar")
-                    .AddTestEnrichment("test", "again");
+                    .AddTestEnrichment("test", "again")
+                    .Enrich((mol, context) =>
+                    {
+                        if (context.Request.Headers.TryGetValue("upn", out var upn)
+                        && !StringValues.IsNullOrEmpty(upn))
+                            mol.CustomerResourceId = upn!;
+
+                        return ValueTask.CompletedTask;
+                    });
                 })
                 .Configure(app =>
                 {

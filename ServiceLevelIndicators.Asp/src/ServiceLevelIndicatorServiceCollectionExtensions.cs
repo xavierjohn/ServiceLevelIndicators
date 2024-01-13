@@ -1,5 +1,6 @@
 ﻿namespace ServiceLevelIndicators;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -8,27 +9,25 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 /// </summary>
 public static class ServiceLevelIndicatorServiceCollectionExtensions
 {
-    /// <summary>
-    /// Add service level indicator options.
-    /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> for adding services.</param>
-    /// <param name="configureOptions">A delegate to configure the <see cref="ServiceLevelIndicatorOptions"/>.</param>
-    /// <returns></returns>
-    public static IServiceLevelIndicatorBuilder AddServiceLevelIndicator(this IServiceCollection services, Action<ServiceLevelIndicatorOptions> configureOptions)
+    public static IServiceLevelIndicatorBuilder AddMvc(this IServiceLevelIndicatorBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(configureOptions);
-
-        services.AddSingleton<ServiceLevelIndicator>();
-        services.Configure(configureOptions);
-
-        return new ServiceLevelIndicatorBuilder(services);
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.Services.AddMvcCore(static options => options.Conventions.Add(new ServiceLevelIndicatorConvention()));
+        return builder;
     }
 
     public static IServiceLevelIndicatorBuilder AddHttpMethodEnrichment(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment, HttpMethodEnrichment>());
+        return builder;
+    }
+
+    public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Func<MeasuredOperationLatency, HttpContext, ValueTask> func)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(func);
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment>(new Enrich(func)));
         return builder;
     }
 }

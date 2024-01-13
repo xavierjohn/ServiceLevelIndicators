@@ -1,5 +1,7 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
 using Microsoft.AspNetCore.TestHost;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Diagnostics.Metrics;
 using System.Net;
 using Xunit.Abstractions;
@@ -112,21 +114,23 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task SLI_Metrics_is_emitted_with_enrichment()
+    public async Task SLI_Metrics_is_emitted_with_enriched_data()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
+        HttpRequestMessage request = new(HttpMethod.Get, "test");
+        request.Headers.Add("upn", "xavier@somewhere.com");
 
         using var host = await TestHostBuilder.CreateHostWithSliEnriched(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().SendAsync(request);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
         {
             var expectedTags = new KeyValuePair<string, object?>[]
             {
-                new("CustomerResourceId", "TestCustomerResourceId"),
+                new("CustomerResourceId", "xavier@somewhere.com"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test"),
                 new("activity.status_code", "Ok"),
@@ -199,7 +203,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task Add_custom_SLI_attribute()
+    public async Task CustomAttribute_is_added_to_SLI_dimension()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
