@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 public sealed class ApiVersionEnrichment : IMeasuredOperationEnrichment
 {
 
-    public ValueTask Enrich(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
+    public ValueTask EnrichAsync(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
     {
         measuredOperation.AddAttribute("http.api.version", GetApiVersion(httpContext));
         return ValueTask.CompletedTask;

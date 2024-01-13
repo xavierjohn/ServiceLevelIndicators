@@ -40,7 +40,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         foreach (var enrichment in _enrichments)
         {
             if (context.RequestAborted.IsCancellationRequested) break;
-            await enrichment.Enrich(measuredOperation, context);
+            await enrichment.EnrichAsync(measuredOperation, context);
         }
         RemoveSliFeatureFromHttpContext(context);
     }

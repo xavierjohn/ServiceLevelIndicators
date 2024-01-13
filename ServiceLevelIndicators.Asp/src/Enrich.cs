@@ -9,6 +9,6 @@ internal sealed class Enrich : IMeasuredOperationEnrichment
 
     public Enrich(Func<HttpContext, MeasuredOperationLatency, ValueTask> func) => _func = func;
 
-    ValueTask IMeasuredOperationEnrichment.Enrich(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
+    ValueTask IMeasuredOperationEnrichment.EnrichAsync(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
         => _func(httpContext, measuredOperation);
 }
