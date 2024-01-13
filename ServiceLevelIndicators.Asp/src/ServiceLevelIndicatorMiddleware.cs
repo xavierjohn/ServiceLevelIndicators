@@ -38,7 +38,10 @@ internal sealed class ServiceLevelIndicatorMiddleware
         await _next(context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
         foreach (var enrichment in _enrichments)
+        {
+            if (context.RequestAborted.IsCancellationRequested) break;
             await enrichment.Enrich(measuredOperation, context);
+        }
         RemoveSliFeatureFromHttpContext(context);
     }
 
