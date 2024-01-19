@@ -21,7 +21,7 @@ public class MeasuredOperationLatency : IDisposable
         _serviceLevelIndicator = serviceLevelIndicator;
         Operation = operation;
         CustomerResourceId = customerResourceId;
-        Attributes = attributes.ToList();
+        Attributes = [.. attributes];
         _stopWatch = Stopwatch.StartNew();
     }
 
