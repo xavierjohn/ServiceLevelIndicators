@@ -7,7 +7,7 @@ internal static class IServiceCollectionExtensions
     public static IServiceLevelIndicatorBuilder AddTestEnrichment(this IServiceLevelIndicatorBuilder builder, string key, string value)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.AddSingleton<IMeasuredOperationEnrichment>(new TestMeasuredOperationLatencyEnrichment(key, value));
+        builder.Services.AddSingleton<IMeasurement<WebMeasurementContext>>(new TestMeasuredOperationLatencyEnrichment(key, value));
         return builder;
     }
 }

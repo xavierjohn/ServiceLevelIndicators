@@ -1,15 +1,16 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
 
-using Microsoft.AspNetCore.Http;
+using System.Threading;
 
-internal class TestMeasuredOperationLatencyEnrichment(string key, string value) : IMeasuredOperationEnrichment
+internal class TestMeasuredOperationLatencyEnrichment(string key, string value)
+    : IMeasurement<WebMeasurementContext>
 {
     private readonly string _key = key;
     private readonly string _value = value;
 
-    public ValueTask EnrichAsync(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
+    public ValueTask EnrichAsync(WebMeasurementContext context, CancellationToken cancellationToken)
     {
-        measuredOperation.AddAttribute(_key, _value);
+        context.AddAttribute(_key, _value);
         return ValueTask.CompletedTask;
     }
 }
