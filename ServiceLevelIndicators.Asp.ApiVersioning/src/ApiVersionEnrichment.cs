@@ -1,7 +1,7 @@
 ﻿namespace ServiceLevelIndicators;
 using System.Threading;
 using System.Threading.Tasks;
-using global::Asp.Versioning;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
 public sealed class ApiVersionEnrichment

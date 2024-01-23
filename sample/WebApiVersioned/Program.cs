@@ -6,7 +6,6 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SampleVersionedWebApplicationSLI;
-using ServiceLevelIndicators.Asp;
 
 var builder = WebApplication.CreateBuilder(args);
 

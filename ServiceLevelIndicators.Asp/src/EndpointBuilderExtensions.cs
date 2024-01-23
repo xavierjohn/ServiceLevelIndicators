@@ -1,4 +1,4 @@
-﻿namespace ServiceLevelIndicators.Asp;
+﻿namespace ServiceLevelIndicators;
 
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
