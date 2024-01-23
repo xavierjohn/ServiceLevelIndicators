@@ -1,14 +1,14 @@
 ﻿namespace ServiceLevelIndicators;
 
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
-internal sealed class EnrichAsync : IMeasuredOperationEnrichment
+internal sealed class EnrichAsync : IEnrichment<WebEnrichmentContext>
 {
-    private readonly Func<HttpContext, MeasuredOperationLatency, ValueTask> _func;
+    private readonly Func<WebEnrichmentContext, CancellationToken, ValueTask> _func;
 
-    public EnrichAsync(Func<HttpContext, MeasuredOperationLatency, ValueTask> func) => _func = func;
+    public EnrichAsync(Func<WebEnrichmentContext, CancellationToken, ValueTask> func) => _func = func;
 
-    ValueTask IMeasuredOperationEnrichment.EnrichAsync(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
-        => _func(httpContext, measuredOperation);
+    ValueTask IEnrichment<WebEnrichmentContext>.EnrichAsync(WebEnrichmentContext context, CancellationToken cancellationToken)
+        => _func(context, cancellationToken);
 }

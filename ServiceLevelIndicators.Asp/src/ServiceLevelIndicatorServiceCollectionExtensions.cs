@@ -19,23 +19,23 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
     public static IServiceLevelIndicatorBuilder AddHttpMethodEnrichment(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment, HttpMethodEnrichment>());
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IEnrichment<WebEnrichmentContext>, HttpMethodEnrichment>());
         return builder;
     }
 
-    public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Action<HttpContext, MeasuredOperationLatency> action)
+    public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Action<WebEnrichmentContext> action)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(action);
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment>(new Enrich(action)));
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IEnrichment<WebEnrichmentContext>>(new Enrich(action)));
         return builder;
     }
 
-    public static IServiceLevelIndicatorBuilder EnrichAsync(this IServiceLevelIndicatorBuilder builder, Func<HttpContext, MeasuredOperationLatency, ValueTask> func)
+    public static IServiceLevelIndicatorBuilder EnrichAsync(this IServiceLevelIndicatorBuilder builder, Func<WebEnrichmentContext, CancellationToken, ValueTask> func)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(func);
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IMeasuredOperationEnrichment>(new EnrichAsync(func)));
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IEnrichment<WebEnrichmentContext>>(new EnrichAsync(func)));
         return builder;
     }
 }

@@ -1,12 +1,12 @@
 ﻿namespace ServiceLevelIndicators;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
-internal sealed class HttpMethodEnrichment : IMeasuredOperationEnrichment
+internal sealed class HttpMethodEnrichment
+    : IEnrichment<WebEnrichmentContext>
 {
-    public ValueTask EnrichAsync(MeasuredOperationLatency measuredOperation, HttpContext context)
+    public ValueTask EnrichAsync(WebEnrichmentContext context, CancellationToken cancellationToken)
     {
-        measuredOperation.AddAttribute("http.request.method", context.Request.Method);
+        context.AddAttribute("http.request.method", context.HttpContext.Request.Method);
         return ValueTask.CompletedTask;
     }
 }

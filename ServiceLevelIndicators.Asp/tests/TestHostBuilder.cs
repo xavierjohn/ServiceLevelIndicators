@@ -61,14 +61,14 @@ internal class TestHostBuilder
                     .AddHttpMethodEnrichment()
                     .AddTestEnrichment("foo", "bar")
                     .AddTestEnrichment("test", "again")
-                    .Enrich((context, m) =>
+                    .Enrich((context) =>
                     {
-                        if (context.Request.Headers.TryGetValue("from", out var from))
-                            m.CustomerResourceId = from!;
+                        if (context.HttpContext.Request.Headers.TryGetValue("from", out var from))
+                            context.SetCustomerResourceId(from!);
                     })
-                    .EnrichAsync((context, m) =>
+                    .EnrichAsync((context, cancellationToken) =>
                     {
-                        m.AddAttribute("enrichAsync", "async");
+                        context.AddAttribute("enrichAsync", "async");
                         return ValueTask.CompletedTask;
                     });
                 })

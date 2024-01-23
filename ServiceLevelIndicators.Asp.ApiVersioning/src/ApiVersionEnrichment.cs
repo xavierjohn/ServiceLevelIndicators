@@ -1,14 +1,15 @@
 ﻿namespace ServiceLevelIndicators;
+using System.Threading;
 using System.Threading.Tasks;
-using global::Asp.Versioning;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
-public sealed class ApiVersionEnrichment : IMeasuredOperationEnrichment
+public sealed class ApiVersionEnrichment
+    : IEnrichment<WebEnrichmentContext>
 {
-
-    public ValueTask EnrichAsync(MeasuredOperationLatency measuredOperation, HttpContext httpContext)
+    public ValueTask EnrichAsync(WebEnrichmentContext context, CancellationToken cancellationToken)
     {
-        measuredOperation.AddAttribute("http.api.version", GetApiVersion(httpContext));
+        context.AddAttribute("http.api.version", GetApiVersion(context.HttpContext));
         return ValueTask.CompletedTask;
     }
 
