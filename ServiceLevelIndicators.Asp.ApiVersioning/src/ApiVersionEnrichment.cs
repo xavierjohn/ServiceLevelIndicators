@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using global::Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
-public sealed class ApiVersionMeasurement
+public sealed class ApiVersionEnrichment
     : IEnrichment<WebEnrichmentContext>
 {
     public ValueTask EnrichAsync(WebEnrichmentContext context, CancellationToken cancellationToken)
