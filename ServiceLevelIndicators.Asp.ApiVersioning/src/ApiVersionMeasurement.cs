@@ -5,9 +5,9 @@ using global::Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 
 public sealed class ApiVersionMeasurement
-    : IMeasurement<WebMeasurementContext>
+    : IEnrichment<WebEnrichmentContext>
 {
-    public ValueTask EnrichAsync(WebMeasurementContext context, CancellationToken cancellationToken)
+    public ValueTask EnrichAsync(WebEnrichmentContext context, CancellationToken cancellationToken)
     {
         context.AddAttribute("http.api.version", GetApiVersion(context.HttpContext));
         return ValueTask.CompletedTask;

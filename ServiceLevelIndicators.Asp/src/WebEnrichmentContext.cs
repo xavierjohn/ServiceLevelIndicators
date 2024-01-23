@@ -1,12 +1,12 @@
 ﻿namespace ServiceLevelIndicators;
 using Microsoft.AspNetCore.Http;
 
-public class WebMeasurementContext : IMeasurementContext
+public class WebEnrichmentContext : IEnrichmentContext
 {
     private readonly MeasuredOperationLatency _operation;
     public HttpContext HttpContext { get; }
 
-    public WebMeasurementContext(MeasuredOperationLatency operation, HttpContext httpContext)
+    public WebEnrichmentContext(MeasuredOperationLatency operation, HttpContext httpContext)
     {
         _operation = operation;
         HttpContext = httpContext;

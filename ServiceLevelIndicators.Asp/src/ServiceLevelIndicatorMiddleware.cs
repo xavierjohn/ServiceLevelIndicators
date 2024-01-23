@@ -11,9 +11,9 @@ internal sealed class ServiceLevelIndicatorMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
-    private readonly IEnumerable<IMeasurement<WebMeasurementContext>> _enrichments;
+    private readonly IEnumerable<IEnrichment<WebEnrichmentContext>> _enrichments;
 
-    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IMeasurement<WebMeasurementContext>> enrichments)
+    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IEnrichment<WebEnrichmentContext>> enrichments)
     {
         _next = next;
         _serviceLevelIndicator = serviceLevelIndicator;
@@ -36,7 +36,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         SetCustomerResourceIdFromAttribute(context, metadata, measuredOperation);
         AddSliFeatureToHttpContext(context, measuredOperation);
         await _next(context);
-        var webmeasurementContext = new WebMeasurementContext(measuredOperation, context);
+        var webmeasurementContext = new WebEnrichmentContext(measuredOperation, context);
         UpdateOperationWithResponseStatus(context, measuredOperation);
         foreach (var enrichment in _enrichments)
         {

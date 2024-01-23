@@ -1,6 +1,6 @@
 ﻿namespace ServiceLevelIndicators;
 
-public interface IMeasurementContext
+public interface IEnrichmentContext
 {
     string Operation { get; }
     void SetCustomerResourceId(string id);

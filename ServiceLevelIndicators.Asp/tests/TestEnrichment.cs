@@ -2,13 +2,13 @@
 
 using System.Threading;
 
-internal class TestMeasuredOperationLatencyEnrichment(string key, string value)
-    : IMeasurement<WebMeasurementContext>
+internal class TestEnrichment(string key, string value)
+    : IEnrichment<WebEnrichmentContext>
 {
     private readonly string _key = key;
     private readonly string _value = value;
 
-    public ValueTask EnrichAsync(WebMeasurementContext context, CancellationToken cancellationToken)
+    public ValueTask EnrichAsync(WebEnrichmentContext context, CancellationToken cancellationToken)
     {
         context.AddAttribute(_key, _value);
         return ValueTask.CompletedTask;

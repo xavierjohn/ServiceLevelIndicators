@@ -3,12 +3,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-internal sealed class EnrichAsync : IMeasurement<WebMeasurementContext>
+internal sealed class EnrichAsync : IEnrichment<WebEnrichmentContext>
 {
-    private readonly Func<WebMeasurementContext, CancellationToken, ValueTask> _func;
+    private readonly Func<WebEnrichmentContext, CancellationToken, ValueTask> _func;
 
-    public EnrichAsync(Func<WebMeasurementContext, CancellationToken, ValueTask> func) => _func = func;
+    public EnrichAsync(Func<WebEnrichmentContext, CancellationToken, ValueTask> func) => _func = func;
 
-    ValueTask IMeasurement<WebMeasurementContext>.EnrichAsync(WebMeasurementContext context, CancellationToken cancellationToken)
+    ValueTask IEnrichment<WebEnrichmentContext>.EnrichAsync(WebEnrichmentContext context, CancellationToken cancellationToken)
         => _func(context, cancellationToken);
 }
