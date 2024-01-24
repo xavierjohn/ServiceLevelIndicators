@@ -195,7 +195,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                     })
                     .AddMvc()
-                    .AddApiVersionEnrichment();
+                    .AddApiVersion();
                 })
                 .Configure(app =>
                 {
@@ -234,7 +234,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                     })
                     .AddMvc()
-                    .AddApiVersionEnrichment();
+                    .AddApiVersion();
                 })
                 .Configure(app =>
                 {
