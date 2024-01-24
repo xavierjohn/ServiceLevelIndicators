@@ -56,7 +56,7 @@ builder.Services.AddServiceLevelIndicator(options =>
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
 })
 .AddMvc()
-.AddApiVersionEnrichment();
+.AddApiVersion();
 
 var app = builder.Build();
 

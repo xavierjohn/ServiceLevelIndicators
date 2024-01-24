@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public static class ServiceLevelIndicatorServiceCollectionExtensions
 {
-    public static IServiceLevelIndicatorBuilder AddApiVersionEnrichment(this IServiceLevelIndicatorBuilder builder)
+    public static IServiceLevelIndicatorBuilder AddApiVersion(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IEnrichment<WebEnrichmentContext>, ApiVersionEnrichment>());
