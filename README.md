@@ -28,20 +28,23 @@ The metrics is emitted via standard [.NET Meter Class](https://learn.microsoft.c
 
 By default, an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
-- CustomerResourceId - The customer resource id.
-- LocationId - The location id of where the service running. eg. Public cloud, West US 3 region.
-- Operation - The name of the operation. Defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
-- activity.status_code - The activity status code tells if the operation succeeded or failed. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
+- CustomerResourceId - A value that helps identity the customer, customer group or calling service.
+- LocationId - The location where the service running. eg. Public cloud, West US 3 region.
+- Operation - The name of the operation.
+- activity.status_code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
 
 ServiceLevelIndicators.Asp adds the following dimensions.
 
+- Operation - In ASP.NET the operation name defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
 - The activity status code will be
    "Ok" when the http response status code is in the 2xx range,
    "Error" when the http response status code is in the 5xx range,
    "Unset" for any other status code.
 - http.response.status_code - The http status code.
 - http.request.method (Optional)- The http request method (GET, POST, etc) is added.
-- http.api.version (Optional)- API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
+
+ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
+- http.api.version - The API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
 
 ## NuGet Packages
 
@@ -70,12 +73,14 @@ ServiceLevelIndicators.Asp adds the following dimensions.
    Example.
 
     ``` csharp
+
     public class SampleApiMeters
     {
         public const string MeterName = "SampleMeter";
         public Meter Meter { get; } = new Meter(MeterName);
     }
     builder.Services.AddSingleton<SampleApiMeters>();
+    
     ```
 
 2. Add a class to configure SLI
@@ -83,6 +88,7 @@ ServiceLevelIndicators.Asp adds the following dimensions.
     Example.
 
     ```csharp
+
     internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
     {
         private readonly SampleApiMeters meters;
@@ -92,13 +98,15 @@ ServiceLevelIndicators.Asp adds the following dimensions.
 
     builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
         ConfigureServiceLevelIndicatorOptions>());
+
     ```
 
-3. Add ServiceLevelIndicator with MVC, into the dependency injection.
+3. Add ServiceLevelIndicator, into the dependency injection. AddMvc() is required for overrides present in SLI attributes to take effect.
 
    Example.
 
     ``` csharp
+
     builder.Services.AddServiceLevelIndicator(options =>
     {
         // Override with calling service id or customer Id.
@@ -106,12 +114,15 @@ ServiceLevelIndicators.Asp adds the following dimensions.
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     })
     .AddMvc();
+
     ```
 
 4. Add the middleware to the pipeline.
 
     ``` csharp
+
     app.UseServiceLevelIndicator();
+
     ```
 
 ## Usage for Minimal API
@@ -177,7 +188,7 @@ Once the Prerequisites are done, all controllers will emit SLI information.
 The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;.
 eg GET WeatherForecast/Action1
 
-- To add API versioning as a dimension use package `ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersionEnrichment`.
+- To add API versioning as a dimension use package `ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersion`.
 
    Example.
 
@@ -187,10 +198,10 @@ eg GET WeatherForecast/Action1
         /// Options
     })
     .AddMvc()
-    .AddApiVersionEnrichment();
+    .AddApiVersion();
     ```
 
-- To add HTTP method as a dimension, add `AddHttpMethodEnrichment` to Service Level Indicator.
+- To add HTTP method as a dimension, add `AddHttpMethod` to Service Level Indicator.
 
    Example.
 
@@ -200,7 +211,7 @@ eg GET WeatherForecast/Action1
         /// Options
     })
     .AddMvc()
-    .AddHttpMethodEnrichment();
+    .AddHttpMethod();
     ```
 
 - To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
@@ -209,15 +220,15 @@ eg GET WeatherForecast/Action1
 
     ``` csharp
     [HttpGet("MyAction2")]
-    [ServiceLevelIndicator(Operation = "MyOperation")]
+    [ServiceLevelIndicator(Operation = "MyNewOperationName")]
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
     ```
 
-- To override the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
+- To set the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
 
     ```csharp
-        [HttpGet("get-by-zip-code/{zipCode}")]
-        public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
+    [HttpGet("get-by-zip-code/{zipCode}")]
+    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
     ```
 
     Or use `GetMeasuredOperationLatency` extension method.
@@ -234,7 +245,7 @@ eg GET WeatherForecast/Action1
 - To add custom Open Telemetry attributes.  
 
     ``` csharp
-        HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
+    HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
     ```
 
     GetMeasuredOperationLatency will **throw** if the route is not configured to emit SLI.
@@ -242,8 +253,8 @@ eg GET WeatherForecast/Action1
     When used in a middleware or scenarios where a route may not be configured to emit SLI.
 
     ``` csharp
-        if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
-            measuredOperationLatency.AddAttribute("CustomAttribute", value);
+    if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
+        measuredOperationLatency.AddAttribute("CustomAttribute", value);
     ```
 
     You can add additional dimensions to the SLI data by using the `Measure` attribute.
@@ -256,7 +267,7 @@ eg GET WeatherForecast/Action1
 - To prevent automatically emitting SLI information on all controllers, set the option,
 
     ``` csharp
-        ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
+    ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
     ```
 
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
@@ -267,11 +278,12 @@ eg GET WeatherForecast/Action1
 
     ``` csharp
    public void StoreItem(MyDomainEvent domainEvent)
-    {
+   {
         var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", attribute);
         DoTheWork();
-    ```
+   )
+   ```
 
 ### Sample
 
