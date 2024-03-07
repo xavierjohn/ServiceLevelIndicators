@@ -42,7 +42,7 @@ builder.Services.AddServiceLevelIndicator(options =>
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
     options.Meter = Sample.Meter;
 })
-.AddHttpMethodEnrichment();
+.AddHttpMethod();
 
 // Add services to the container.
 

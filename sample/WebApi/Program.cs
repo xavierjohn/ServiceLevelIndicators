@@ -42,7 +42,7 @@ builder.Services.AddServiceLevelIndicator(options =>
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
 })
 .AddMvc()
-.AddHttpMethodEnrichment();
+.AddHttpMethod();
 
 var app = builder.Build();
 

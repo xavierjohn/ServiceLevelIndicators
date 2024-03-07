@@ -174,12 +174,12 @@ You can measure a block of code by boxing it in a using clause of MeasuredOperat
 Example.
 
 ```csharp
-    async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
-    {
-        using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("OperationName");
-        // Do Work.
-        measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
-    }
+async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
+{
+    using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("OperationName");
+    // Do Work.
+    measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+}
 ```
 
 ### Customizations
