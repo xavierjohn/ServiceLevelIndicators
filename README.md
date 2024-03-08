@@ -250,7 +250,8 @@ eg GET WeatherForecast/Action1
     ```csharp
 
     [HttpGet("get-by-zip-code/{zipCode}")]
-    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
+    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode)
+       => GetWeather();
 
     ```
 
@@ -291,7 +292,10 @@ eg GET WeatherForecast/Action1
     ```csharp
 
     [HttpGet("name/{first}/{surname}")]
-    public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string surname) => Ok(first + " " + surname);
+    public IActionResult GetCustomerResourceId(
+        [Measure] string first,
+        [CustomerResourceId] string surname)
+          => Ok(first + " " + surname);
 
     ```
 
