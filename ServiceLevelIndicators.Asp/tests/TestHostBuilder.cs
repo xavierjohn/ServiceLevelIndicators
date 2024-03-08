@@ -58,7 +58,7 @@ internal class TestHostBuilder
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                     })
                     .AddMvc()
-                    .AddHttpMethodEnrichment()
+                    .AddHttpMethod()
                     .AddTestEnrichment("foo", "bar")
                     .AddTestEnrichment("test", "again")
                     .Enrich((context) =>
