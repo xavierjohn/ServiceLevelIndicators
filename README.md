@@ -91,12 +91,16 @@ ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
 
     internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
     {
+        public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters)
+            => this.meters = meters;
+        public void Configure(ServiceLevelIndicatorOptions options)
+            => options.Meter = meters.Meter;
+
         private readonly SampleApiMeters meters;
-        public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters) => this.meters = meters;
-        public void Configure(ServiceLevelIndicatorOptions options) => options.Meter = meters.Meter;
     }
 
-    builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
+    builder.Services.TryAddEnumerable(
+        ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
         ConfigureServiceLevelIndicatorOptions>());
 
     ```
