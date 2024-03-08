@@ -89,7 +89,8 @@ ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
 
     ```csharp
 
-    internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
+    internal sealed class ConfigureServiceLevelIndicatorOptions
+        : IConfigureOptions<ServiceLevelIndicatorOptions>
     {
         public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters)
             => this.meters = meters;
@@ -316,7 +317,7 @@ eg GET WeatherForecast/Action1
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", attribute);
         DoTheWork();
    )
-   
+
    ```
 
 ### Sample
