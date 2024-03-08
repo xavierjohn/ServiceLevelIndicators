@@ -91,12 +91,16 @@ ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
 
     internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
     {
+        public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters)
+            => this.meters = meters;
+        public void Configure(ServiceLevelIndicatorOptions options)
+            => options.Meter = meters.Meter;
+
         private readonly SampleApiMeters meters;
-        public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters) => this.meters = meters;
-        public void Configure(ServiceLevelIndicatorOptions options) => options.Meter = meters.Meter;
     }
 
-    builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
+    builder.Services.TryAddEnumerable(
+        ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
         ConfigureServiceLevelIndicatorOptions>());
 
     ```
@@ -132,10 +136,12 @@ ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
     Example.
 
     ```csharp
+
     internal sealed class Sample
     {
         public static Meter Meter { get; } = new(nameof(Sample));
     }
+
     ```
 
 2. Add ServiceLevelIndicator into the dependency injection.
@@ -143,12 +149,14 @@ ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
    Example.
 
     ``` csharp
+
     builder.Services.AddServiceLevelIndicator(options =>
     {
         // Override with calling service id or customer resource Id.
         options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     });
+
     ```
 
 3. Add the middleware to the ASP.NET core pipeline.
@@ -156,7 +164,9 @@ ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
    Example.
 
     ``` csharp
+
     app.UseServiceLevelIndicator();
+    
     ```
 
 4. To each API route mapping, add `AddServiceLevelIndicator()`
@@ -164,8 +174,10 @@ ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
    Example.
 
     ``` csharp
+
     app.MapGet("/hello", () => "Hello World!")
        .AddServiceLevelIndicator();
+    
     ```
 
 ### Usage for background jobs
@@ -174,12 +186,14 @@ You can measure a block of code by boxing it in a using clause of MeasuredOperat
 Example.
 
 ```csharp
+
 async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 {
     using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("OperationName");
     // Do Work.
     measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
 }
+
 ```
 
 ### Customizations
@@ -193,12 +207,14 @@ eg GET WeatherForecast/Action1
    Example.
 
     ``` csharp
+
     builder.Services.AddServiceLevelIndicator(options =>
     {
         /// Options
     })
     .AddMvc()
     .AddApiVersion();
+
     ```
 
 - To add HTTP method as a dimension, add `AddHttpMethod` to Service Level Indicator.
@@ -206,12 +222,14 @@ eg GET WeatherForecast/Action1
    Example.
 
     ``` csharp
+
     builder.Services.AddServiceLevelIndicator(options =>
     {
         /// Options
     })
     .AddMvc()
     .AddHttpMethod();
+
     ```
 
 - To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
@@ -219,33 +237,41 @@ eg GET WeatherForecast/Action1
    Example.
 
     ``` csharp
+
     [HttpGet("MyAction2")]
     [ServiceLevelIndicator(Operation = "MyNewOperationName")]
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
+
     ```
 
 - To set the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
 
     ```csharp
+
     [HttpGet("get-by-zip-code/{zipCode}")]
     public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
+
     ```
 
     Or use `GetMeasuredOperationLatency` extension method.
 
     ``` csharp
+
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
         HttpContext.GetMeasuredOperationLatency().CustomerResourceId = customerResourceId;
         return GetWeather();
     }
+
     ```
 
 - To add custom Open Telemetry attributes.  
 
     ``` csharp
+
     HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
+
     ```
 
     GetMeasuredOperationLatency will **throw** if the route is not configured to emit SLI.
@@ -253,21 +279,27 @@ eg GET WeatherForecast/Action1
     When used in a middleware or scenarios where a route may not be configured to emit SLI.
 
     ``` csharp
+
     if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
         measuredOperationLatency.AddAttribute("CustomAttribute", value);
+
     ```
 
     You can add additional dimensions to the SLI data by using the `Measure` attribute.
 
     ```csharp
+
     [HttpGet("name/{first}/{surname}")]
     public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string surname) => Ok(first + " " + surname);
+
     ```
 
 - To prevent automatically emitting SLI information on all controllers, set the option,
 
     ``` csharp
+
     ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
+
     ```
 
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
@@ -277,12 +309,14 @@ eg GET WeatherForecast/Action1
    Example.
 
     ``` csharp
+
    public void StoreItem(MyDomainEvent domainEvent)
    {
         var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
         using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", attribute);
         DoTheWork();
    )
+   
    ```
 
 ### Sample
