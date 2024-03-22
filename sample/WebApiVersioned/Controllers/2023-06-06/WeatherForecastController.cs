@@ -30,7 +30,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "GET weather-forecast"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = {Calling Service Id}
     /// </summary>
     [HttpGet]
     public IEnumerable<WeatherForecast> Get() => GetWeather();
@@ -38,7 +38,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "GET weather-forecast/MyAction1"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = {Calling Service Id}
     /// </summary>
 
     [HttpGet("MyAction1")]
@@ -47,7 +47,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "MyOperation"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = {Calling Service Id}
     /// </summary>
     [HttpGet("MyAction2")]
     [ServiceLevelIndicator(Operation = "MyOperation")]
@@ -64,15 +64,15 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Use Attribute to set CustomerResourceId
     /// Operation: "GET weather-forecast/get-by-zip-code/{zipCode}"
-    /// CustomerResourceId is setup to the zip code.
+    /// CustomerResourceId is set to the zip code.
     /// </summary>
     [HttpGet("get-by-zip-code/{zipCode}")]
     public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode) => GetWeather();
 
     /// <summary>
     /// Use Attribute to set CustomerResourceId
-    /// Operation: "GET weather-forecast/get-by-city/{city"
-    /// CustomerResourceId is setup to the zip code.
+    /// Operation: "GET weather-forecast/get-by-city/{city}"
+    /// CustomerResourceId is set to the city code.
     /// </summary>
     [HttpGet("get-by-city/{city}")]
     public IEnumerable<WeatherForecast> GetByCity([CustomerResourceId] string city) => GetWeather();

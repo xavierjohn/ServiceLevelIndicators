@@ -75,6 +75,14 @@ app.UseSwaggerUI(
             options.SwaggerEndpoint(url, name);
         }
     });
+
+// Random delay.
+Random rnd = new Random();
+app.Use(async (context, next) =>
+{
+    await Task.Delay(rnd.Next(200));
+    await next(context);
+});
 app.UseHttpsRedirection();
 app.UseServiceLevelIndicator();
 app.UseAuthorization();
