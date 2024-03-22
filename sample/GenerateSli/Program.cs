@@ -15,7 +15,7 @@ static async Task ClientRequests()
     ];
 
     using var httpClient = new HttpClient();
-    for (int i = 1; i <= 200; i++)
+    for (var i = 1; i <= 200; i++)
     {
         Random rnd = new Random();
         try
@@ -23,13 +23,9 @@ static async Task ClientRequests()
             var response = await httpClient.GetAsync(apiUrl[rnd.Next(apiUrl.Length)]);
 
             if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-            }
+                await response.Content.ReadAsStringAsync();
             else
-            {
                 Console.WriteLine($"Request {i}: Failed with status code {response.StatusCode}");
-            }
         }
         catch (Exception ex)
         {
