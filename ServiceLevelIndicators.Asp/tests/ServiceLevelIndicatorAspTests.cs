@@ -47,8 +47,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -75,8 +75,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "POST Test"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -103,8 +103,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/bad_request"),
-                new("activity.status_code", "Unset"),
-                new("http.response.status_code", 400),
+                new("activity.status.code", "Unset"),
+                new("http.response.status.code", 400),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -133,9 +133,9 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "xavier@somewhere.com"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test"),
-                new("activity.status_code", "Ok"),
+                new("activity.status.code", "Ok"),
                 new("http.request.method", "GET"),
-                new("http.response.status_code", 200),
+                new("http.response.status.code", 200),
                 new("foo", "bar"),
                 new("test", "again"),
                 new("enrichAsync", "async"),
@@ -165,8 +165,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "TestOperation"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -193,8 +193,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "myId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/customer_resourceid/{id}"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -221,8 +221,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/custom_attribute/{value}"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
                 new("CustomAttribute", "Mickey"),
             };
 
@@ -274,8 +274,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/send_sli"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -330,8 +330,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/try_get_measured_operation_latency/{value}"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
                 new("CustomAttribute", "Goofy"),
             };
 
@@ -361,8 +361,8 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                 new("age", "25"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
                 new("Operation", "GET Test/name/{first}/{surname}/{age}"),
-                new("activity.status_code", "Ok"),
-                new("http.response.status_code", 200),
+                new("activity.status.code", "Ok"),
+                new("http.response.status.code", 200),
             };
 
             ValidateMetrics(instrument, measurement, tags, expectedTags);
@@ -404,7 +404,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     private void ValidateMetrics(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, KeyValuePair<string, object?>[] expectedTags)
     {
         _callbackCalled = true;
-        instrument.Name.Should().Be("LatencySLI");
+        instrument.Name.Should().Be("ServiceLevelIndicator");
         instrument.Unit.Should().Be("ms");
         measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
         _output.WriteLine($"Measurement {measurement}");

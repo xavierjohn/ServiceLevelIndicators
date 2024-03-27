@@ -17,7 +17,7 @@ public class ServiceLevelIndicatorOptions
     /// CustomerResrouceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
     /// CustomerResourceId can be set for the entire service here or in each API method.
     /// </summary>
-    public string CustomerResourceId { get; set; } = string.Empty;
+    public string CustomerResourceId { get; set; } = "Unset";
 
     /// <summary>
     /// Location where the service is running.
@@ -27,13 +27,13 @@ public class ServiceLevelIndicatorOptions
     /// <summary>
     /// The instrument name created on the given meter. Cannot be null.
     /// </summary>
-    public string InstrumentName { get; set; } = "LatencySLI";
+    public string InstrumentName { get; set; } = "ServiceLevelIndicator";
 
     /// <summary>
     /// Activity Status Code attribute name.
     /// [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0)
     /// </summary>
-    public string ActivityStatusCodeAttributeName { get; set; } = "activity.status_code";
+    public string ActivityStatusCodeAttributeName { get; set; } = "activity.status.code";
 
     /// <summary>
     /// Automatically emit for all API methods.
