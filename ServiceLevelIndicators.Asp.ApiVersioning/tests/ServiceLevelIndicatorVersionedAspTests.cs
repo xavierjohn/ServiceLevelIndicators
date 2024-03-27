@@ -50,8 +50,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
-            new("activity.status_code", "Ok"),
-            new("http.response.status_code", 200),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
             new("http.api.version", "2023-08-29"),
         ];
         using var host = await CreateHost();
@@ -73,8 +73,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
-            new("activity.status_code", "Ok"),
-            new("http.response.status_code", 200),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
             new("http.api.version", "2023-08-29"),
         ];
         using var host = await CreateHost();
@@ -99,8 +99,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestNeutral"),
-            new("activity.status_code", "Ok"),
-            new("http.response.status_code", 200),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
         ];
         using var host = await CreateHost();
 
@@ -122,8 +122,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
-            new("activity.status_code", "Ok"),
-            new("http.response.status_code", 200),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
         ];
         using var host = await CreateHostWithDefaultApiVersion();
 
@@ -160,8 +160,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET /" + route),
-            new("activity.status_code", "Unset"),
-            new("http.response.status_code", 400),
+            new("activity.status.code", "Unset"),
+            new("http.response.status.code", 400),
         ];
         var routeWithVersion = route + "?" + version;
         using var host = await CreateHost();
@@ -262,7 +262,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         _callbackCalled = true;
 
         _output.WriteLine($"Measurement {measurement}");
-        instrument.Name.Should().Be("LatencySLI");
+        instrument.Name.Should().Be("ServiceLevelIndicator");
         instrument.Unit.Should().Be("ms");
         measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 400);
     }

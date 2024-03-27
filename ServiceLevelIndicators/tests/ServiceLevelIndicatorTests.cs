@@ -104,7 +104,7 @@ public class ServiceLevelIndicatorTests : IDisposable
             new("CustomerResourceId", customerResourceId),
             new("LocationId", locationId),
             new("Operation", "SleepWorker"),
-            new("activity.status_code", nameof(System.Diagnostics.ActivityStatusCode.Ok)),
+            new("activity.status.code", nameof(System.Diagnostics.ActivityStatusCode.Ok)),
         ];
 
         ValidateMetrics(sleepTime, approx: 100);
@@ -152,7 +152,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         ValidateMetrics(elapsedTime, InstrumentName);
     }
 
-    private void ValidateMetrics(int elapsedTime, string instrumentName = "LatencySLI", int? approx = null)
+    private void ValidateMetrics(int elapsedTime, string instrumentName = "ServiceLevelIndicator", int? approx = null)
     {
         _callbackCalled.Should().BeTrue();
         _actualTags.Should().BeEquivalentTo(_expectedTags);

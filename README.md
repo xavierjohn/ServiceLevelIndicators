@@ -23,17 +23,17 @@ By tracking SLIs over time, service providers can identify trends and make impro
 
 ## Service Level Indicator Library
 
-Service Level Indicator library will help emit latency metrics for each API operation to help monitor the service performance over time.
+**ServiceLevelIndicators** library will help emit latency metrics for each API operation to help monitor the service performance over time.
 The metrics is emitted via standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-7.0).
 
-By default, an instrument named `LatencySLI` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
+By default, an instrument named `ServiceLevelIndicator` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 - CustomerResourceId - A value that helps identity the customer, customer group or calling service.
 - LocationId - The location where the service running. eg. Public cloud, West US 3 region.
 - Operation - The name of the operation.
-- activity.status_code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
+- activity.status.code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
 
-ServiceLevelIndicators.Asp adds the following dimensions.
+**ServiceLevelIndicators.Asp** adds the following dimensions.
 
 - Operation - In ASP.NET the operation name defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
 - The activity status code will be
@@ -43,8 +43,17 @@ ServiceLevelIndicators.Asp adds the following dimensions.
 - http.response.status_code - The http status code.
 - http.request.method (Optional)- The http request method (GET, POST, etc) is added.
 
-ServiceLevelIndicators.Asp.Versioning adds the following dimensions.
+Difference between ServiceLevelIndicator and http.server.request.duration
+
+|             | ServiceLevelIndicator | http.server.request.duration
+| ----------  | ------- | ------
+| Resolution  | milliseconds       | seconds
+| Customer    | CustomerResourceId | N/A
+| Error check | Activity or HTTP status.code | HTTP status code
+
+**ServiceLevelIndicators.Asp.Versioning** adds the following dimensions.
 - http.api.version - The API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
+
 
 ## NuGet Packages
 
