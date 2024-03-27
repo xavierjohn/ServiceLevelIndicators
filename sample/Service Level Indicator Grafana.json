@@ -513,7 +513,7 @@
           "useBackend": false
         }
       ],
-      "title": "Users",
+      "title": "Unique active users",
       "type": "timeseries"
     },
     {
@@ -1129,9 +1129,10 @@
     "list": [
       {
         "current": {
+          "isNone": true,
           "selected": false,
-          "text": "SampleServiceName",
-          "value": "SampleServiceName"
+          "text": "None",
+          "value": ""
         },
         "datasource": {
           "type": "prometheus",
@@ -1156,9 +1157,10 @@
       },
       {
         "current": {
+          "isNone": true,
           "selected": false,
-          "text": "798e934e-400e-4def-b559-95b7edd85efb",
-          "value": "798e934e-400e-4def-b559-95b7edd85efb"
+          "text": "None",
+          "value": ""
         },
         "datasource": {
           "type": "prometheus",
