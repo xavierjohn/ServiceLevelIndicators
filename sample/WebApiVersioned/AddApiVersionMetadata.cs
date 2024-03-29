@@ -1,4 +1,4 @@
-﻿namespace SampleWebApplicationSLI;
+﻿namespace SampleVersionedWebApplicationSLI;
 
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;

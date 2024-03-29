@@ -1,4 +1,4 @@
-﻿namespace SampleWebApplicationSLI;
+﻿namespace SampleVersionedWebApplicationSLI;
 
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;

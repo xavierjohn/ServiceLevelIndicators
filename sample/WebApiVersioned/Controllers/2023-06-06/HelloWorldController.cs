@@ -3,7 +3,6 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using ServiceLevelIndicators;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 /// <summary>
 /// Hello World controller.
