@@ -123,8 +123,6 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        // Override with calling service id or customer Id.
-        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     })
     .AddMvc();
@@ -162,8 +160,6 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        // Override with calling service id or customer resource Id.
-        options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceId);
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
     });
 
