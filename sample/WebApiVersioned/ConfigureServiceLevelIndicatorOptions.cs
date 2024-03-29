@@ -1,7 +1,6 @@
 ﻿namespace SampleVersionedWebApplicationSLI;
 
 using Microsoft.Extensions.Options;
-using SampleWebApplicationSLI;
 using ServiceLevelIndicators;
 
 internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>

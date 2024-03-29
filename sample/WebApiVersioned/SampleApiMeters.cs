@@ -1,4 +1,4 @@
-﻿namespace SampleWebApplicationSLI;
+﻿namespace SampleVersionedWebApplicationSLI;
 
 using System.Diagnostics.Metrics;
 

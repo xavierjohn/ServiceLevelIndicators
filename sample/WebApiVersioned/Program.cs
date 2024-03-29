@@ -1,6 +1,5 @@
 ﻿using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
-using SampleWebApplicationSLI;
 using ServiceLevelIndicators;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -37,13 +36,12 @@ builder.Services.AddProblemDetails();
 Action<ResourceBuilder> configureResource = r => r.AddService(
     serviceName: "SampleServiceName",
     serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
-
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
-    .WithMetrics(options =>
+    .WithMetrics(builder =>
     {
-        options.AddMeter(SampleApiMeters.MeterName);
-        options.AddOtlpExporter();
+        builder.AddMeter(SampleApiMeters.MeterName);
+        builder.AddOtlpExporter();
     });
 
 builder.Services.AddSingleton<SampleApiMeters>();
@@ -51,8 +49,6 @@ builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<
 
 builder.Services.AddServiceLevelIndicator(options =>
 {
-    Guid serviceTree = Guid.NewGuid();
-    options.CustomerResourceId = ServiceLevelIndicator.CreateCustomerResourceId(serviceTree);
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
 })
 .AddMvc()
@@ -75,6 +71,14 @@ app.UseSwaggerUI(
             options.SwaggerEndpoint(url, name);
         }
     });
+
+// Random delay.
+Random rnd = new Random();
+app.Use(async (context, next) =>
+{
+    await Task.Delay(rnd.Next(40, 200));
+    await next(context);
+});
 app.UseHttpsRedirection();
 app.UseServiceLevelIndicator();
 app.UseAuthorization();
