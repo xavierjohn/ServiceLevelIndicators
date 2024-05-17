@@ -32,7 +32,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         var operation = GetOperation(context, metadata);
         var attributes = GetMeasuredAttributes(context, metadata);
 
-        using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation(operation, attributes);
+        using var measuredOperation = _serviceLevelIndicator.StartMeasuring(operation, attributes);
         SetCustomerResourceIdFromAttribute(context, metadata, measuredOperation);
         AddSliFeatureToHttpContext(context, measuredOperation);
         await _next(context);
@@ -47,14 +47,14 @@ internal sealed class ServiceLevelIndicatorMiddleware
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void SetCustomerResourceIdFromAttribute(HttpContext context, EndpointMetadataCollection metadata, MeasuredOperationLatency measuredOperation)
+    private static void SetCustomerResourceIdFromAttribute(HttpContext context, EndpointMetadataCollection metadata, MeasuredOperation measuredOperation)
     {
         var customerResourceId = GetCustomerResourceIdAttributes(context, metadata);
         if (customerResourceId is not null)
             measuredOperation.CustomerResourceId = customerResourceId;
     }
 
-    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperationLatency measuredOperation)
+    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperation measuredOperation)
     {
         var statusCode = context.Response.StatusCode;
         measuredOperation.AddAttribute("http.response.status.code", statusCode);
@@ -129,7 +129,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
         return attributes;
     }
 
-    private void AddSliFeatureToHttpContext(HttpContext context, MeasuredOperationLatency measuredOperation)
+    private void AddSliFeatureToHttpContext(HttpContext context, MeasuredOperation measuredOperation)
     {
         if (context.Features.Get<IServiceLevelIndicatorFeature>() != null)
             throw new InvalidOperationException($"Another instance of {nameof(ServiceLevelIndicatorFeature)} already exists. Only one instance of {nameof(ServiceLevelIndicatorMiddleware)} can be configured for an application.");

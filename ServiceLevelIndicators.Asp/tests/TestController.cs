@@ -24,16 +24,16 @@ public class TestController : ControllerBase
     [HttpGet("custom_attribute/{value}")]
     public IActionResult AddCustomAttribute(string value)
     {
-        HttpContext.GetMeasuredOperationLatency().AddAttribute("CustomAttribute", value);
+        HttpContext.GetMeasuredOperation().AddAttribute("CustomAttribute", value);
         return Ok(value);
     }
 
     [HttpGet("try_get_measured_operation_latency/{value}")]
     public IActionResult TryGetMeasuredOperationLatency(string value)
     {
-        if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
+        if (HttpContext.TryGetMeasuredOperation(out var measuredOperation))
         {
-            measuredOperationLatency.AddAttribute("CustomAttribute", value);
+            measuredOperation.AddAttribute("CustomAttribute", value);
             return Ok(true);
         }
         return Ok(false);
