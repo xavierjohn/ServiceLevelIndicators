@@ -39,7 +39,7 @@ public class ServiceLevelIndicatorTests : IDisposable
 
 
     [Fact]
-    public void Record_latency()
+    public void Record()
     {
         // Arrange
         var customerResourceId = "TestResourceId";
@@ -62,7 +62,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         };
 
         // Act
-        serviceLevelIndicator.RecordLatency(operation, elapsedTime, attributes);
+        serviceLevelIndicator.Record(operation, elapsedTime, attributes);
 
         // Assert
         _expectedTags =
@@ -111,7 +111,7 @@ public class ServiceLevelIndicatorTests : IDisposable
 
         async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
         {
-            using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("SleepWorker");
+            using var measuredOperation = serviceLevelIndicator.StartMeasuring("SleepWorker");
             await Task.Delay(sleepTime);
             measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
         }
@@ -139,7 +139,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         var elapsedTime = 30;
 
         // Act
-        serviceLevelIndicator.RecordLatency(operation, elapsedTime);
+        serviceLevelIndicator.Record(operation, elapsedTime);
 
         // Assert
         _expectedTags =

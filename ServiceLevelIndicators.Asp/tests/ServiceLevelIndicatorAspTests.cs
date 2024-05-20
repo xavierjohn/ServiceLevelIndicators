@@ -285,7 +285,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task GetMeasuredOperationLatency_will_throw_if_route_does_not_emit_SLI()
+    public async Task GetMeasuredOperation_will_throw_if_route_does_not_emit_SLI()
     {
         using var host = await TestHostBuilder.CreateHostWithoutSli();
 
@@ -298,7 +298,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task TryGetMeasuredOperationLatency_will_return_false_if_route_does_not_emit_SLI()
+    public async Task TryGetMeasuredOperation_will_return_false_if_route_does_not_emit_SLI()
     {
         using var host = await TestHostBuilder.CreateHostWithoutSli();
 
@@ -310,7 +310,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task TryGetMeasuredOperationLatency_will_return_true_if_route_emits_SLI()
+    public async Task TryGetMeasuredOperation_will_return_true_if_route_emits_SLI()
     {
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();

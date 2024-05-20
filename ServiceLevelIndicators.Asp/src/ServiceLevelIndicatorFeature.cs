@@ -2,7 +2,7 @@
 
 internal sealed class ServiceLevelIndicatorFeature : IServiceLevelIndicatorFeature
 {
-    public ServiceLevelIndicatorFeature(MeasuredOperationLatency measureOperationLatency) => MeasuredOperationLatency = measureOperationLatency;
+    public ServiceLevelIndicatorFeature(MeasuredOperation measureOperation) => MeasuredOperation = measureOperation;
 
-    public MeasuredOperationLatency MeasuredOperationLatency { get; }
+    public MeasuredOperation MeasuredOperation { get; }
 }

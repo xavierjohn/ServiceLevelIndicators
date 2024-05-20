@@ -7,38 +7,38 @@ using Microsoft.AspNetCore.Http.Features;
 public static class HttpContextExtensions
 {
     /// <summary>
-    /// Gets the MeasuredOperationLatency from the IServiceLevelIndicatorFeature.
+    /// Gets the MeasuredOperation from the IServiceLevelIndicatorFeature.
     /// The method will throw an exception if the route is not configured to emit SLI metrics.
     /// </summary>
     /// <param name="context"></param>
-    /// <returns>MeasuredOperationLatency for the current API method.</returns>
+    /// <returns>MeasuredOperation for the current API method.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="InvalidOperationException">If the route does not emit SLI information and therefore MeasuredOperationLatency does not exist.</exception>
-    public static MeasuredOperationLatency GetMeasuredOperationLatency(this HttpContext context)
+    /// <exception cref="InvalidOperationException">If the route does not emit SLI information and therefore MeasuredOperation does not exist.</exception>
+    public static MeasuredOperation GetMeasuredOperation(this HttpContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        return context.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>().MeasuredOperationLatency;
+        return context.Features.GetRequiredFeature<IServiceLevelIndicatorFeature>().MeasuredOperation;
     }
 
     /// <summary>
-    /// Gets the MeasuredOperationLatency from the IServiceLevelIndicatorFeature.
+    /// Gets the MeasuredOperation from the IServiceLevelIndicatorFeature.
     /// </summary>
     /// <param name="context"></param>
-    /// <param name="measuredOperationLatency"></param>
-    /// <returns>true if MeasuredOperationLatency exists.</returns>
+    /// <param name="measuredOperation"></param>
+    /// <returns>true if MeasuredOperation exists.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public static bool TryGetMeasuredOperationLatency(this HttpContext context, [MaybeNullWhen(false)] out MeasuredOperationLatency measuredOperationLatency)
+    public static bool TryGetMeasuredOperation(this HttpContext context, [MaybeNullWhen(false)] out MeasuredOperation measuredOperation)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         if (context.Features.Get<IServiceLevelIndicatorFeature>() is IServiceLevelIndicatorFeature feature)
         {
-            measuredOperationLatency = feature.MeasuredOperationLatency;
+            measuredOperation = feature.MeasuredOperation;
             return true;
         }
 
-        measuredOperationLatency = null;
+        measuredOperation = null;
         return false;
     }
 }

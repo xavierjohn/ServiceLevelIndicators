@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-public class MeasuredOperationLatency : IDisposable
+public class MeasuredOperation : IDisposable
 {
     private bool _disposed;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
@@ -12,11 +12,11 @@ public class MeasuredOperationLatency : IDisposable
     private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
     private readonly object _disposeLock = new();
 
-    public MeasuredOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
+    public MeasuredOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
         this(serviceLevelIndicator, operation, serviceLevelIndicator.ServiceLevelIndicatorOptions.CustomerResourceId, attributes)
     { }
 
-    public MeasuredOperationLatency(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
+    public MeasuredOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
     {
         _serviceLevelIndicator = serviceLevelIndicator;
         Operation = operation;
@@ -46,7 +46,7 @@ public class MeasuredOperationLatency : IDisposable
                     _stopWatch.Stop();
                     var elapsedTime = _stopWatch.ElapsedMilliseconds;
                     Attributes.Add(new KeyValuePair<string, object?>(_serviceLevelIndicator.ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName, _activityStatusCode.ToString()));
-                    _serviceLevelIndicator.RecordLatency(Operation, CustomerResourceId, elapsedTime, Attributes.ToArray());
+                    _serviceLevelIndicator.Record(Operation, CustomerResourceId, elapsedTime, Attributes.ToArray());
                 }
 
                 _disposed = true;

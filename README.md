@@ -195,7 +195,7 @@ Example.
 
 async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 {
-    using var measuredOperation = serviceLevelIndicator.StartLatencyMeasureOperation("OperationName");
+    using var measuredOperation = serviceLevelIndicator.StartMeasuring("OperationName");
     // Do Work.
     measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
 }

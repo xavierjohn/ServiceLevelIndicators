@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Http;
 
 public class WebEnrichmentContext : IEnrichmentContext
 {
-    private readonly MeasuredOperationLatency _operation;
+    private readonly MeasuredOperation _operation;
     public HttpContext HttpContext { get; }
 
-    public WebEnrichmentContext(MeasuredOperationLatency operation, HttpContext httpContext)
+    public WebEnrichmentContext(MeasuredOperation operation, HttpContext httpContext)
     {
         _operation = operation;
         HttpContext = httpContext;
