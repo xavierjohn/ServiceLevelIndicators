@@ -302,7 +302,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     {
         using var host = await TestHostBuilder.CreateHostWithoutSli();
 
-        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation_latency/Donald");
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Donald");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
 
@@ -317,7 +317,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation_latency/Goofy");
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Goofy");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
 
@@ -329,7 +329,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             {
                 new("CustomerResourceId", "TestCustomerResourceId"),
                 new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test/try_get_measured_operation_latency/{value}"),
+                new("Operation", "GET Test/try_get_measured_operation/{value}"),
                 new("activity.status.code", "Ok"),
                 new("http.response.status.code", 200),
                 new("CustomAttribute", "Goofy"),
