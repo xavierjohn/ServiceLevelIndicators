@@ -28,8 +28,8 @@ public class TestController : ControllerBase
         return Ok(value);
     }
 
-    [HttpGet("try_get_measured_operation_latency/{value}")]
-    public IActionResult TryGetMeasuredOperationLatency(string value)
+    [HttpGet("try_get_measured_operation/{value}")]
+    public IActionResult TryGetMeasuredOperation(string value)
     {
         if (HttpContext.TryGetMeasuredOperation(out var measuredOperation))
         {

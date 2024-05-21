@@ -260,14 +260,14 @@ eg GET WeatherForecast/Action1
 
     ```
 
-    Or use `GetMeasuredOperationLatency` extension method.
+    Or use `GetMeasuredOperation` extension method.
 
     ``` csharp
 
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
-        HttpContext.GetMeasuredOperationLatency().CustomerResourceId = customerResourceId;
+        HttpContext.GetMeasuredOperation().CustomerResourceId = customerResourceId;
         return GetWeather();
     }
 
@@ -277,18 +277,18 @@ eg GET WeatherForecast/Action1
 
     ``` csharp
 
-    HttpContext.GetMeasuredOperationLatency().AddAttribute(attribute, value);
+    HttpContext.GetMeasuredOperation().AddAttribute(attribute, value);
 
     ```
 
-    GetMeasuredOperationLatency will **throw** if the route is not configured to emit SLI.
+    GetMeasuredOperation will **throw** if the route is not configured to emit SLI.
 
     When used in a middleware or scenarios where a route may not be configured to emit SLI.
 
     ``` csharp
 
-    if (HttpContext.TryGetMeasuredOperationLatency(out var measuredOperationLatency))
-        measuredOperationLatency.AddAttribute("CustomAttribute", value);
+    if (HttpContext.TryGetMeasuredOperation(out var measuredOperation))
+        measuredOperation.AddAttribute("CustomAttribute", value);
 
     ```
 
@@ -314,7 +314,7 @@ eg GET WeatherForecast/Action1
 
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
 
-- To measure a process, run it within a `using StartLatencyMeasureOperation` block.
+- To measure a process, run it within a `using StartMeasuring` block.
 
    Example.
 
@@ -323,7 +323,7 @@ eg GET WeatherForecast/Action1
    public void StoreItem(MyDomainEvent domainEvent)
    {
         var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
-        using var measuredOperation = _serviceLevelIndicator.StartLatencyMeasureOperation("StoreItem", attribute);
+        using var measuredOperation = _serviceLevelIndicator.StartMeasuring("StoreItem", attribute);
         DoTheWork();
    )
 
@@ -338,7 +338,7 @@ To view the metrics locally.
 1. Run Docker Desktop
 2. Run [sample\DockerOpenTelemetry\run.cmd](sample\DockerOpenTelemetry\run.cmd) to download and run zipkin and prometheus.
 3. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-4. You should see the SLI metrics in prometheus under the meter `LatencySLI_bucket` where the `Operation = "GET WeatherForeCase"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status_code = Ok`
+4. You should see the SLI metrics in prometheus under the meter `ServiceLevelIndicator_bucket` where the `Operation = "GET WeatherForeCase"`, `http.response.status_code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status_code = Ok`
 ![SLI](assets/prometheus.jpg)
 5. If you run the sample with API Versioning, you will see something similar to the following.
 ![SLI](assets/versioned.jpg)
