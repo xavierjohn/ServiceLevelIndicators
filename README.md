@@ -238,6 +238,27 @@ eg GET WeatherForecast/Action1
 
     ```
 
+- Enrich SLI with `Enrich` callback. The callback receives a `MeasuredOperation` as context that can be used to set to `CustomerResourceId` or additional attributes.
+An async version `EnrichAsync` is also available.
+
+   Example.
+
+    ``` csharp
+
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        options.LocationId = ServiceLevelIndicator.CreateLocationId(Cloud, Region);
+    })
+    .AddMvc()
+    .Enrich(context =>
+    {
+        var upn = context.HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "upn")?.Value ?? "Unknown";
+        context.SetCustomerResourceId(upn);
+    });
+
+    ```
+
 - To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
 
    Example.
