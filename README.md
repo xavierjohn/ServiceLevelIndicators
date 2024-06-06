@@ -21,6 +21,9 @@ There are many different types of SLIs that can be used to measure the performan
 SLIs are important because they provide a way to objectively measure the performance of a service.
 By tracking SLIs over time, service providers can identify trends and make improvements to the service to ensure that it meets the needs of its customers.
 
+[![Watch the video](https://img.youtube.com/vi/wXJbA0AkcRE/hqdefault.jpg)](https://www.youtube.com/embed/wXJbA0AkcRE)
+
+
 ## Service Level Indicator Library
 
 **ServiceLevelIndicators** library will help emit latency metrics for each API operation to help monitor the service performance over time.
