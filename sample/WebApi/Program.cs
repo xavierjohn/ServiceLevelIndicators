@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+﻿using Azure.Core;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -39,7 +40,7 @@ builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<
 builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";
-    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
 })
 .AddMvc()
 .AddHttpMethod();

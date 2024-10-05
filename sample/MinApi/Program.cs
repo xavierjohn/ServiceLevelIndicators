@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.Metrics;
+using Azure.Core;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using ServiceLevelIndicators;
@@ -39,7 +40,7 @@ builder.Services.AddOpenTelemetry()
 builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";
-    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
     options.Meter = Sample.Meter;
 })
 .AddHttpMethod();

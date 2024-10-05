@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SampleVersionedWebApplicationSLI;
+using Azure.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,7 +50,7 @@ builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<
 
 builder.Services.AddServiceLevelIndicator(options =>
 {
-    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
 })
 .AddMvc()
 .AddApiVersion();
