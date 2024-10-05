@@ -32,7 +32,7 @@ The metrics is emitted via standard [.NET Meter Class](https://learn.microsoft.c
 By default, an instrument named `ServiceLevelIndicator` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 - CustomerResourceId - A value that helps identity the customer, customer group or calling service.
-- LocationId - The location where the service running. eg. Public cloud, West US 3 region.
+- LocationId - The location where the service running. eg. Public cloud, West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
 - Operation - The name of the operation.
 - activity.status.code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
 
@@ -126,7 +126,7 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
+        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
     })
     .AddMvc();
 
@@ -163,7 +163,7 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
     builder.Services.AddServiceLevelIndicator(options =>
     {
-        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus2");
+        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
     });
 
     ```
