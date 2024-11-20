@@ -1,4 +1,5 @@
 ﻿namespace SampleMinimalApiSli;
+using ServiceLevelIndicators;
 
 /// <summary>
 /// User API routes
@@ -11,7 +12,8 @@ public static class UserExt
     /// <param name="app"></param>
     public static void UseUserRoute(this WebApplication app)
     {
-        var userApi = app.MapGroup("/users");
+        var userApi = app.MapGroup("/users")
+            .AddServiceLevelIndicator();
 
 
         userApi.MapGet("/", () => "Hello Users");
