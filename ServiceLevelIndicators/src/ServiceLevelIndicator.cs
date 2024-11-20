@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 public class ServiceLevelIndicator
 {
-    public const string DefaultInstrumentationName = nameof(ServiceLevelIndicator);
+    public const string DefaultMeterName = nameof(ServiceLevelIndicator);
     public ServiceLevelIndicatorOptions ServiceLevelIndicatorOptions { get; }
 
     private readonly Histogram<long> _responseLatencyHistogram;
@@ -20,7 +20,7 @@ public class ServiceLevelIndicator
         {
             AssemblyName AssemblyName = typeof(ServiceLevelIndicator).Assembly.GetName();
             string InstrumentationVersion = AssemblyName.Version!.ToString();
-            ServiceLevelIndicatorOptions.Meter = new(DefaultInstrumentationName, InstrumentationVersion);
+            ServiceLevelIndicatorOptions.Meter = new(DefaultMeterName, InstrumentationVersion);
         }
 
         _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName, "ms", "Duration of the operation.");
