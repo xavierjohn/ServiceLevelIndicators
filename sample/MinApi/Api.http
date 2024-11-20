@@ -1,0 +1,21 @@
+@HostAddress = https://localhost:6001
+
+//Weather 
+GET {{HostAddress}}/weatherforecast/Redmond
+Accept: application/json
+
+###
+
+// User
+
+// Hello World
+GET {{HostAddress}}/users/
+Accept: application/json
+
+###
+
+// Hello World Xavier
+GET {{HostAddress}}/users/Xavier
+Accept: application/json
+
+###

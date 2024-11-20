@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Builder;
 
 public static class EndpointBuilderExtensions
 {
-    public static IEndpointConventionBuilder AddServiceLevelIndicator(this IEndpointConventionBuilder builder, string? operation = default)
+    public static TBuilder AddServiceLevelIndicator<TBuilder>(this TBuilder builder, string? operation = default)
+        where TBuilder : notnull, IEndpointConventionBuilder
     {
         builder.WithMetadata(new ServiceLevelIndicatorAttribute() { Operation = operation });
         builder.Finally(AddSliMetadata);
