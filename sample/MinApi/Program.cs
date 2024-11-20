@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using SampleMinimalApiSli;
 using ServiceLevelIndicators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,7 +65,7 @@ app.MapGet(
         ([Measure] int wait_seconds) => Task.Delay(TimeSpan.FromSeconds(wait_seconds)))
    .AddServiceLevelIndicator("background_work");
 
-
+app.UseUserRoute();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();
