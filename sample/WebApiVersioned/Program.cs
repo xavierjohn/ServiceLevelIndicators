@@ -3,7 +3,6 @@ using OpenTelemetry.Resources;
 using ServiceLevelIndicators;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using SampleVersionedWebApplicationSLI;
 using Azure.Core;
 

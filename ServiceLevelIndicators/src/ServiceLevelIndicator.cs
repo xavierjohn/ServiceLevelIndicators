@@ -6,7 +6,7 @@ using System.Diagnostics.Metrics;
 using System.Reflection;
 using Microsoft.Extensions.Options;
 
-public class ServiceLevelIndicator
+public class ServiceLevelIndicator : IDisposable
 {
     public const string InstrumentationName = nameof(ServiceLevelIndicator);
 
@@ -16,6 +16,7 @@ public class ServiceLevelIndicator
     internal static readonly Meter Meter = new(InstrumentationName, InstrumentationVersion);
 
     private readonly Histogram<long> _responseLatencyHistogram;
+    private bool _disposedValue;
 
     public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options)
     {
@@ -54,5 +55,23 @@ public class ServiceLevelIndicator
         var arr = new string?[] { "ms-loc://az", cloud, region, zone };
         var id = string.Join("/", arr.Where(s => !string.IsNullOrEmpty(s)));
         return id;
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+                Meter.Dispose();
+
+            _disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

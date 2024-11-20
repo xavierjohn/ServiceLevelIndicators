@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.Metrics;
-using Azure.Core;
+﻿using Azure.Core;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using ServiceLevelIndicators;

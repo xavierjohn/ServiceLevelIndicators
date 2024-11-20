@@ -1,9 +1,6 @@
 ﻿using Azure.Core;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
-using SampleWebApplicationSLI;
 using ServiceLevelIndicators;
 
 var builder = WebApplication.CreateBuilder(args);
