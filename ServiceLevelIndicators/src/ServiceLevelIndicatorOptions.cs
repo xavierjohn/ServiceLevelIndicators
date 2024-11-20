@@ -8,10 +8,25 @@ using System.Diagnostics.Metrics;
 /// </summary>
 public class ServiceLevelIndicatorOptions
 {
+    private readonly object _meterLock = new();
+    private Meter _meter = null!;
+
     /// <summary>
     /// The meter that is used to create the histogram that reports the latency.
     /// </summary>
-    public Meter Meter { get; set; } = null!;
+    public Meter Meter
+    {
+        get
+        {
+            lock (_meterLock)
+                return _meter;
+        }
+        set
+        {
+            lock (_meterLock)
+                _meter = value;
+        }
+    }
 
     /// <summary>
     /// CustomerResrouceId is the unique identifier for the customer like subscriptionId, tenantId, etc.

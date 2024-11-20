@@ -3,7 +3,6 @@ using OpenTelemetry.Resources;
 using ServiceLevelIndicators;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using SampleVersionedWebApplicationSLI;
 using Azure.Core;
 
@@ -33,7 +32,6 @@ builder.Services.AddApiVersioning()
 
 builder.Services.AddProblemDetails();
 
-// Build a resource configuration action to set service information.
 Action<ResourceBuilder> configureResource = r => r.AddService(
     serviceName: "SampleServiceName",
     serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
@@ -41,12 +39,10 @@ builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
     .WithMetrics(builder =>
     {
-        builder.AddMeter(SampleApiMeters.MeterName);
+        builder.AddServiceLevelIndicatorInstrumentation();
         builder.AddOtlpExporter();
     });
 
-builder.Services.AddSingleton<SampleApiMeters>();
-builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
 
 builder.Services.AddServiceLevelIndicator(options =>
 {
