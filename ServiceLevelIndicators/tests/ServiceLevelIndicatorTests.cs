@@ -7,7 +7,6 @@ using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorTests : IDisposable
 {
-    private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
     private KeyValuePair<string, object?>[] _actualTags;
@@ -20,13 +19,11 @@ public class ServiceLevelIndicatorTests : IDisposable
     public ServiceLevelIndicatorTests(ITestOutputHelper output)
     {
         _output = output;
-        const string MeterName = "ServiceLevelIndicator";
-        _meter = new(MeterName);
         _meterListener = new()
         {
             InstrumentPublished = (instrument, listener) =>
             {
-                if (instrument.Meter.Name is MeterName)
+                if (instrument.Meter.Name is ServiceLevelIndicator.InstrumentationName)
                     listener.EnableMeasurementEvents(instrument);
             }
         };
@@ -49,7 +46,6 @@ public class ServiceLevelIndicatorTests : IDisposable
         {
             CustomerResourceId = customerResourceId,
             LocationId = locationId,
-            Meter = _meter
         };
         var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
 
@@ -89,8 +85,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         var options = new ServiceLevelIndicatorOptions
         {
             CustomerResourceId = customerResourceId,
-            LocationId = locationId,
-            Meter = _meter
+            LocationId = locationId
         };
         var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
 
@@ -130,7 +125,6 @@ public class ServiceLevelIndicatorTests : IDisposable
         {
             CustomerResourceId = customerResourceId,
             LocationId = locationId,
-            Meter = _meter,
             InstrumentName = InstrumentName
         };
         var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
@@ -181,7 +175,6 @@ public class ServiceLevelIndicatorTests : IDisposable
         {
             if (disposing)
             {
-                _meter.Dispose();
                 _meterListener.Dispose();
             }
 

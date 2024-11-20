@@ -1,6 +1,7 @@
-﻿namespace ServiceLevelIndicators.Asp.Tests;
+﻿[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
+namespace ServiceLevelIndicators.Asp.Tests;
 using Microsoft.AspNetCore.TestHost;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics.Metrics;
 using System.Net;
@@ -8,7 +9,6 @@ using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorAspTests : IDisposable
 {
-    private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
     private bool _callbackCalled;
@@ -17,13 +17,11 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     public ServiceLevelIndicatorAspTests(ITestOutputHelper output)
     {
         _output = output;
-        const string MeterName = "SliTestMeter";
-        _meter = new(MeterName, "1.0.0");
         _meterListener = new()
         {
             InstrumentPublished = (instrument, listener) =>
             {
-                if (instrument.Meter.Name is MeterName)
+                if (instrument.Meter.Name is ServiceLevelIndicator.InstrumentationName)
                     listener.EnableMeasurementEvents(instrument);
             }
         };
@@ -35,7 +33,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -63,7 +61,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().PostAsync("test", new StringContent("Hi"));
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -91,7 +89,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().GetAsync("test/bad_request");
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -121,7 +119,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         HttpRequestMessage request = new(HttpMethod.Get, "test");
         request.Headers.Add("from", "xavier@somewhere.com");
 
-        using var host = await TestHostBuilder.CreateHostWithSliEnriched(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSliEnriched();
 
         var response = await host.GetTestClient().SendAsync(request);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -153,7 +151,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().GetAsync("test/operation");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -181,7 +179,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().GetAsync("test/customer_resourceid/myId");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -209,7 +207,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -238,7 +236,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli();
 
         var response = await host.GetTestClient().GetAsync("test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -262,7 +260,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli();
 
         var response = await host.GetTestClient().GetAsync("test/send_sli");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -315,7 +313,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Goofy");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -347,7 +345,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
         _meterListener.Start();
 
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         var response = await host.GetTestClient().GetAsync("test/name/Xavier/Jon/25");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -374,7 +372,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     [Fact]
     public async Task SLI_multiple_CustomerResourceId_will_fail()
     {
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        using var host = await TestHostBuilder.CreateHostWithSli();
 
         Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon");
         await act.Should().ThrowAsync<ArgumentException>();
@@ -387,7 +385,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         {
             if (disposing)
             {
-                _meter.Dispose();
                 _meterListener.Dispose();
             }
 

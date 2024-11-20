@@ -13,7 +13,6 @@ using Xunit.Abstractions;
 public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 {
     private const int MillisecondsDelay = 200;
-    private readonly Meter _meter;
     private readonly MeterListener _meterListener;
     private readonly ITestOutputHelper _output;
     private KeyValuePair<string, object?>[] _actualTags;
@@ -24,13 +23,11 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
     public ServiceLevelIndicatorVersionedAspTests(ITestOutputHelper output)
     {
         _output = output;
-        const string MeterName = "SliTestMeter";
-        _meter = new(MeterName, "1.0.0");
         _meterListener = new()
         {
             InstrumentPublished = (instrument, listener) =>
             {
-                if (instrument.Meter.Name is MeterName)
+                if (instrument.Meter.Name is ServiceLevelIndicator.InstrumentationName)
                     listener.EnableMeasurementEvents(instrument);
             }
         };
@@ -174,7 +171,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         ValidateMetrics();
     }
 
-    private async Task<IHost> CreateHost() =>
+    private static async Task<IHost> CreateHost() =>
     await new HostBuilder()
         .ConfigureWebHost(webBuilder =>
         {
@@ -190,7 +187,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                     .AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
-                        options.Meter = _meter;
                         options.CustomerResourceId = "TestCustomerResourceId";
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                     })
@@ -211,7 +207,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         })
         .StartAsync();
 
-    private async Task<IHost> CreateHostWithDefaultApiVersion() =>
+    private static async Task<IHost> CreateHostWithDefaultApiVersion() =>
     await new HostBuilder()
         .ConfigureWebHost(webBuilder =>
         {
@@ -229,7 +225,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                     .AddMvc();
                     services.AddServiceLevelIndicator(options =>
                     {
-                        options.Meter = _meter;
                         options.CustomerResourceId = "TestCustomerResourceId";
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                     })
@@ -273,7 +268,6 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         {
             if (disposing)
             {
-                _meter.Dispose();
                 _meterListener.Dispose();
             }
 

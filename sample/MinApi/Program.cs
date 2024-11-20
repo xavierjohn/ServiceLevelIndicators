@@ -32,7 +32,7 @@ builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
     .WithMetrics(builder =>
     {
-        builder.AddMeter(Sample.Meter.Name);
+        builder.AddServiceLevelIndicatorInstrumentation();
         builder.AddOtlpExporter();
     });
 
@@ -41,7 +41,6 @@ builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
-    options.Meter = Sample.Meter;
 })
 .AddHttpMethod();
 
@@ -76,9 +75,4 @@ app.Run();
 internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
-
-internal sealed class Sample
-{
-    public static Meter Meter { get; } = new(nameof(Sample));
 }

@@ -3,21 +3,24 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Reflection;
 using Microsoft.Extensions.Options;
 
 public class ServiceLevelIndicator
 {
+    public const string InstrumentationName = nameof(ServiceLevelIndicator);
+
     public ServiceLevelIndicatorOptions ServiceLevelIndicatorOptions { get; }
+    internal static readonly AssemblyName AssemblyName = typeof(ServiceLevelIndicator).Assembly.GetName();
+    internal static readonly string InstrumentationVersion = AssemblyName.Version!.ToString();
+    internal static readonly Meter Meter = new(InstrumentationName, InstrumentationVersion);
 
     private readonly Histogram<long> _responseLatencyHistogram;
 
     public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options)
     {
         ServiceLevelIndicatorOptions = options.Value;
-        if (ServiceLevelIndicatorOptions.Meter == null)
-            throw new ArgumentNullException(message: "Meter must be provided in options.", paramName: nameof(options));
-
-        _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName, "ms");
+        _responseLatencyHistogram = Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName, "ms", "Duration of the operation.");
     }
 
     public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes) =>

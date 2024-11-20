@@ -9,11 +9,6 @@ using System.Diagnostics.Metrics;
 public class ServiceLevelIndicatorOptions
 {
     /// <summary>
-    /// The meter that is used to create the histogram that reports the latency.
-    /// </summary>
-    public Meter Meter { get; set; } = null!;
-
-    /// <summary>
     /// CustomerResrouceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
     /// CustomerResourceId can be set for the entire service here or in each API method.
     /// </summary>

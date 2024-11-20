@@ -35,8 +35,6 @@ builder.Services.AddOpenTelemetry()
         options.AddOtlpExporter();
     });
 
-builder.Services.AddSingleton<SampleApiMeters>();
-builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
 builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";

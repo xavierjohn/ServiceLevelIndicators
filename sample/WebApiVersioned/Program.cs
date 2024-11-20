@@ -41,12 +41,9 @@ builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
     .WithMetrics(builder =>
     {
-        builder.AddMeter(SampleApiMeters.MeterName);
+        builder.AddServiceLevelIndicatorInstrumentation();
         builder.AddOtlpExporter();
     });
-
-builder.Services.AddSingleton<SampleApiMeters>();
-builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>, ConfigureServiceLevelIndicatorOptions>());
 
 builder.Services.AddServiceLevelIndicator(options =>
 {

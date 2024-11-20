@@ -11,7 +11,7 @@ internal class TestHostBuilder
 {
     internal const int MillisecondsDelay = 200;
 
-    public static async Task<IHost> CreateHostWithSli(Meter meter) =>
+    public static async Task<IHost> CreateHostWithSli() =>
         await new HostBuilder()
             .ConfigureWebHost(webBuilder =>
             {
@@ -22,7 +22,6 @@ internal class TestHostBuilder
                         services.AddControllers();
                         services.AddServiceLevelIndicator(options =>
                         {
-                            options.Meter = meter;
                             options.CustomerResourceId = "TestCustomerResourceId";
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                         }).AddMvc();
@@ -41,7 +40,7 @@ internal class TestHostBuilder
             })
             .StartAsync();
 
-    public static async Task<IHost> CreateHostWithSliEnriched(Meter meter) =>
+    public static async Task<IHost> CreateHostWithSliEnriched() =>
     await new HostBuilder()
         .ConfigureWebHost(webBuilder =>
         {
@@ -52,7 +51,6 @@ internal class TestHostBuilder
                     services.AddControllers();
                     services.AddServiceLevelIndicator(options =>
                     {
-                        options.Meter = meter;
                         options.CustomerResourceId = "TestCustomerResourceId";
                         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                     })
@@ -85,7 +83,7 @@ internal class TestHostBuilder
         })
         .StartAsync();
 
-    public static async Task<IHost> CreateHostWithoutAutomaticSli(Meter meter)
+    public static async Task<IHost> CreateHostWithoutAutomaticSli()
     {
         return await new HostBuilder()
             .ConfigureWebHost(webBuilder =>
@@ -97,7 +95,6 @@ internal class TestHostBuilder
                         services.AddControllers();
                         services.AddServiceLevelIndicator(options =>
                         {
-                            options.Meter = meter;
                             options.CustomerResourceId = "TestCustomerResourceId";
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                             options.AutomaticallyEmitted = false;
