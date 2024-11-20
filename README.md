@@ -80,79 +80,53 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
 ## Usage for Web API MVC
 
-1. Create and register a metrics meter with the dependency injection.
+1. Register SLI with open telemetry by calling `AddServiceLevelIndicatorInstrumentation`.
 
    Example.
 
     ``` csharp
-
-    public class SampleApiMeters
-    {
-        public const string MeterName = "SampleMeter";
-        public Meter Meter { get; } = new Meter(MeterName);
-    }
-    builder.Services.AddSingleton<SampleApiMeters>();
-    
+     builder.Services.AddOpenTelemetry()
+      .ConfigureResource(configureResource)
+      .WithMetrics(builder =>
+      {
+          builder.AddServiceLevelIndicatorInstrumentation();
+          builder.AddOtlpExporter();
+      });
     ```
 
-2. Add a class to configure SLI
-
-    Example.
-
-    ```csharp
-
-    internal sealed class ConfigureServiceLevelIndicatorOptions
-        : IConfigureOptions<ServiceLevelIndicatorOptions>
-    {
-        public ConfigureServiceLevelIndicatorOptions(SampleApiMeters meters)
-            => this.meters = meters;
-        public void Configure(ServiceLevelIndicatorOptions options)
-            => options.Meter = meters.Meter;
-
-        private readonly SampleApiMeters meters;
-    }
-
-    builder.Services.TryAddEnumerable(
-        ServiceDescriptor.Singleton<IConfigureOptions<ServiceLevelIndicatorOptions>,
-        ConfigureServiceLevelIndicatorOptions>());
-
-    ```
-
-3. Add ServiceLevelIndicator, into the dependency injection. AddMvc() is required for overrides present in SLI attributes to take effect.
+2. Add ServiceLevelIndicator, into the dependency injection. AddMvc() is required for overrides present in SLI attributes to take effect.
 
    Example.
 
     ``` csharp
-
     builder.Services.AddServiceLevelIndicator(options =>
     {
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
     })
     .AddMvc();
-
     ```
 
-4. Add the middleware to the pipeline.
+3. Add the middleware to the pipeline.
 
     ``` csharp
-
     app.UseServiceLevelIndicator();
-
     ```
 
 ## Usage for Minimal API
 
-1. Create the metrics meter.
+1. Register SLI with open telemetry by calling `AddServiceLevelIndicatorInstrumentation`.
 
-    Example.
+   Example.
 
-    ```csharp
 
-    internal sealed class Sample
-    {
-        public static Meter Meter { get; } = new(nameof(Sample));
-    }
-
+    ``` csharp
+     builder.Services.AddOpenTelemetry()
+      .ConfigureResource(configureResource)
+      .WithMetrics(builder =>
+      {
+          builder.AddServiceLevelIndicatorInstrumentation();
+          builder.AddOtlpExporter();
+      });
     ```
 
 2. Add ServiceLevelIndicator into the dependency injection.
@@ -173,9 +147,7 @@ Difference between ServiceLevelIndicator and http.server.request.duration
    Example.
 
     ``` csharp
-
     app.UseServiceLevelIndicator();
-    
     ```
 
 4. To each API route mapping, add `AddServiceLevelIndicator()`
@@ -183,10 +155,8 @@ Difference between ServiceLevelIndicator and http.server.request.duration
    Example.
 
     ``` csharp
-
     app.MapGet("/hello", () => "Hello World!")
        .AddServiceLevelIndicator();
-    
     ```
 
 ### Usage for background jobs
@@ -195,14 +165,12 @@ You can measure a block of code by boxing it in a using clause of MeasuredOperat
 Example.
 
 ```csharp
-
 async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 {
     using var measuredOperation = serviceLevelIndicator.StartMeasuring("OperationName");
     // Do Work.
     measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
 }
-
 ```
 
 ### Customizations
@@ -216,14 +184,12 @@ eg GET WeatherForecast/Action1
    Example.
 
     ``` csharp
-
     builder.Services.AddServiceLevelIndicator(options =>
     {
         /// Options
     })
     .AddMvc()
     .AddApiVersion();
-
     ```
 
 - To add HTTP method as a dimension, add `AddHttpMethod` to Service Level Indicator.
@@ -231,14 +197,12 @@ eg GET WeatherForecast/Action1
    Example.
 
     ``` csharp
-
     builder.Services.AddServiceLevelIndicator(options =>
     {
         /// Options
     })
     .AddMvc()
     .AddHttpMethod();
-
     ```
 
 - Enrich SLI with `Enrich` callback. The callback receives a `MeasuredOperation` as context that can be used to set to `CustomerResourceId` or additional attributes.
@@ -247,7 +211,6 @@ An async version `EnrichAsync` is also available.
    Example.
 
     ``` csharp
-
     builder.Services.AddServiceLevelIndicator(options =>
     {
         options.LocationId = ServiceLevelIndicator.CreateLocationId(Cloud, Region);
@@ -259,7 +222,6 @@ An async version `EnrichAsync` is also available.
             .FirstOrDefault(c => c.Type == "upn")?.Value ?? "Unknown";
         context.SetCustomerResourceId(upn);
     });
-
     ```
 
 - To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
@@ -267,42 +229,34 @@ An async version `EnrichAsync` is also available.
    Example.
 
     ``` csharp
-
     [HttpGet("MyAction2")]
     [ServiceLevelIndicator(Operation = "MyNewOperationName")]
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
-
     ```
 
 - To set the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
 
     ```csharp
-
     [HttpGet("get-by-zip-code/{zipCode}")]
     public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode)
        => GetWeather();
-
     ```
 
     Or use `GetMeasuredOperation` extension method.
 
     ``` csharp
-
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get(string customerResourceId)
     {
         HttpContext.GetMeasuredOperation().CustomerResourceId = customerResourceId;
         return GetWeather();
     }
-
     ```
 
 - To add custom Open Telemetry attributes.  
 
     ``` csharp
-
     HttpContext.GetMeasuredOperation().AddAttribute(attribute, value);
-
     ```
 
     GetMeasuredOperation will **throw** if the route is not configured to emit SLI.
@@ -310,30 +264,24 @@ An async version `EnrichAsync` is also available.
     When used in a middleware or scenarios where a route may not be configured to emit SLI.
 
     ``` csharp
-
     if (HttpContext.TryGetMeasuredOperation(out var measuredOperation))
         measuredOperation.AddAttribute("CustomAttribute", value);
-
     ```
 
     You can add additional dimensions to the SLI data by using the `Measure` attribute.
 
     ```csharp
-
     [HttpGet("name/{first}/{surname}")]
     public IActionResult GetCustomerResourceId(
         [Measure] string first,
         [CustomerResourceId] string surname)
           => Ok(first + " " + surname);
-
     ```
 
 - To prevent automatically emitting SLI information on all controllers, set the option,
 
     ``` csharp
-
     ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
-
     ```
 
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
@@ -343,14 +291,12 @@ An async version `EnrichAsync` is also available.
    Example.
 
     ``` csharp
-
    public void StoreItem(MyDomainEvent domainEvent)
    {
         var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
         using var measuredOperation = _serviceLevelIndicator.StartMeasuring("StoreItem", attribute);
         DoTheWork();
    )
-
    ```
 
 ### Sample
