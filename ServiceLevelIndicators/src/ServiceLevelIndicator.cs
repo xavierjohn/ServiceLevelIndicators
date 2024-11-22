@@ -23,7 +23,7 @@ public class ServiceLevelIndicator
             ServiceLevelIndicatorOptions.Meter = new(DefaultMeterName, InstrumentationVersion);
         }
 
-        _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.InstrumentName, "ms", "Duration of the operation.");
+        _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.DurationInstrumentName, "ms", "Duration of the operation.");
     }
 
     public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes) =>

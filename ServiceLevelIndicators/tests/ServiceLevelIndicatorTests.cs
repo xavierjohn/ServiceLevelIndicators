@@ -131,7 +131,7 @@ public class ServiceLevelIndicatorTests : IDisposable
             CustomerResourceId = customerResourceId,
             LocationId = locationId,
             Meter = _meter,
-            InstrumentName = InstrumentName
+            DurationInstrumentName = InstrumentName
         };
         var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
 
@@ -152,7 +152,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         ValidateMetrics(elapsedTime, InstrumentName);
     }
 
-    private void ValidateMetrics(int elapsedTime, string instrumentName = "ServiceLevelIndicator", int? approx = null)
+    private void ValidateMetrics(int elapsedTime, string instrumentName = "operation.duration", int? approx = null)
     {
         _callbackCalled.Should().BeTrue();
         _actualTags.Should().BeEquivalentTo(_expectedTags);

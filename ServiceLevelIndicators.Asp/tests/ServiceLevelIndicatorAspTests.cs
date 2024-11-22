@@ -404,7 +404,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     private void ValidateMetrics(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, KeyValuePair<string, object?>[] expectedTags)
     {
         _callbackCalled = true;
-        instrument.Name.Should().Be("ServiceLevelIndicator");
+        instrument.Name.Should().Be("operation.duration");
         instrument.Unit.Should().Be("ms");
         measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
         _output.WriteLine($"Measurement {measurement}");

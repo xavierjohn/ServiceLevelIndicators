@@ -29,7 +29,7 @@ By tracking SLIs over time, service providers can identify trends and make impro
 **ServiceLevelIndicators** library will help emit latency metrics for each API operation to help monitor the service performance over time.
 The metrics is emitted via standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-7.0).
 
-By default, an instrument named `ServiceLevelIndicator` is added to the service metrics and the metrics are emitted. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
+By default, a meter named `ServiceLevelIndicator` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 - CustomerResourceId - A value that helps identity the customer, customer group or calling service.
 - LocationId - The location where the service running. eg. Public cloud, West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
@@ -308,7 +308,7 @@ To view the metrics locally.
 1. Run Docker Desktop
 2. Run [sample\DockerOpenTelemetry\run.cmd](sample\DockerOpenTelemetry\run.cmd) to download and run zipkin and prometheus.
 3. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-4. You should see the SLI metrics in prometheus under the meter `ServiceLevelIndicator_bucket` where the `Operation = "GET WeatherForeCase"`, `http.response.status_code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status_code = Ok`
+4. You should see the SLI metrics in prometheus under the meter `operation_duration_milliseconds_bucket` where the `Operation = "GET WeatherForeCase"`, `http.response.status_code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status_code = Ok`
 ![SLI](assets/prometheus.jpg)
 5. If you run the sample with API Versioning, you will see something similar to the following.
 ![SLI](assets/versioned.jpg)
