@@ -42,7 +42,7 @@ public class ServiceLevelIndicatorOptions
     /// <summary>
     /// The instrument name created on the given meter. Cannot be null.
     /// </summary>
-    public string InstrumentName { get; set; } = "ServiceLevelIndicator";
+    public string DurationInstrumentName { get; set; } = "operation.duration";
 
     /// <summary>
     /// Activity Status Code attribute name.

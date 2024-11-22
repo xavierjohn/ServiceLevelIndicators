@@ -262,7 +262,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         _callbackCalled = true;
 
         _output.WriteLine($"Measurement {measurement}");
-        instrument.Name.Should().Be("ServiceLevelIndicator");
+        instrument.Name.Should().Be("operation.duration");
         instrument.Unit.Should().Be("ms");
         measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 400);
     }
