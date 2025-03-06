@@ -43,7 +43,6 @@ var serviceProvider = services.BuildServiceProvider();
 
 var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
-
 using MeterProvider meterProvider = Sdk.CreateMeterProviderBuilder()
                 .SetResourceBuilder(resourceBuilder)
                 .AddConsoleExporter()
