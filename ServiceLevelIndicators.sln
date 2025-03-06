@@ -39,6 +39,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleMinimalApiSli", "samp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateSli", "sample\GenerateSli\GenerateSli.csproj", "{94FA59E4-26A3-4457-8AD7-4091205F1D06}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleConsoleSLI", "sample\ConsoleApp\SampleConsoleSLI.csproj", "{08C09D03-67BE-25CF-68EA-8A94E1EBFE2F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{94FA59E4-26A3-4457-8AD7-4091205F1D06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94FA59E4-26A3-4457-8AD7-4091205F1D06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94FA59E4-26A3-4457-8AD7-4091205F1D06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08C09D03-67BE-25CF-68EA-8A94E1EBFE2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08C09D03-67BE-25CF-68EA-8A94E1EBFE2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08C09D03-67BE-25CF-68EA-8A94E1EBFE2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08C09D03-67BE-25CF-68EA-8A94E1EBFE2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,6 +106,7 @@ Global
 		{A776B107-2730-4EB6-B481-7F3EFAC2A2A8} = {2C6E9F62-8968-455A-AD02-DC795296471A}
 		{D25F951D-CE1A-47D1-8421-F71BEBF3A356} = {A7D8DEF7-8D37-4DE9-B935-7D9FF571132B}
 		{94FA59E4-26A3-4457-8AD7-4091205F1D06} = {A7D8DEF7-8D37-4DE9-B935-7D9FF571132B}
+		{08C09D03-67BE-25CF-68EA-8A94E1EBFE2F} = {A7D8DEF7-8D37-4DE9-B935-7D9FF571132B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5C1087B8-93AA-4847-9D18-6A16E754593F}
