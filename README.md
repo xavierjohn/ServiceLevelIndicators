@@ -220,7 +220,8 @@ An async version `EnrichAsync` is also available.
     {
         var upn = context.HttpContext.User.Claims
             .FirstOrDefault(c => c.Type == "upn")?.Value ?? "Unknown";
-        context.SetCustomerResourceId(upn);
+        context.SetCustomerResourceId(upn); // Set CustomerResourceId
+        context.AddAttribute("UserPrincipalName", upn); // Add custom attribute
     });
     ```
 
