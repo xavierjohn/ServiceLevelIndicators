@@ -1,11 +1,10 @@
-﻿namespace ServiceLevelIndicators.Asp.Tests;
+namespace ServiceLevelIndicators.Asp.Tests;
 
 using System;
 using System.Diagnostics.Metrics;
 using System.Net;
 using Microsoft.AspNetCore.TestHost;
 using Newtonsoft.Json.Linq;
-using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorAspTests : IDisposable
 {
@@ -38,7 +37,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().GetAsync("test", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -66,7 +65,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().PostAsync("test", new StringContent("Hi"));
+        var response = await host.GetTestClient().PostAsync("test", new StringContent("Hi"), TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -94,7 +93,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/bad_request");
+        var response = await host.GetTestClient().GetAsync("test/bad_request", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -124,7 +123,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSliEnriched(_meter);
 
-        var response = await host.GetTestClient().SendAsync(request);
+        var response = await host.GetTestClient().SendAsync(request, TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -156,7 +155,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/operation");
+        var response = await host.GetTestClient().GetAsync("test/operation", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -184,7 +183,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/customer_resourceid/myId");
+        var response = await host.GetTestClient().GetAsync("test/customer_resourceid/myId", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -212,7 +211,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
+        var response = await host.GetTestClient().GetAsync("test/custom_attribute/Mickey", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -241,7 +240,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().GetAsync("test", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -265,7 +264,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/send_sli");
+        var response = await host.GetTestClient().GetAsync("test/send_sli", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -290,10 +289,10 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     {
         using var host = await TestHostBuilder.CreateHostWithoutSli();
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().GetAsync("test", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Func<Task> getMeasuredOperationLatency = () => host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
+        Func<Task> getMeasuredOperationLatency = () => host.GetTestClient().GetAsync("test/custom_attribute/Mickey", TestContext.Current.CancellationToken);
 
         await getMeasuredOperationLatency.Should().ThrowAsync<InvalidOperationException>();
     }
@@ -303,9 +302,9 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     {
         using var host = await TestHostBuilder.CreateHostWithoutSli();
 
-        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Donald");
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Donald", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         content.Should().Be("false");
     }
@@ -318,9 +317,9 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Goofy");
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Goofy", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         content.Should().Be("true");
 
@@ -350,7 +349,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/name/Xavier/Jon/25");
+        var response = await host.GetTestClient().GetAsync("test/name/Xavier/Jon/25", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
@@ -377,7 +376,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     {
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon");
+        Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon", TestContext.Current.CancellationToken);
         await act.Should().ThrowAsync<ArgumentException>();
     }
 

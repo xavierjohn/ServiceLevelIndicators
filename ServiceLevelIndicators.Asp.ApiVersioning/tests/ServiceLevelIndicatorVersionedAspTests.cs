@@ -1,4 +1,4 @@
-﻿namespace ServiceLevelIndicators.Asp.ApiVersioning.Tests;
+namespace ServiceLevelIndicators.Asp.ApiVersioning.Tests;
 
 using System.Diagnostics.Metrics;
 using System.Net;
@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 {
@@ -57,7 +56,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHost();
 
         // Act
-        var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29");
+        var response = await host.GetTestClient().GetAsync("testSingle?api-version=2023-08-29", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -82,7 +81,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         httpClient.DefaultRequestHeaders.Add("api-version", "2023-08-29");
 
         // Act
-        var response = await httpClient.GetAsync("testSingle");
+        var response = await httpClient.GetAsync("testSingle", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -105,7 +104,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHost();
 
         // Act
-        var response = await host.GetTestClient().GetAsync("testNeutral");
+        var response = await host.GetTestClient().GetAsync("testNeutral", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -128,7 +127,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHostWithDefaultApiVersion();
 
         // Act
-        var response = await host.GetTestClient().GetAsync("testSingle");
+        var response = await host.GetTestClient().GetAsync("testSingle", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -142,7 +141,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHost();
 
         // Act
-        var response = await host.GetTestClient().GetAsync("does-not-exist?api-version=2023-08-29");
+        var response = await host.GetTestClient().GetAsync("does-not-exist?api-version=2023-08-29", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -167,7 +166,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
         using var host = await CreateHost();
 
         // Act
-        var response = await host.GetTestClient().GetAsync(routeWithVersion);
+        var response = await host.GetTestClient().GetAsync(routeWithVersion, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
