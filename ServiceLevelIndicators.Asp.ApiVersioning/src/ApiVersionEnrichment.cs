@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators;
+
 using System.Threading;
 using System.Threading.Tasks;
 using Asp.Versioning;
@@ -15,7 +16,7 @@ public sealed class ApiVersionEnrichment
 
     private static string GetApiVersion(HttpContext context)
     {
-        var apiVersioningFeature = context.ApiVersioningFeature();
+        var apiVersioningFeature = context.ApiVersioningFeature;
         var versions = apiVersioningFeature.RawRequestedApiVersions;
         if (versions.Count == 1)
             return apiVersioningFeature.RequestedApiVersion?.ToString() ?? string.Empty;

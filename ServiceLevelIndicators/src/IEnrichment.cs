@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators;
+
 using System.Threading.Tasks;
 
 public interface IEnrichment<T>

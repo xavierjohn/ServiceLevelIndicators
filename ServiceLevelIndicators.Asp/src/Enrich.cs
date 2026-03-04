@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators;
+
 using System.Threading;
 using System.Threading.Tasks;
 

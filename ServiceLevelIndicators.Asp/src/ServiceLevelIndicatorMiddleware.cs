@@ -43,6 +43,7 @@ internal sealed class ServiceLevelIndicatorMiddleware
             if (context.RequestAborted.IsCancellationRequested) break;
             await enrichment.EnrichAsync(webmeasurementContext, context.RequestAborted);
         }
+
         RemoveSliFeatureFromHttpContext(context);
     }
 
@@ -66,7 +67,6 @@ internal sealed class ServiceLevelIndicatorMiddleware
         };
         measuredOperation.SetActivityStatusCode(activityCode);
     }
-
 
     private bool ShouldEmitMetrics(EndpointMetadataCollection metadata) =>
         _serviceLevelIndicator.ServiceLevelIndicatorOptions.AutomaticallyEmitted || GetSliAttribute(metadata) is not null;

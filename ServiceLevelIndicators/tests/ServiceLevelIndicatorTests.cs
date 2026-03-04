@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators.Tests;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
@@ -36,7 +37,6 @@ public class ServiceLevelIndicatorTests : IDisposable
         _actualTags = [];
         _expectedTags = [];
     }
-
 
     [Fact]
     public void Record()
@@ -77,7 +77,6 @@ public class ServiceLevelIndicatorTests : IDisposable
         ValidateMetrics(elapsedTime);
     }
 
-
     [Fact]
     public async Task Will_measure_code_block()
     {
@@ -93,7 +92,6 @@ public class ServiceLevelIndicatorTests : IDisposable
             Meter = _meter
         };
         var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
-
 
         // Act
         await MeasureCodeBlock(serviceLevelIndicator);
@@ -116,7 +114,6 @@ public class ServiceLevelIndicatorTests : IDisposable
             measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
         }
     }
-
 
     [Fact]
     public void Customize_instrument_name()

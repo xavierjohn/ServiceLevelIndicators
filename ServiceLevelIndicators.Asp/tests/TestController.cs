@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
+
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -36,6 +37,7 @@ public class TestController : ControllerBase
             measuredOperation.AddAttribute("CustomAttribute", value);
             return Ok(true);
         }
+
         return Ok(false);
     }
 

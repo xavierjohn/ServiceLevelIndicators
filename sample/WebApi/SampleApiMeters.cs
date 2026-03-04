@@ -1,11 +1,10 @@
-﻿namespace SampleWebApplicationSLI
+﻿namespace SampleWebApplicationSLI;
+
+using System.Diagnostics.Metrics;
+
+internal class SampleApiMeters
 {
-    using System.Diagnostics.Metrics;
+    public const string MeterName = "SampleMeter";
 
-    internal class SampleApiMeters
-    {
-        public const string MeterName = "SampleMeter";
-
-        public Meter Meter { get; } = new Meter(MeterName);
-    }
+    public Meter Meter { get; } = new Meter(MeterName);
 }

@@ -36,7 +36,6 @@ builder.Services.AddOpenTelemetry()
         builder.AddOtlpExporter();
     });
 
-
 builder.Services.AddServiceLevelIndicator(options =>
 {
     options.CustomerResourceId = "SampleCustomerResourceId";

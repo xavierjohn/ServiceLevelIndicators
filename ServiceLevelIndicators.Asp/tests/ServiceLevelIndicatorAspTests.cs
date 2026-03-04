@@ -1,9 +1,10 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
-using Microsoft.AspNetCore.TestHost;
-using Newtonsoft.Json.Linq;
+
 using System;
 using System.Diagnostics.Metrics;
 using System.Net;
+using Microsoft.AspNetCore.TestHost;
+using Newtonsoft.Json.Linq;
 using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorAspTests : IDisposable
@@ -379,7 +380,6 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon");
         await act.Should().ThrowAsync<ArgumentException>();
     }
-
 
     protected virtual void Dispose(bool disposing)
     {

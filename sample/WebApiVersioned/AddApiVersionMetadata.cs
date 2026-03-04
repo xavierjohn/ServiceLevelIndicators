@@ -1,11 +1,11 @@
 ﻿namespace SampleVersionedWebApplicationSLI;
 
+using System.Globalization;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Globalization;
-using System.Text.Json;
 
 /// <summary>
 /// Represents the OpenAPI/Swashbuckle operation filter used to document information provided, but not used.
@@ -19,7 +19,7 @@ public class AddApiVersionMetadata : IOperationFilter
     {
         var apiDescription = context.ApiDescription;
 
-        operation.Deprecated |= apiDescription.IsDeprecated();
+        operation.Deprecated |= apiDescription.IsDeprecated;
 
         // REF: https://github.com/domaindrivendev/Swashbuckle.AspNetCore/issues/1752#issue-663991077
         foreach (var responseType in context.ApiDescription.SupportedResponseTypes)

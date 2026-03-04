@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators;
+
 using Microsoft.AspNetCore.Http;
 
 public class WebEnrichmentContext : IEnrichmentContext
@@ -12,7 +13,6 @@ public class WebEnrichmentContext : IEnrichmentContext
         HttpContext = httpContext;
     }
     public string Operation => _operation.Operation;
-
 
     public void AddAttribute(string name, object value) => _operation.AddAttribute(name, value);
 

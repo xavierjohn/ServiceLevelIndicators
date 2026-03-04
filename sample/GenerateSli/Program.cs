@@ -36,6 +36,3 @@ static async Task ClientRequests()
         }
     }
 }
-
-
-

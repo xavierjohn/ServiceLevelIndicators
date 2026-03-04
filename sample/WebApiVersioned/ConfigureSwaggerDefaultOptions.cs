@@ -1,12 +1,12 @@
 ﻿namespace SampleVersionedWebApplicationSLI;
 
+using System.Text;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Text;
 
 /// <summary>
 /// Configures the Swagger generation options.

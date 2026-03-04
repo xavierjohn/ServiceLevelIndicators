@@ -1,13 +1,13 @@
 ﻿namespace ServiceLevelIndicators.Asp.ApiVersioning.Tests;
 
+using System.Diagnostics.Metrics;
+using System.Net;
 using global::Asp.Versioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Diagnostics.Metrics;
-using System.Net;
 using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorVersionedAspTests : IDisposable
@@ -176,9 +176,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 
     private async Task<IHost> CreateHost() =>
     await new HostBuilder()
-        .ConfigureWebHost(webBuilder =>
-        {
-            webBuilder
+        .ConfigureWebHost(webBuilder => webBuilder
                 .UseTestServer()
                 .ConfigureServices(services =>
                 {
@@ -197,25 +195,19 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                     .AddMvc()
                     .AddApiVersion();
                 })
-                .Configure(app =>
-                {
-                    app.UseRouting()
+                .Configure(app => app.UseRouting()
                        .UseServiceLevelIndicator()
                        .Use(async (context, next) =>
                         {
                             await Task.Delay(MillisecondsDelay);
                             await next(context);
                         })
-                       .UseEndpoints(endpoints => endpoints.MapControllers());
-                });
-        })
+                       .UseEndpoints(endpoints => endpoints.MapControllers())))
         .StartAsync();
 
     private async Task<IHost> CreateHostWithDefaultApiVersion() =>
     await new HostBuilder()
-        .ConfigureWebHost(webBuilder =>
-        {
-            webBuilder
+        .ConfigureWebHost(webBuilder => webBuilder
                 .UseTestServer()
                 .ConfigureServices(services =>
                 {
@@ -236,18 +228,14 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
                     .AddMvc()
                     .AddApiVersion();
                 })
-                .Configure(app =>
-                {
-                    app.UseRouting()
+                .Configure(app => app.UseRouting()
                        .UseServiceLevelIndicator()
                        .Use(async (context, next) =>
                        {
                            await Task.Delay(MillisecondsDelay);
                            await next(context);
                        })
-                       .UseEndpoints(endpoints => endpoints.MapControllers());
-                });
-        })
+                       .UseEndpoints(endpoints => endpoints.MapControllers())))
         .StartAsync();
 
     private void ValidateMetrics()

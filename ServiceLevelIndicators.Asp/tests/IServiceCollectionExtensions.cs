@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
+
 using System;
 using Microsoft.Extensions.DependencyInjection;
 
