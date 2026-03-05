@@ -4,6 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
+/// <summary>
+/// Represents an in-flight measured operation. Disposing this instance stops the stopwatch
+/// and records the elapsed time as a metric.
+/// </summary>
 public class MeasuredOperation : IDisposable
 {
     private bool _disposed;
@@ -25,14 +29,32 @@ public class MeasuredOperation : IDisposable
         _stopWatch = Stopwatch.StartNew();
     }
 
+    /// <summary>
+    /// Gets or sets the operation name emitted as a tag.
+    /// </summary>
     public string Operation { get; set; }
+
+    /// <summary>
+    /// Gets or sets the customer resource identifier emitted as a tag.
+    /// </summary>
     public string CustomerResourceId { get; set; }
 
-    // OTEL Attributes to emit
+    /// <summary>
+    /// Gets the additional OpenTelemetry attributes emitted with the measurement.
+    /// </summary>
     public List<KeyValuePair<string, object?>> Attributes { get; }
 
+    /// <summary>
+    /// Sets the <see cref="ActivityStatusCode"/> recorded with the measurement.
+    /// </summary>
+    /// <param name="activityStatusCode">The activity status code.</param>
     public void SetActivityStatusCode(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
 
+    /// <summary>
+    /// Adds a custom attribute to the measurement.
+    /// </summary>
+    /// <param name="attribute">The attribute name.</param>
+    /// <param name="value">The attribute value.</param>
     public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
 
     protected virtual void Dispose(bool disposing)
@@ -54,9 +76,9 @@ public class MeasuredOperation : IDisposable
         }
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

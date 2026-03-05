@@ -20,7 +20,6 @@ ResourceBuilder resourceBuilder = ResourceBuilder
     .CreateEmpty()
     .AddService(ProgramName, serviceVersion: version, serviceInstanceId: Environment.MachineName);
 
-
 ServiceCollection services = new();
 services.Configure<ServiceLevelIndicatorOptions>(r =>
 {
@@ -29,15 +28,12 @@ services.Configure<ServiceLevelIndicatorOptions>(r =>
 });
 
 services
-    .AddLogging(builder =>
-    {
-        builder.AddOpenTelemetry(options =>
+    .AddLogging(builder => builder.AddOpenTelemetry(options =>
         {
             options.SetResourceBuilder(resourceBuilder);
             options.AddConsoleExporter();
-        });
-    })
-    .AddSingleton<ServiceLevelIndicator>(); ;
+        }))
+    .AddSingleton<ServiceLevelIndicator>();
 
 var serviceProvider = services.BuildServiceProvider();
 

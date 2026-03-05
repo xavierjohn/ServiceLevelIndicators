@@ -19,7 +19,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "GET WeatherForecast"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = "SampleCustomerResourceId"
     /// </summary>
     [HttpGet]
     public IEnumerable<WeatherForecast> Get() => GetWeather();
@@ -27,7 +27,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "GET WeatherForecast/MyAction1"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = "SampleCustomerResourceId"
     /// </summary>
 
     [HttpGet("MyAction1")]
@@ -36,7 +36,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "MyOperation"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = "SampleCustomerResourceId"
     /// </summary>
     [HttpGet("MyAction2")]
     [ServiceLevelIndicator(Operation = "MyOperation")]
@@ -50,14 +50,11 @@ public class WeatherForecastController : ControllerBase
     [HttpGet("{customerResourceId}")]
     public IEnumerable<WeatherForecast> Get([CustomerResourceId] string customerResourceId) => GetWeather();
 
-    private static WeatherForecast[] GetWeather()
+    private static WeatherForecast[] GetWeather() => Enumerable.Range(1, 5).Select(index => new WeatherForecast
     {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = DateTime.Now.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
+        Date = DateTime.Now.AddDays(index),
+        TemperatureC = Random.Shared.Next(-20, 55),
+        Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+    })
         .ToArray();
-    }
 }

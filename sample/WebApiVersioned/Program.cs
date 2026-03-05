@@ -1,10 +1,10 @@
-﻿using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using ServiceLevelIndicators;
+﻿using Azure.Core;
 using Microsoft.Extensions.Options;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using SampleVersionedWebApplicationSLI;
-using Azure.Core;
+using ServiceLevelIndicators;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +33,7 @@ builder.Services.AddApiVersioning()
 builder.Services.AddProblemDetails();
 
 Action<ResourceBuilder> configureResource = r => r.AddService(
-    serviceName: "SampleServiceName",
+    serviceName: "SampleVersionedWebApplicationSLI",
     serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
@@ -43,11 +43,7 @@ builder.Services.AddOpenTelemetry()
         builder.AddOtlpExporter();
     });
 
-
-builder.Services.AddServiceLevelIndicator(options =>
-{
-    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
-})
+builder.Services.AddServiceLevelIndicator(options => options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name))
 .AddMvc()
 .AddApiVersion();
 

@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
+
 using System.Diagnostics.Metrics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -13,9 +14,7 @@ internal class TestHostBuilder
 
     public static async Task<IHost> CreateHostWithSli(Meter meter) =>
         await new HostBuilder()
-            .ConfigureWebHost(webBuilder =>
-            {
-                webBuilder
+            .ConfigureWebHost(webBuilder => webBuilder
                     .UseTestServer()
                     .ConfigureServices(services =>
                     {
@@ -27,25 +26,19 @@ internal class TestHostBuilder
                             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
                         }).AddMvc();
                     })
-                    .Configure(app =>
-                    {
-                        app.UseRouting()
+                    .Configure(app => app.UseRouting()
                            .UseServiceLevelIndicator()
                            .Use(async (context, next) =>
                            {
                                await Task.Delay(MillisecondsDelay);
                                await next(context);
                            })
-                           .UseEndpoints(endpoints => endpoints.MapControllers());
-                    });
-            })
+                           .UseEndpoints(endpoints => endpoints.MapControllers())))
             .StartAsync();
 
     public static async Task<IHost> CreateHostWithSliEnriched(Meter meter) =>
     await new HostBuilder()
-        .ConfigureWebHost(webBuilder =>
-        {
-            webBuilder
+        .ConfigureWebHost(webBuilder => webBuilder
                 .UseTestServer()
                 .ConfigureServices(services =>
                 {
@@ -71,26 +64,18 @@ internal class TestHostBuilder
                         return ValueTask.CompletedTask;
                     });
                 })
-                .Configure(app =>
-                {
-                    app.UseRouting()
+                .Configure(app => app.UseRouting()
                        .UseServiceLevelIndicator()
                        .Use(async (context, next) =>
                        {
                            await Task.Delay(MillisecondsDelay);
                            await next(context);
                        })
-                       .UseEndpoints(endpoints => endpoints.MapControllers());
-                });
-        })
+                       .UseEndpoints(endpoints => endpoints.MapControllers())))
         .StartAsync();
 
-    public static async Task<IHost> CreateHostWithoutAutomaticSli(Meter meter)
-    {
-        return await new HostBuilder()
-            .ConfigureWebHost(webBuilder =>
-            {
-                webBuilder
+    public static async Task<IHost> CreateHostWithoutAutomaticSli(Meter meter) => await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
                     .UseTestServer()
                     .ConfigureServices(services =>
                     {
@@ -103,44 +88,26 @@ internal class TestHostBuilder
                             options.AutomaticallyEmitted = false;
                         }).AddMvc();
                     })
-                    .Configure(app =>
-                    {
-                        app.UseRouting()
+                    .Configure(app => app.UseRouting()
                            .UseServiceLevelIndicator()
                            .Use(async (context, next) =>
                            {
                                await Task.Delay(MillisecondsDelay);
                                await next(context);
                            })
-                           .UseEndpoints(endpoints => endpoints.MapControllers());
-                    });
-            })
+                           .UseEndpoints(endpoints => endpoints.MapControllers())))
             .StartAsync();
-    }
 
-    public static async Task<IHost> CreateHostWithoutSli()
-    {
-        return await new HostBuilder()
-            .ConfigureWebHost(webBuilder =>
-            {
-                webBuilder
+    public static async Task<IHost> CreateHostWithoutSli() => await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
                     .UseTestServer()
-                    .ConfigureServices(services =>
-                    {
-                        services.AddControllers();
-                    })
-                    .Configure(app =>
-                    {
-                        app.UseRouting()
+                    .ConfigureServices(services => services.AddControllers())
+                    .Configure(app => app.UseRouting()
                            .Use(async (context, next) =>
                            {
                                await Task.Delay(MillisecondsDelay);
                                await next(context);
                            })
-                           .UseEndpoints(endpoints => endpoints.MapControllers());
-                    });
-            })
+                           .UseEndpoints(endpoints => endpoints.MapControllers())))
             .StartAsync();
-    }
 }
-

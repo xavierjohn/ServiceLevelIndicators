@@ -1,9 +1,10 @@
 ﻿namespace ServiceLevelIndicators.Tests;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
+using System.Threading;
 using Microsoft.Extensions.Options;
-using Xunit.Abstractions;
 
 public class ServiceLevelIndicatorTests : IDisposable
 {
@@ -36,7 +37,6 @@ public class ServiceLevelIndicatorTests : IDisposable
         _actualTags = [];
         _expectedTags = [];
     }
-
 
     [Fact]
     public void Record()
@@ -77,7 +77,6 @@ public class ServiceLevelIndicatorTests : IDisposable
         ValidateMetrics(elapsedTime);
     }
 
-
     [Fact]
     public async Task Will_measure_code_block()
     {
@@ -93,7 +92,6 @@ public class ServiceLevelIndicatorTests : IDisposable
             Meter = _meter
         };
         var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
-
 
         // Act
         await MeasureCodeBlock(serviceLevelIndicator);
@@ -117,6 +115,121 @@ public class ServiceLevelIndicatorTests : IDisposable
         }
     }
 
+    [Fact]
+    public void Uses_default_meter_when_none_provided()
+    {
+        // Arrange
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = "TestResourceId",
+            LocationId = "TestLocationId"
+        };
+
+        // Act
+        var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
+
+        // Assert
+        serviceLevelIndicator.ServiceLevelIndicatorOptions.Meter.Should().NotBeNull();
+        serviceLevelIndicator.ServiceLevelIndicatorOptions.Meter.Name.Should().Be(ServiceLevelIndicator.DefaultMeterName);
+    }
+
+    [Fact]
+    public void Record_with_no_attributes()
+    {
+        // Arrange
+        var customerResourceId = "TestResourceId";
+        var locationId = "TestLocationId";
+
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = customerResourceId,
+            LocationId = locationId,
+            Meter = _meter
+        };
+        var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
+
+        var operation = "TestOperation";
+        var elapsedTime = 50;
+
+        // Act
+        serviceLevelIndicator.Record(operation, elapsedTime);
+
+        // Assert
+        _expectedTags =
+        [
+            new("CustomerResourceId", customerResourceId),
+            new("LocationId", locationId),
+            new("Operation", operation)
+        ];
+
+        ValidateMetrics(elapsedTime);
+    }
+
+    [Fact]
+    public void Record_with_customerResourceId_override()
+    {
+        // Arrange
+        var defaultCustomerResourceId = "DefaultResourceId";
+        var overrideCustomerResourceId = "OverrideResourceId";
+        var locationId = "TestLocationId";
+
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = defaultCustomerResourceId,
+            LocationId = locationId,
+            Meter = _meter
+        };
+        var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
+
+        var operation = "TestOperation";
+        var elapsedTime = 75;
+
+        // Act
+        serviceLevelIndicator.Record(operation, overrideCustomerResourceId, elapsedTime);
+
+        // Assert
+        _expectedTags =
+        [
+            new("CustomerResourceId", overrideCustomerResourceId),
+            new("LocationId", locationId),
+            new("Operation", operation)
+        ];
+
+        ValidateMetrics(elapsedTime);
+    }
+
+    [Fact]
+    public async Task MeasuredOperation_double_dispose_does_not_record_twice()
+    {
+        // Arrange
+        var customerResourceId = "TestResourceId";
+        var locationId = "TestLocationId";
+        int callCount = 0;
+
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = customerResourceId,
+            LocationId = locationId,
+            Meter = _meter
+        };
+        var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
+
+        _meterListener.SetMeasurementEventCallback<long>((Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state) =>
+        {
+            Interlocked.Increment(ref callCount);
+            OnMeasurementRecorded(instrument, measurement, tags, state);
+        });
+
+        // Act
+        var measuredOperation = serviceLevelIndicator.StartMeasuring("DoubleDispose");
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+        measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+        measuredOperation.Dispose();
+        measuredOperation.Dispose(); // Second dispose should be a no-op
+
+        // Assert
+        callCount.Should().Be(1);
+    }
 
     [Fact]
     public void Customize_instrument_name()

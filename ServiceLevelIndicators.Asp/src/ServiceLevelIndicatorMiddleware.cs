@@ -6,18 +6,21 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.Logging;
 
-internal sealed class ServiceLevelIndicatorMiddleware
+internal sealed partial class ServiceLevelIndicatorMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly IEnumerable<IEnrichment<WebEnrichmentContext>> _enrichments;
+    private readonly ILogger<ServiceLevelIndicatorMiddleware> _logger;
 
-    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IEnrichment<WebEnrichmentContext>> enrichments)
+    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IEnrichment<WebEnrichmentContext>> enrichments, ILogger<ServiceLevelIndicatorMiddleware> logger)
     {
         _next = next;
         _serviceLevelIndicator = serviceLevelIndicator;
         _enrichments = enrichments;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -41,10 +44,21 @@ internal sealed class ServiceLevelIndicatorMiddleware
         foreach (var enrichment in _enrichments)
         {
             if (context.RequestAborted.IsCancellationRequested) break;
-            await enrichment.EnrichAsync(webmeasurementContext, context.RequestAborted);
+            try
+            {
+                await enrichment.EnrichAsync(webmeasurementContext, context.RequestAborted);
+            }
+            catch (Exception ex)
+            {
+                LogEnrichmentFailed(ex, enrichment.GetType().Name);
+            }
         }
+
         RemoveSliFeatureFromHttpContext(context);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "SLI enrichment {EnrichmentType} failed.")]
+    partial void LogEnrichmentFailed(Exception ex, string enrichmentType);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SetCustomerResourceIdFromAttribute(HttpContext context, EndpointMetadataCollection metadata, MeasuredOperation measuredOperation)
@@ -66,7 +80,6 @@ internal sealed class ServiceLevelIndicatorMiddleware
         };
         measuredOperation.SetActivityStatusCode(activityCode);
     }
-
 
     private bool ShouldEmitMetrics(EndpointMetadataCollection metadata) =>
         _serviceLevelIndicator.ServiceLevelIndicatorOptions.AutomaticallyEmitted || GetSliAttribute(metadata) is not null;
@@ -93,25 +106,19 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
     private static string? GetCustomerResourceIdAttributes(HttpContext context, EndpointMetadataCollection metadata)
     {
-        var measures = metadata.OfType<CustomerResourceIdMetadata>().ToArray();
-        var count = measures.Length;
-
-        if (count == 0)
+        var measure = metadata.GetMetadata<CustomerResourceIdMetadata>();
+        if (measure is null)
             return null;
 
-        if (count > 1)
-            throw new ArgumentException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined.");
-
         var values = context.Request.RouteValues;
-        var measure = measures[0];
         var value = values.TryGetValue(measure.RouteValueName, out var val) ? val : default;
         return value?.ToString();
     }
 
     private static KeyValuePair<string, object?>[] GetMeasuredAttributes(HttpContext context, EndpointMetadataCollection metadata)
     {
-        var measures = metadata.OfType<MeasureMetadata>().ToArray();
-        var count = measures.Length;
+        var measures = metadata.GetOrderedMetadata<MeasureMetadata>();
+        var count = measures.Count;
 
         if (count == 0)
             return [];

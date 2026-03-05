@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators;
+
 using OpenTelemetry.Metrics;
 
 /// <summary>

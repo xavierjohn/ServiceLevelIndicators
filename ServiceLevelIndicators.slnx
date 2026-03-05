@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Sample/">
+    <Project Path="sample/ConsoleApp/SampleConsoleSLI.csproj" />
+    <Project Path="sample/GenerateSli/GenerateSli.csproj" />
+    <Project Path="sample/MinApi/SampleMinimalApiSli.csproj" />
+    <Project Path="sample/WebApi/SampleWebApplicationSLI.csproj" />
+    <Project Path="sample/WebApiVersioned/SampleVersionedWebApplicationSLI.csproj" />
+  </Folder>
+  <Folder Name="/ServiceLevelIndicators.Asp.ApiVersioning/">
+    <Project Path="ServiceLevelIndicators.Asp.ApiVersioning/src/ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
+    <Project Path="ServiceLevelIndicators.Asp.ApiVersioning/tests/ServiceLevelIndicators.Asp.ApiVersioning.Tests.csproj" />
+  </Folder>
+  <Folder Name="/ServiceLevelIndicators.Asp/">
+    <Project Path="ServiceLevelIndicators.Asp/src/ServiceLevelIndicators.Asp.csproj" />
+    <Project Path="ServiceLevelIndicators.Asp/tests/ServiceLevelIndicators.Asp.Tests.csproj" />
+  </Folder>
+  <Folder Name="/ServiceLevelIndicators/">
+    <Project Path="ServiceLevelIndicators/src/ServiceLevelIndicators.csproj" />
+    <Project Path="ServiceLevelIndicators/tests/ServiceLevelIndicators.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="version.json" />
+  </Folder>
+</Solution>

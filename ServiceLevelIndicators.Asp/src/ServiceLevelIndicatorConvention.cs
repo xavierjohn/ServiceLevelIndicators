@@ -7,15 +7,10 @@ internal sealed class ServiceLevelIndicatorConvention : IParameterModelConventio
     public void Apply(ParameterModel parameter)
     {
         var selectors = parameter.Action.Selectors;
-        SelectorModel selector;
 
         if (selectors.Count == 0)
         {
-            selectors.Add(selector = new());
-        }
-        else
-        {
-            selector = selectors[0];
+            selectors.Add(new());
         }
 
         for (var i = 0; i < parameter.Attributes.Count; i++)
@@ -23,11 +18,20 @@ internal sealed class ServiceLevelIndicatorConvention : IParameterModelConventio
             switch (parameter.Attributes[i])
             {
                 case CustomerResourceIdAttribute:
-                    // TODO: what happens if there is more than one?
-                    selector.EndpointMetadata.Add(new CustomerResourceIdMetadata(parameter.Name));
+                    foreach (var selector in selectors)
+                    {
+                        if (selector.EndpointMetadata.OfType<CustomerResourceIdMetadata>().Any())
+                            throw new InvalidOperationException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined on action '" + parameter.Action.DisplayName + "'.");
+                        selector.EndpointMetadata.Add(new CustomerResourceIdMetadata(parameter.Name));
+                    }
+
                     break;
                 case MeasureAttribute measure:
-                    selector.EndpointMetadata.Add(new MeasureMetadata(parameter.Name, measure.Name));
+                    foreach (var selector in selectors)
+                    {
+                        selector.EndpointMetadata.Add(new MeasureMetadata(parameter.Name, measure.Name));
+                    }
+
                     break;
             }
         }

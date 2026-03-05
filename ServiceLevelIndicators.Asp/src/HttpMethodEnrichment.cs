@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators;
+
 using System.Threading.Tasks;
 
 internal sealed class HttpMethodEnrichment

@@ -1,4 +1,5 @@
 ﻿namespace SampleMinimalApiSli;
+
 using ServiceLevelIndicators;
 
 /// <summary>
@@ -14,7 +15,6 @@ public static class UserExt
     {
         var userApi = app.MapGroup("/users")
             .AddServiceLevelIndicator();
-
 
         userApi.MapGet("/", () => "Hello Users");
 

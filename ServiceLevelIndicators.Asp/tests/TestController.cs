@@ -1,4 +1,5 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
+
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -13,6 +14,9 @@ public class TestController : ControllerBase
 
     [HttpGet("bad_request")]
     public IActionResult Bad() => BadRequest("Sad World!");
+
+    [HttpGet("server_error")]
+    public IActionResult ServerError() => StatusCode(500, "Server Error!");
 
     [HttpGet("operation")]
     [ServiceLevelIndicator(Operation = "TestOperation")]
@@ -36,6 +40,7 @@ public class TestController : ControllerBase
             measuredOperation.AddAttribute("CustomAttribute", value);
             return Ok(true);
         }
+
         return Ok(false);
     }
 
@@ -45,7 +50,4 @@ public class TestController : ControllerBase
 
     [HttpGet("name/{first}/{surname}/{age}")]
     public IActionResult GetCustomerResourceId([Measure] string first, [CustomerResourceId] string surname, [Measure] int age) => Ok(first + " " + surname + " " + age);
-
-    [HttpGet("multiple_customer_resource_id/{first}/{surname}")]
-    public IActionResult MultipleCustomerResourceId([CustomerResourceId] string first, [CustomerResourceId] string surname) => Ok(first + " " + surname);
 }

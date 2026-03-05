@@ -1,7 +1,7 @@
 ﻿namespace ServiceLevelIndicators.Asp.ApiVersioning.Tests;
 
-using Microsoft.AspNetCore.Mvc;
 using global::Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("[controller]")]

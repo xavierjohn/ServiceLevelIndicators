@@ -1,10 +1,14 @@
-﻿namespace ServiceLevelIndicators.Asp.Tests;
-using Microsoft.AspNetCore.TestHost;
-using Newtonsoft.Json.Linq;
+namespace ServiceLevelIndicators.Asp.Tests;
+
 using System;
 using System.Diagnostics.Metrics;
 using System.Net;
-using Xunit.Abstractions;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 public class ServiceLevelIndicatorAspTests : IDisposable
 {
@@ -13,6 +17,9 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     private readonly ITestOutputHelper _output;
     private bool _callbackCalled;
     private bool _disposedValue;
+    private KeyValuePair<string, object?>[] _actualTags = [];
+    private Instrument? _instrument;
+    private long _measurement;
 
     public ServiceLevelIndicatorAspTests(ITestOutputHelper output)
     {
@@ -27,231 +34,165 @@ public class ServiceLevelIndicatorAspTests : IDisposable
                     listener.EnableMeasurementEvents(instrument);
             }
         };
+        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
+        _meterListener.Start();
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_for_successful_API_call()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().GetAsync("test", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "TestCustomerResourceId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-            };
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_for_successful_POST_API_call()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().PostAsync("test", new StringContent("Hi"));
+        var response = await host.GetTestClient().PostAsync("test", new StringContent("Hi"), TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "TestCustomerResourceId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "POST Test"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-            };
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "POST Test"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_for_failed_API_call()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/bad_request");
+        var response = await host.GetTestClient().GetAsync("test/bad_request", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "TestCustomerResourceId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test/bad_request"),
-                new("activity.status.code", "Unset"),
-                new("http.response.status.code", 400),
-            };
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/bad_request"),
+            new("activity.status.code", "Unset"),
+            new("http.response.status.code", 400),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task SLI_Metrics_is_emitted_with_enriched_data()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
         HttpRequestMessage request = new(HttpMethod.Get, "test");
         request.Headers.Add("from", "xavier@somewhere.com");
 
         using var host = await TestHostBuilder.CreateHostWithSliEnriched(_meter);
 
-        var response = await host.GetTestClient().SendAsync(request);
+        var response = await host.GetTestClient().SendAsync(request, TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "xavier@somewhere.com"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test"),
-                new("activity.status.code", "Ok"),
-                new("http.request.method", "GET"),
-                new("http.response.status.code", 200),
-                new("foo", "bar"),
-                new("test", "again"),
-                new("enrichAsync", "async"),
-            };
+            new("CustomerResourceId", "xavier@somewhere.com"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test"),
+            new("activity.status.code", "Ok"),
+            new("http.request.method", "GET"),
+            new("http.response.status.code", 200),
+            new("foo", "bar"),
+            new("test", "again"),
+            new("enrichAsync", "async"),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task Override_Operation_name()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/operation");
+        var response = await host.GetTestClient().GetAsync("test/operation", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "TestCustomerResourceId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "TestOperation"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-            };
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "TestOperation"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task Override_CustomerResourceId()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/customer_resourceid/myId");
+        var response = await host.GetTestClient().GetAsync("test/customer_resourceid/myId", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "myId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test/customer_resourceid/{id}"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-            };
+            new("CustomerResourceId", "myId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/customer_resourceid/{id}"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task CustomAttribute_is_added_to_SLI_dimension()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
+        var response = await host.GetTestClient().GetAsync("test/custom_attribute/Mickey", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "TestCustomerResourceId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test/custom_attribute/{value}"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-                new("CustomAttribute", "Mickey"),
-            };
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/custom_attribute/{value}"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+            new("CustomAttribute", "Mickey"),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task When_automatically_emit_SLI_is_Off_do_not_send_SLI()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().GetAsync("test", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
-        {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new KeyValuePair<string, object?>("CustomerResourceId", "TestCustomerResourceId"),
-            };
-
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
 
         _callbackCalled.Should().BeFalse();
     }
@@ -259,29 +200,21 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     [Fact]
     public async Task When_automatically_emit_SLI_is_Off_X2C_send_SLI_using_attribute()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithoutAutomaticSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/send_sli");
+        var response = await host.GetTestClient().GetAsync("test/send_sli", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "TestCustomerResourceId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test/send_sli"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-            };
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/send_sli"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
@@ -289,10 +222,10 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     {
         using var host = await TestHostBuilder.CreateHostWithoutSli();
 
-        var response = await host.GetTestClient().GetAsync("test");
+        var response = await host.GetTestClient().GetAsync("test", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        Func<Task> getMeasuredOperationLatency = () => host.GetTestClient().GetAsync("test/custom_attribute/Mickey");
+        Func<Task> getMeasuredOperationLatency = () => host.GetTestClient().GetAsync("test/custom_attribute/Mickey", TestContext.Current.CancellationToken);
 
         await getMeasuredOperationLatency.Should().ThrowAsync<InvalidOperationException>();
     }
@@ -302,9 +235,9 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     {
         using var host = await TestHostBuilder.CreateHostWithoutSli();
 
-        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Donald");
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Donald", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         content.Should().Be("false");
     }
@@ -312,74 +245,141 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     [Fact]
     public async Task TryGetMeasuredOperation_will_return_true_if_route_emits_SLI()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Goofy");
+        var response = await host.GetTestClient().GetAsync("test/try_get_measured_operation/Goofy", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         content.Should().Be("true");
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "TestCustomerResourceId"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test/try_get_measured_operation/{value}"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-                new("CustomAttribute", "Goofy"),
-            };
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/try_get_measured_operation/{value}"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+            new("CustomAttribute", "Goofy"),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
     public async Task SLI_Measure_is_emitted()
     {
-        _meterListener.SetMeasurementEventCallback<long>(OnMeasurementRecorded);
-        _meterListener.Start();
-
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        var response = await host.GetTestClient().GetAsync("test/name/Xavier/Jon/25");
+        var response = await host.GetTestClient().GetAsync("test/name/Xavier/Jon/25", TestContext.Current.CancellationToken);
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        var expectedTags = new KeyValuePair<string, object?>[]
         {
-            var expectedTags = new KeyValuePair<string, object?>[]
-            {
-                new("CustomerResourceId", "Jon"),
-                new("first", "Xavier"),
-                new("age", "25"),
-                new("LocationId", "ms-loc://az/public/West US 3"),
-                new("Operation", "GET Test/name/{first}/{surname}/{age}"),
-                new("activity.status.code", "Ok"),
-                new("http.response.status.code", 200),
-            };
+            new("CustomerResourceId", "Jon"),
+            new("first", "Xavier"),
+            new("age", "25"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/name/{first}/{surname}/{age}"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+        };
 
-            ValidateMetrics(instrument, measurement, tags, expectedTags);
-        }
-
-        _callbackCalled.Should().BeTrue();
+        ValidateMetrics(expectedTags);
     }
 
     [Fact]
-    public async Task SLI_multiple_CustomerResourceId_will_fail()
+    public async Task SLI_multiple_CustomerResourceId_MinimalApi_will_fail()
+    {
+        // Minimal API endpoint with multiple [CustomerResourceId] should throw when the endpoint is built
+        using var host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.AddRouting();
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = _meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                        options.AutomaticallyEmitted = false;
+                    });
+                })
+                .Configure(app =>
+                {
+                    app.UseRouting();
+                    app.UseServiceLevelIndicator();
+                    app.UseEndpoints(endpoints =>
+                        endpoints.MapGet("/bad/{a}/{b}",
+                            ([CustomerResourceId] string a, [CustomerResourceId] string b) => a + b)
+                        .AddServiceLevelIndicator());
+                }))
+            .StartAsync(TestContext.Current.CancellationToken);
+
+        Func<Task> act = () => host.GetTestClient().GetAsync("/bad/x/y", TestContext.Current.CancellationToken);
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Multiple*CustomerResourceId*");
+    }
+
+    [Fact]
+    public async Task SLI_multiple_CustomerResourceId_Mvc_will_fail()
+    {
+        // MVC controller action with multiple [CustomerResourceId] should throw at startup
+        Func<Task> act = () => new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    var mvcBuilder = services.AddControllers();
+                    mvcBuilder.PartManager.FeatureProviders.Add(
+                        new SingleControllerFeatureProvider(typeof(MultipleCustomerResourceIdController)));
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = _meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                    }).AddMvc();
+                })
+                .Configure(app => app.UseRouting()
+                    .UseServiceLevelIndicator()
+                    .UseEndpoints(endpoints => endpoints.MapControllers())))
+            .StartAsync(TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Multiple*CustomerResourceId*");
+    }
+
+    [Fact]
+    public async Task Middleware_should_not_emit_metrics_for_nonexistent_route()
     {
         using var host = await TestHostBuilder.CreateHostWithSli(_meter);
 
-        Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon");
-        await act.Should().ThrowAsync<ArgumentException>();
+        var response = await host.GetTestClient().GetAsync("does-not-exist", TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        _callbackCalled.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_for_server_error()
+    {
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+
+        var response = await host.GetTestClient().GetAsync("test/server_error", TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+
+        var expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/server_error"),
+            new("activity.status.code", "Error"),
+            new("http.response.status.code", 500),
+        };
+
+        ValidateMetrics(expectedTags);
+    }
 
     protected virtual void Dispose(bool disposing)
     {
@@ -401,14 +401,22 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void ValidateMetrics(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, KeyValuePair<string, object?>[] expectedTags)
+    private void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
     {
         _callbackCalled = true;
-        instrument.Name.Should().Be("operation.duration");
-        instrument.Unit.Should().Be("ms");
-        measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
+        _instrument = instrument;
+        _measurement = measurement;
+        _actualTags = tags.ToArray();
         _output.WriteLine($"Measurement {measurement}");
-        tags.ToArray().Should().BeEquivalentTo(expectedTags);
+    }
+
+    private void ValidateMetrics(KeyValuePair<string, object?>[] expectedTags)
+    {
+        _callbackCalled.Should().BeTrue();
+        _instrument!.Name.Should().Be("operation.duration");
+        _instrument.Unit.Should().Be("ms");
+        _measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
+        _actualTags.Should().BeEquivalentTo(expectedTags);
     }
 
 }

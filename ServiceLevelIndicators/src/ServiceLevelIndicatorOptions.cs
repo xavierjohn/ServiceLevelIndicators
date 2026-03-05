@@ -8,28 +8,14 @@ using System.Diagnostics.Metrics;
 /// </summary>
 public class ServiceLevelIndicatorOptions
 {
-    private readonly object _meterLock = new();
-    private Meter _meter = null!;
-
     /// <summary>
     /// The meter that is used to create the histogram that reports the latency.
+    /// Configure this during startup; the value is read once when <see cref="ServiceLevelIndicator"/> is constructed.
     /// </summary>
-    public Meter Meter
-    {
-        get
-        {
-            lock (_meterLock)
-                return _meter;
-        }
-        set
-        {
-            lock (_meterLock)
-                _meter = value;
-        }
-    }
+    public Meter Meter { get; set; } = null!;
 
     /// <summary>
-    /// CustomerResrouceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
+    /// CustomerResourceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
     /// CustomerResourceId can be set for the entire service here or in each API method.
     /// </summary>
     public string CustomerResourceId { get; set; } = "Unset";

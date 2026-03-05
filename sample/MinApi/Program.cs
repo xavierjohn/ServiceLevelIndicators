@@ -25,7 +25,7 @@ builder.Services.AddSwaggerGen(options =>
 // Build a resource configuration action to set service information.
 
 Action<ResourceBuilder> configureResource = r => r.AddService(
-    serviceName: "SampleServiceName",
+    serviceName: "SampleMinimalApiSli",
     serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
 
 builder.Services.AddOpenTelemetry()
@@ -35,7 +35,6 @@ builder.Services.AddOpenTelemetry()
         builder.AddServiceLevelIndicatorInstrumentation();
         builder.AddOtlpExporter();
     });
-
 
 builder.Services.AddServiceLevelIndicator(options =>
 {
