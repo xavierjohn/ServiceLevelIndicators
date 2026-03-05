@@ -23,7 +23,8 @@ internal sealed class ServiceLevelIndicatorConvention : IParameterModelConventio
             switch (parameter.Attributes[i])
             {
                 case CustomerResourceIdAttribute:
-                    // TODO: what happens if there is more than one?
+                    if (selector.EndpointMetadata.OfType<CustomerResourceIdMetadata>().Any())
+                        throw new InvalidOperationException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined on action '" + parameter.Action.DisplayName + "'.");
                     selector.EndpointMetadata.Add(new CustomerResourceIdMetadata(parameter.Name));
                     break;
                 case MeasureAttribute measure:

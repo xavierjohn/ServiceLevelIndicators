@@ -14,7 +14,7 @@ public class WebEnrichmentContext : IEnrichmentContext
     }
     public string Operation => _operation.Operation;
 
-    public void AddAttribute(string name, object value) => _operation.AddAttribute(name, value);
+    public void AddAttribute(string name, object? value) => _operation.AddAttribute(name, value);
 
     public void SetCustomerResourceId(string id) => _operation.CustomerResourceId = id;
 }

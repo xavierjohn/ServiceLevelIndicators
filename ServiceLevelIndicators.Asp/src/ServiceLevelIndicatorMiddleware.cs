@@ -93,25 +93,19 @@ internal sealed class ServiceLevelIndicatorMiddleware
 
     private static string? GetCustomerResourceIdAttributes(HttpContext context, EndpointMetadataCollection metadata)
     {
-        var measures = metadata.OfType<CustomerResourceIdMetadata>().ToArray();
-        var count = measures.Length;
-
-        if (count == 0)
+        var measure = metadata.GetMetadata<CustomerResourceIdMetadata>();
+        if (measure is null)
             return null;
 
-        if (count > 1)
-            throw new ArgumentException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined.");
-
         var values = context.Request.RouteValues;
-        var measure = measures[0];
         var value = values.TryGetValue(measure.RouteValueName, out var val) ? val : default;
         return value?.ToString();
     }
 
     private static KeyValuePair<string, object?>[] GetMeasuredAttributes(HttpContext context, EndpointMetadataCollection metadata)
     {
-        var measures = metadata.OfType<MeasureMetadata>().ToArray();
-        var count = measures.Length;
+        var measures = metadata.GetOrderedMetadata<MeasureMetadata>();
+        var count = measures.Count;
 
         if (count == 0)
             return [];

@@ -3,7 +3,12 @@ namespace ServiceLevelIndicators.Asp.Tests;
 using System;
 using System.Diagnostics.Metrics;
 using System.Net;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 public class ServiceLevelIndicatorAspTests : IDisposable
 {
@@ -284,12 +289,65 @@ public class ServiceLevelIndicatorAspTests : IDisposable
     }
 
     [Fact]
-    public async Task SLI_multiple_CustomerResourceId_will_fail()
+    public async Task SLI_multiple_CustomerResourceId_MinimalApi_will_fail()
     {
-        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+        // Minimal API endpoint with multiple [CustomerResourceId] should throw when the endpoint is built
+        using var host = await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.AddRouting();
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = _meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                        options.AutomaticallyEmitted = false;
+                    });
+                })
+                .Configure(app =>
+                {
+                    app.UseRouting();
+                    app.UseServiceLevelIndicator();
+                    app.UseEndpoints(endpoints =>
+                        endpoints.MapGet("/bad/{a}/{b}",
+                            ([CustomerResourceId] string a, [CustomerResourceId] string b) => a + b)
+                        .AddServiceLevelIndicator());
+                }))
+            .StartAsync(TestContext.Current.CancellationToken);
 
-        Func<Task> act = () => host.GetTestClient().GetAsync("test/multiple_customer_resource_id/Xavier/Jon", TestContext.Current.CancellationToken);
-        await act.Should().ThrowAsync<ArgumentException>();
+        Func<Task> act = () => host.GetTestClient().GetAsync("/bad/x/y", TestContext.Current.CancellationToken);
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Multiple*CustomerResourceId*");
+    }
+
+    [Fact]
+    public async Task SLI_multiple_CustomerResourceId_Mvc_will_fail()
+    {
+        // MVC controller action with multiple [CustomerResourceId] should throw at startup
+        Func<Task> act = () => new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    var mvcBuilder = services.AddControllers();
+                    mvcBuilder.PartManager.FeatureProviders.Add(
+                        new SingleControllerFeatureProvider(typeof(MultipleCustomerResourceIdController)));
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = _meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                    }).AddMvc();
+                })
+                .Configure(app => app.UseRouting()
+                    .UseServiceLevelIndicator()
+                    .UseEndpoints(endpoints => endpoints.MapControllers())))
+            .StartAsync(TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Multiple*CustomerResourceId*");
     }
 
     [Fact]

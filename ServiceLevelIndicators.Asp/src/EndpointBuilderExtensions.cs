@@ -32,6 +32,8 @@ public static class EndpointBuilderExtensions
                 switch (attributes[j])
                 {
                     case CustomerResourceIdAttribute:
+                        if (endpoint.Metadata.OfType<CustomerResourceIdMetadata>().Any())
+                            throw new InvalidOperationException("Multiple " + nameof(CustomerResourceIdAttribute) + " defined on endpoint '" + endpoint.DisplayName + "'.");
                         endpoint.Metadata.Add(new CustomerResourceIdMetadata(parameter.Name!));
                         break;
                     case MeasureAttribute measure:
