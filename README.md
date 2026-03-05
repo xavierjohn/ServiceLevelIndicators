@@ -1,10 +1,7 @@
----
-ArtifactType: nupkg.
-Language: csharp.
-Tags: SLI, OpenTelemetry, Metrics.
----
-
 # Service Level Indicators
+
+[![Build](https://github.com/xavierjohn/ServiceLevelIndicators/actions/workflows/build.yml/badge.svg)](https://github.com/xavierjohn/ServiceLevelIndicators/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Service level indicators (SLIs) are metrics used to measure the performance of a service.
 They are typically used in the context of service level agreements (SLAs),
@@ -27,14 +24,14 @@ By tracking SLIs over time, service providers can identify trends and make impro
 ## Service Level Indicator Library
 
 **ServiceLevelIndicators** library will help emit latency metrics for each API operation to help monitor the service performance over time.
-The metrics is emitted via standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter?view=net-7.0).
+The metrics are emitted via the standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter).
 
 By default, a meter named `ServiceLevelIndicator` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 - CustomerResourceId - A value that helps identity the customer, customer group or calling service.
 - LocationId - The location where the service running. eg. Public cloud, West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
 - Operation - The name of the operation.
-- activity.status.code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0).
+- activity.status.code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode).
 
 **ServiceLevelIndicators.Asp** adds the following dimensions.
 
@@ -78,27 +75,45 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
   [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning)
 
+## Installation
+
+```shell
+dotnet add package ServiceLevelIndicators
+```
+
+For ASP.NET Core:
+
+```shell
+dotnet add package ServiceLevelIndicators.Asp
+```
+
+For API Versioning support:
+
+```shell
+dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
+```
+
 ## Usage for Web API MVC
 
 1. Register SLI with open telemetry by calling `AddServiceLevelIndicatorInstrumentation`.
 
-   Example.
+   Example:
 
-    ``` csharp
-     builder.Services.AddOpenTelemetry()
-      .ConfigureResource(configureResource)
-      .WithMetrics(builder =>
-      {
-          builder.AddServiceLevelIndicatorInstrumentation();
-          builder.AddOtlpExporter();
-      });
+    ```csharp
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(configureResource)
+        .WithMetrics(builder =>
+        {
+            builder.AddServiceLevelIndicatorInstrumentation();
+            builder.AddOtlpExporter();
+        });
     ```
 
-2. Add ServiceLevelIndicator, into the dependency injection. AddMvc() is required for overrides present in SLI attributes to take effect.
+2. Add ServiceLevelIndicator into the dependency injection. `AddMvc()` is required for overrides present in SLI attributes to take effect.
 
-   Example.
+   Example:
 
-    ``` csharp
+    ```csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
@@ -108,7 +123,7 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
 3. Add the middleware to the pipeline.
 
-    ``` csharp
+    ```csharp
     app.UseServiceLevelIndicator();
     ```
 
@@ -116,53 +131,51 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
 1. Register SLI with open telemetry by calling `AddServiceLevelIndicatorInstrumentation`.
 
-   Example.
+   Example:
 
-
-    ``` csharp
-     builder.Services.AddOpenTelemetry()
-      .ConfigureResource(configureResource)
-      .WithMetrics(builder =>
-      {
-          builder.AddServiceLevelIndicatorInstrumentation();
-          builder.AddOtlpExporter();
-      });
+    ```csharp
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(configureResource)
+        .WithMetrics(builder =>
+        {
+            builder.AddServiceLevelIndicatorInstrumentation();
+            builder.AddOtlpExporter();
+        });
     ```
 
 2. Add ServiceLevelIndicator into the dependency injection.
 
-   Example.
+   Example:
 
-    ``` csharp
-
+    ```csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
         options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
     });
-
     ```
 
-3. Add the middleware to the ASP.NET core pipeline.
+3. Add the middleware to the ASP.NET Core pipeline.
 
-   Example.
+   Example:
 
-    ``` csharp
+    ```csharp
     app.UseServiceLevelIndicator();
     ```
 
-4. To each API route mapping, add `AddServiceLevelIndicator()`
+4. To each API route mapping, add `AddServiceLevelIndicator()`.
 
-   Example.
+   Example:
 
-    ``` csharp
+    ```csharp
     app.MapGet("/hello", () => "Hello World!")
        .AddServiceLevelIndicator();
     ```
 
 ### Usage for background jobs
 
-You can measure a block of code by boxing it in a using clause of MeasuredOperation.
-Example.
+You can measure a block of code by wrapping it in a `using` clause of `MeasuredOperation`.
+
+Example:
 
 ```csharp
 async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
@@ -181,9 +194,9 @@ eg GET WeatherForecast/Action1
 
 - To add API versioning as a dimension use package `ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersion`.
 
-   Example.
+   Example:
 
-    ``` csharp
+    ```csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
         /// Options
@@ -194,9 +207,9 @@ eg GET WeatherForecast/Action1
 
 - To add HTTP method as a dimension, add `AddHttpMethod` to Service Level Indicator.
 
-   Example.
+   Example:
 
-    ``` csharp
+    ```csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
         /// Options
@@ -205,12 +218,12 @@ eg GET WeatherForecast/Action1
     .AddHttpMethod();
     ```
 
-- Enrich SLI with `Enrich` callback. The callback receives a `MeasuredOperation` as context that can be used to set to `CustomerResourceId` or additional attributes.
-An async version `EnrichAsync` is also available.
+- Enrich SLI with the `Enrich` callback. The callback receives a `MeasuredOperation` as context that can be used to set `CustomerResourceId` or additional attributes.
+  An async version `EnrichAsync` is also available.
 
-   Example.
+   Example:
 
-    ``` csharp
+    ```csharp
     builder.Services.AddServiceLevelIndicator(options =>
     {
         options.LocationId = ServiceLevelIndicator.CreateLocationId(Cloud, Region);
@@ -225,11 +238,11 @@ An async version `EnrichAsync` is also available.
     });
     ```
 
-- To override the default operation name add the attribute `[ServiceLevelIndicator]` and specify the operation name.
+- To override the default operation name, add the attribute `[ServiceLevelIndicator]` and specify the operation name.
 
-   Example.
+   Example:
 
-    ``` csharp
+    ```csharp
     [HttpGet("MyAction2")]
     [ServiceLevelIndicator(Operation = "MyNewOperationName")]
     public IEnumerable<WeatherForecast> GetOperation() => GetWeather();
@@ -269,7 +282,7 @@ An async version `EnrichAsync` is also available.
         measuredOperation.AddAttribute("CustomAttribute", value);
     ```
 
-    You can add additional dimensions to the SLI data by using the `Measure` attribute.
+    You can add additional dimensions to the SLI data by using the `Measure` attribute. Parameters decorated with `[Measure]` are automatically added as metric attributes (dimensions) using the parameter name as the attribute key.
 
     ```csharp
     [HttpGet("name/{first}/{surname}")]
@@ -289,16 +302,16 @@ An async version `EnrichAsync` is also available.
 
 - To measure a process, run it within a `using StartMeasuring` block.
 
-   Example.
+   Example:
 
-    ``` csharp
-   public void StoreItem(MyDomainEvent domainEvent)
-   {
+    ```csharp
+    public void StoreItem(MyDomainEvent domainEvent)
+    {
         var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
         using var measuredOperation = _serviceLevelIndicator.StartMeasuring("StoreItem", attribute);
         DoTheWork();
-   )
-   ```
+    }
+    ```
 
 ### Sample
 
@@ -311,7 +324,7 @@ To view the metrics locally using the [.NET Aspire Dashboard](https://aspire.dev
    docker run --rm -it -d -p 18888:18888 -p 4317:18889 -e DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true -e DASHBOARD__OTLP__AUTHMODE=Unsecured --name aspire-dashboard mcr.microsoft.com/dotnet/aspire-dashboard:latest
    ```
 2. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the meter `operation_duration_milliseconds_bucket` where the `Operation = "GET WeatherForecast"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status.code = Ok`
-![SLI](assets/prometheus.jpg)
+3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the instrument `operation.duration` where `Operation = "GET WeatherForecast"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status.code = Ok`.
+![SLI](assets/aspire.jpg)
 4. If you run the sample with API Versioning, you will see something similar to the following.
 ![SLI](assets/versioned.jpg)
