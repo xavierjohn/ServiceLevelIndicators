@@ -2,6 +2,10 @@
 
 using Microsoft.AspNetCore.Http;
 
+/// <summary>
+/// ASP.NET Core enrichment context providing access to the <see cref="Microsoft.AspNetCore.Http.HttpContext"/>
+/// and the current <see cref="MeasuredOperation"/>.
+/// </summary>
 public class WebEnrichmentContext : IEnrichmentContext
 {
     private readonly MeasuredOperation _operation;

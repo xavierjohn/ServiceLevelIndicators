@@ -3,8 +3,19 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 
+/// <summary>
+/// Extension methods for adding SLI metadata to Minimal API endpoints.
+/// </summary>
 public static class EndpointBuilderExtensions
 {
+    /// <summary>
+    /// Marks a Minimal API endpoint for SLI metric emission and scans handler parameters
+    /// for <see cref="CustomerResourceIdAttribute"/> and <see cref="MeasureAttribute"/>.
+    /// </summary>
+    /// <typeparam name="TBuilder">The endpoint convention builder type.</typeparam>
+    /// <param name="builder">The endpoint builder.</param>
+    /// <param name="operation">An optional custom operation name; if omitted, the route template is used.</param>
+    /// <returns>The <paramref name="builder"/> for chaining.</returns>
     public static TBuilder AddServiceLevelIndicator<TBuilder>(this TBuilder builder, string? operation = default)
         where TBuilder : notnull, IEndpointConventionBuilder
     {
