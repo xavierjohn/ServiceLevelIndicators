@@ -1,31 +1,15 @@
 ﻿using Azure.Core;
-using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
-using SampleVersionedWebApplicationSLI;
+using Scalar.AspNetCore;
 using ServiceLevelIndicators;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerDefaultOptions>();
-builder.Services.AddSwaggerGen(
-            options =>
-            {
-                // add a custom operation filter which sets default values
-                options.OperationFilter<AddApiVersionMetadata>();
-
-                var fileName = typeof(Program).Assembly.GetName().Name + ".xml";
-                var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
-
-                // integrate XML comments
-                options.IncludeXmlComments(filePath);
-            });
+builder.Services.AddOpenApi();
 builder.Services.AddApiVersioning()
         .AddMvc()
         .AddApiExplorer();
@@ -49,21 +33,10 @@ builder.Services.AddServiceLevelIndicator(options => options.LocationId = Servic
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI(
-    options =>
-    {
-        options.RoutePrefix = string.Empty; // make home page the swagger UI
-        var descriptions = app.DescribeApiVersions();
-
-        // build a swagger endpoint for each discovered API version
-        foreach (var description in descriptions)
-        {
-            var url = $"/swagger/{description.GroupName}/swagger.json";
-            var name = description.GroupName.ToUpperInvariant();
-            options.SwaggerEndpoint(url, name);
-        }
-    });
+// TODO: Use .AddOpenApi() from Asp.Versioning.OpenApi with WithDocumentPerVersion()
+// and AddScalarTransformers() once a stable release is available.
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 // Random delay.
 Random rnd = new Random();

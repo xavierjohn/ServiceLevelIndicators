@@ -9,7 +9,8 @@
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\ServiceLevelIndicators.Asp.ApiVersioning\src\ServiceLevelIndicators.Asp.ApiVersioning.csproj" />

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using Scalar.AspNetCore;
 using SampleWebApplicationSLI;
 using ServiceLevelIndicators;
 
@@ -13,13 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-
-    var fileName = typeof(Program).Assembly.GetName().Name + ".xml";
-    var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
-    options.IncludeXmlComments(filePath);
-});
+builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 
 // Build a resource configuration action to set service information.
@@ -47,8 +42,8 @@ builder.Services.AddServiceLevelIndicator(options =>
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapOpenApi();
+app.MapScalarApiReference();
 app.UseHttpsRedirection();
 app.UseServiceLevelIndicator();
 app.UseAuthorization();
