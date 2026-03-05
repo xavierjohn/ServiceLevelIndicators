@@ -33,7 +33,7 @@ services
             options.SetResourceBuilder(resourceBuilder);
             options.AddConsoleExporter();
         }))
-    .AddSingleton<ServiceLevelIndicator>(); ;
+    .AddSingleton<ServiceLevelIndicator>();
 
 var serviceProvider = services.BuildServiceProvider();
 
