@@ -24,7 +24,7 @@ builder.Services.AddProblemDetails();
 
 // Build a resource configuration action to set service information.
 Action<ResourceBuilder> configureResource = r => r.AddService(
-    serviceName: "SampleServiceName",
+    serviceName: "SampleWebApplicationSLI",
     serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
 
 builder.Services.AddOpenTelemetry()

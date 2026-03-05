@@ -33,7 +33,7 @@ builder.Services.AddApiVersioning()
 builder.Services.AddProblemDetails();
 
 Action<ResourceBuilder> configureResource = r => r.AddService(
-    serviceName: "SampleServiceName",
+    serviceName: "SampleVersionedWebApplicationSLI",
     serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown");
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(configureResource)
