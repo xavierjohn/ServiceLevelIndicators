@@ -29,7 +29,7 @@ public class ServiceLevelIndicatorOptions
     }
 
     /// <summary>
-    /// CustomerResrouceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
+    /// CustomerResourceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
     /// CustomerResourceId can be set for the entire service here or in each API method.
     /// </summary>
     public string CustomerResourceId { get; set; } = "Unset";

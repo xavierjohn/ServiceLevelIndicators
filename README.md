@@ -43,7 +43,7 @@ By default, a meter named `ServiceLevelIndicator` with instrument name `operatio
    "Ok" when the http response status code is in the 2xx range,
    "Error" when the http response status code is in the 5xx range,
    "Unset" for any other status code.
-- http.response.status_code - The http status code.
+- http.response.status.code - The http status code.
 - http.request.method (Optional)- The http request method (GET, POST, etc) is added.
 
 Difference between ServiceLevelIndicator and http.server.request.duration
@@ -311,7 +311,7 @@ To view the metrics locally using the [.NET Aspire Dashboard](https://aspire.dev
    docker run --rm -it -d -p 18888:18888 -p 4317:18889 -e DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true -e DASHBOARD__OTLP__AUTHMODE=Unsecured --name aspire-dashboard mcr.microsoft.com/dotnet/aspire-dashboard:latest
    ```
 2. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the meter `operation_duration_milliseconds_bucket` where the `Operation = "GET WeatherForecast"`, `http.response.status_code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status_code = Ok`
+3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the meter `operation_duration_milliseconds_bucket` where the `Operation = "GET WeatherForecast"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status.code = Ok`
 ![SLI](assets/prometheus.jpg)
 4. If you run the sample with API Versioning, you will see something similar to the following.
 ![SLI](assets/versioned.jpg)

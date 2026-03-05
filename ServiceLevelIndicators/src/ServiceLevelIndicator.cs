@@ -29,11 +29,11 @@ public class ServiceLevelIndicator
     public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes) =>
         Record(operation, ServiceLevelIndicatorOptions.CustomerResourceId, elapsedTime, attributes);
 
-    public void Record(string operation, string customerResourseId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
+    public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
     {
         var tagList = new TagList
         {
-            { "CustomerResourceId", customerResourseId },
+            { "CustomerResourceId", customerResourceId },
             { "LocationId", ServiceLevelIndicatorOptions.LocationId },
             { "Operation", operation }
         };

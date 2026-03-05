@@ -19,7 +19,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "GET WeatherForecast"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = "SampleCustomerResourceId"
     /// </summary>
     [HttpGet]
     public IEnumerable<WeatherForecast> Get() => GetWeather();
@@ -27,7 +27,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "GET WeatherForecast/MyAction1"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = "SampleCustomerResourceId"
     /// </summary>
 
     [HttpGet("MyAction1")]
@@ -36,7 +36,7 @@ public class WeatherForecastController : ControllerBase
     /// <summary>
     /// Should emit SLI metrics
     /// Operation: "MyOperation"
-    /// CustomerResourceId = "SampleCustomerResrouceId"
+    /// CustomerResourceId = "SampleCustomerResourceId"
     /// </summary>
     [HttpGet("MyAction2")]
     [ServiceLevelIndicator(Operation = "MyOperation")]

@@ -15,6 +15,9 @@ public class TestController : ControllerBase
     [HttpGet("bad_request")]
     public IActionResult Bad() => BadRequest("Sad World!");
 
+    [HttpGet("server_error")]
+    public IActionResult ServerError() => StatusCode(500, "Server Error!");
+
     [HttpGet("operation")]
     [ServiceLevelIndicator(Operation = "TestOperation")]
     public IActionResult GetOperation() => Ok("Hello World!");
