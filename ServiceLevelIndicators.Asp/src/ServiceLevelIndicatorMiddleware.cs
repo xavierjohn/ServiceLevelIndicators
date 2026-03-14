@@ -38,23 +38,47 @@ internal sealed partial class ServiceLevelIndicatorMiddleware
         using var measuredOperation = _serviceLevelIndicator.StartMeasuring(operation, attributes);
         SetCustomerResourceIdFromAttribute(context, metadata, measuredOperation);
         AddSliFeatureToHttpContext(context, measuredOperation);
-        await _next(context);
-        var webmeasurementContext = new WebEnrichmentContext(measuredOperation, context);
-        UpdateOperationWithResponseStatus(context, measuredOperation);
-        foreach (var enrichment in _enrichments)
+        Exception? unhandledException = null;
+
+        try
         {
-            if (context.RequestAborted.IsCancellationRequested) break;
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            unhandledException = ex;
+
+            if (!context.Response.HasStarted && context.Response.StatusCode < StatusCodes.Status500InternalServerError)
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+            throw;
+        }
+        finally
+        {
             try
             {
-                await enrichment.EnrichAsync(webmeasurementContext, context.RequestAborted);
+                var webmeasurementContext = new WebEnrichmentContext(measuredOperation, context);
+                UpdateOperationWithResponseStatus(context, measuredOperation, unhandledException is not null);
+
+                foreach (var enrichment in _enrichments)
+                {
+                    if (context.RequestAborted.IsCancellationRequested) break;
+
+                    try
+                    {
+                        await enrichment.EnrichAsync(webmeasurementContext, context.RequestAborted);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogEnrichmentFailed(ex, enrichment.GetType().Name);
+                    }
+                }
             }
-            catch (Exception ex)
+            finally
             {
-                LogEnrichmentFailed(ex, enrichment.GetType().Name);
+                RemoveSliFeatureFromHttpContext(context);
             }
         }
-
-        RemoveSliFeatureFromHttpContext(context);
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "SLI enrichment {EnrichmentType} failed.")]
@@ -68,11 +92,11 @@ internal sealed partial class ServiceLevelIndicatorMiddleware
             measuredOperation.CustomerResourceId = customerResourceId;
     }
 
-    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperation measuredOperation)
+    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperation measuredOperation, bool unhandledException = false)
     {
         var statusCode = context.Response.StatusCode;
         measuredOperation.AddAttribute("http.response.status.code", statusCode);
-        var activityCode = statusCode switch
+        var activityCode = unhandledException ? ActivityStatusCode.Error : statusCode switch
         {
             >= StatusCodes.Status500InternalServerError => ActivityStatusCode.Error,
             >= StatusCodes.Status200OK and < StatusCodes.Status300MultipleChoices => ActivityStatusCode.Ok,
