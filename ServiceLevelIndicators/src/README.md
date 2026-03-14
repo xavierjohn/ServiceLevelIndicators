@@ -6,6 +6,12 @@ A .NET library for emitting **Service Level Indicator (SLI)** latency metrics in
 
 For ASP.NET Core applications, see [ServiceLevelIndicators.Asp](https://www.nuget.org/packages/ServiceLevelIndicators.Asp).
 
+## When To Use This Package
+
+Choose `ServiceLevelIndicators` when you want to measure operations directly in application code, especially in console apps, worker services, background jobs, libraries, or shared business logic that should stay independent from ASP.NET Core.
+
+If you want automatic measurement of ASP.NET Core endpoints, use [ServiceLevelIndicators.Asp](https://www.nuget.org/packages/ServiceLevelIndicators.Asp) instead.
+
 ## Installation
 
 ```shell
@@ -23,6 +29,26 @@ builder.Services.AddOpenTelemetry()
         metrics.AddServiceLevelIndicatorInstrumentation();
         metrics.AddOtlpExporter();
     });
+```
+
+If you supply a custom `Meter` in `ServiceLevelIndicatorOptions`, register that same meter with OpenTelemetry:
+
+```csharp
+var sliMeter = new Meter("MyCompany.ServiceLevelIndicator");
+
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddServiceLevelIndicatorInstrumentation(sliMeter);
+        metrics.AddOtlpExporter();
+    });
+
+builder.Services.AddServiceLevelIndicator(options =>
+{
+    options.Meter = sliMeter;
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
+    options.CustomerResourceId = "my-customer";
+});
 ```
 
 ### 2. Configure options
@@ -66,6 +92,10 @@ A meter named `ServiceLevelIndicator` with instrument `operation.duration` (mill
 | `LocationId` | Where the service is running (e.g. `ms-loc://az/public/westus3`) |
 | `activity.status.code` | `Ok`, `Error`, or `Unset` based on the operation outcome |
 
+## Cardinality Guidance
+
+Use stable, bounded values for `CustomerResourceId` and custom attributes. Good dimensions include tenant, subscription, environment, region, or product tier. Avoid highly variable values such as request IDs, email addresses, timestamps, or arbitrary user input unless high-cardinality metrics are intentional and supported by your backend.
+
 ## Key APIs
 
 | Type / Method | Description |
@@ -80,4 +110,5 @@ A meter named `ServiceLevelIndicator` with instrument `operation.duration` (mill
 ## Further Reading
 
 - [Full documentation and samples](https://github.com/xavierjohn/ServiceLevelIndicators)
+- [Package selection and usage reference](https://github.com/xavierjohn/ServiceLevelIndicators/blob/main/docs/usage-reference.md)
 - [OpenTelemetry .NET](https://opentelemetry.io/docs/languages/dotnet/)

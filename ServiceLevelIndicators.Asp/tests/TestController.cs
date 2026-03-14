@@ -1,5 +1,6 @@
 ﻿namespace ServiceLevelIndicators.Asp.Tests;
 
+using System;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -17,6 +18,13 @@ public class TestController : ControllerBase
 
     [HttpGet("server_error")]
     public IActionResult ServerError() => StatusCode(500, "Server Error!");
+
+    [HttpGet("throw")]
+    public IActionResult Throw()
+    {
+        _ = HttpContext;
+        throw new InvalidOperationException("Boom");
+    }
 
     [HttpGet("operation")]
     [ServiceLevelIndicator(Operation = "TestOperation")]

@@ -4,6 +4,12 @@
 
 Adds **API version** as a metric dimension to [ServiceLevelIndicators.Asp](https://www.nuget.org/packages/ServiceLevelIndicators.Asp) SLI metrics. Works with the [Asp.Versioning](https://github.com/dotnet/aspnet-api-versioning) package.
 
+## When To Use This Package
+
+Choose `ServiceLevelIndicators.Asp.ApiVersioning` only when your ASP.NET Core application already uses [Asp.Versioning](https://github.com/dotnet/aspnet-api-versioning) and you want the resolved API version included in emitted SLI metrics.
+
+This package extends [ServiceLevelIndicators.Asp](https://www.nuget.org/packages/ServiceLevelIndicators.Asp); it is not a replacement for it.
+
 ## Installation
 
 ```shell
@@ -27,6 +33,12 @@ builder.Services.AddServiceLevelIndicator(options =>
 
 This registers `ApiVersionEnrichment`, which reads the resolved API version from the request and emits it as an attribute on every SLI measurement.
 
+## Requirements
+
+- ASP.NET Core application using [ServiceLevelIndicators.Asp](https://www.nuget.org/packages/ServiceLevelIndicators.Asp)
+- Asp.Versioning configured in the application
+- `AddApiVersion()` chained onto the SLI builder
+
 ## Emitted Attribute
 
 | Attribute | Description |
@@ -38,4 +50,5 @@ This attribute is added alongside all the standard attributes emitted by `Servic
 ## Further Reading
 
 - [Full documentation and samples](https://github.com/xavierjohn/ServiceLevelIndicators)
+- [Package selection and usage reference](https://github.com/xavierjohn/ServiceLevelIndicators/blob/main/docs/usage-reference.md)
 - [ASP.NET API Versioning](https://github.com/dotnet/aspnet-api-versioning)

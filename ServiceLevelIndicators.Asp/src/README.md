@@ -6,6 +6,12 @@ ASP.NET Core middleware that **automatically emits Service Level Indicator (SLI)
 
 For API versioning support, add [ServiceLevelIndicators.Asp.ApiVersioning](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning).
 
+## When To Use This Package
+
+Choose `ServiceLevelIndicators.Asp` when you are building an ASP.NET Core application and want SLI metrics emitted automatically for MVC controllers or Minimal API endpoints.
+
+Use [ServiceLevelIndicators](https://www.nuget.org/packages/ServiceLevelIndicators) if you only need manual measurement in non-HTTP code. Add [ServiceLevelIndicators.Asp.ApiVersioning](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning) when your ASP.NET Core app uses Asp.Versioning and you want the resolved API version emitted as a metric dimension.
+
 ## Installation
 
 ```shell
@@ -48,6 +54,8 @@ app.UseServiceLevelIndicator();
 app.MapGet("/hello", () => "Hello World!")
     .AddServiceLevelIndicator();
 ```
+
+If you configure a custom `Meter` in `ServiceLevelIndicatorOptions`, register that same meter with OpenTelemetry by calling `AddServiceLevelIndicatorInstrumentation(meter)`.
 
 ## Emitted Metrics
 
@@ -128,6 +136,10 @@ if (HttpContext.TryGetMeasuredOperation(out var op))
     op.AddAttribute("CustomKey", value);
 ```
 
+## Cardinality Guidance
+
+Use `CustomerResourceId`, `[Measure]`, and custom attributes for stable service dimensions such as tenant, subscription, region, or API flavor. Avoid unbounded values like request IDs, email addresses, timestamps, or arbitrary user input unless you explicitly want high-cardinality metrics and your backend can absorb the cost.
+
 ### Opt-in mode
 
 To disable automatic SLI emission on all controllers:
@@ -141,3 +153,4 @@ Then add `[ServiceLevelIndicator]` only to the controllers you want measured.
 ## Further Reading
 
 - [Full documentation and samples](https://github.com/xavierjohn/ServiceLevelIndicators)
+- [Package selection and usage reference](https://github.com/xavierjohn/ServiceLevelIndicators/blob/main/docs/usage-reference.md)

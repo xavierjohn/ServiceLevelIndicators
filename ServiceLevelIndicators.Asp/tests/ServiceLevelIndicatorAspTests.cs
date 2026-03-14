@@ -381,6 +381,28 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         ValidateMetrics(expectedTags);
     }
 
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_for_unhandled_exception()
+    {
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+
+        Func<Task> act = () => host.GetTestClient().GetAsync("test/throw", TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Boom");
+
+        var expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/throw"),
+            new("activity.status.code", "Error"),
+            new("http.response.status.code", 500),
+        };
+
+        ValidateMetrics(expectedTags);
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)

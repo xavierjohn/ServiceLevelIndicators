@@ -74,6 +74,8 @@ This makes the library useful when generic HTTP server metrics are not enough, e
 dotnet add package ServiceLevelIndicators
 ```
 
+For a concise package-selection and integration guide, see [docs/usage-reference.md](docs/usage-reference.md).
+
 For ASP.NET Core:
 
 ```shell
@@ -100,6 +102,26 @@ dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
             builder.AddServiceLevelIndicatorInstrumentation();
             builder.AddOtlpExporter();
         });
+    ```
+
+   If you configure `ServiceLevelIndicatorOptions.Meter` with a custom meter, register that same meter with OpenTelemetry:
+
+    ```csharp
+    var sliMeter = new Meter("MyCompany.ServiceLevelIndicator");
+
+    builder.Services.AddOpenTelemetry()
+        .ConfigureResource(configureResource)
+        .WithMetrics(metrics =>
+        {
+            metrics.AddServiceLevelIndicatorInstrumentation(sliMeter);
+            metrics.AddOtlpExporter();
+        });
+
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        options.Meter = sliMeter;
+        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
+    });
     ```
 
 2. Add ServiceLevelIndicator into the dependency injection. `AddMvc()` is required for overrides present in SLI attributes to take effect.
@@ -180,6 +202,12 @@ async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 ```
 
 ### Customizations
+
+### Cardinality guidance
+
+Metric dimensions should stay bounded. `CustomerResourceId` and values captured with `[Measure]` are useful when they represent a stable tenant, customer group, plan, environment, or region, but they become expensive if you feed them raw per-user or highly variable values.
+
+Prefer values with a controlled set of outcomes. Avoid using email addresses, request IDs, timestamps, or unconstrained free text unless your metrics backend is explicitly designed for high-cardinality telemetry.
 
 Once the Prerequisites are done, all controllers will emit SLI information.
 The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;.
