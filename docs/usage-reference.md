@@ -48,11 +48,13 @@ builder.Services.AddOpenTelemetry()
 Register the service:
 
 ```csharp
-builder.Services.AddServiceLevelIndicator(options =>
+builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
 {
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "tenant-a";
 });
+
+builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 Measure work:
@@ -89,12 +91,14 @@ builder.Services.AddOpenTelemetry()
         metrics.AddOtlpExporter();
     });
 
-builder.Services.AddServiceLevelIndicator(options =>
+builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
 {
     options.Meter = sliMeter;
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "tenant-a";
 });
+
+builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 Available registration overloads:

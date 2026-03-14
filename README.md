@@ -88,7 +88,7 @@ For API Versioning support:
 dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
 ```
 
-## Usage for Web API MVC
+## Usage for ASP.NET Core MVC
 
 1. Register SLI with open telemetry by calling `AddServiceLevelIndicatorInstrumentation`.
 
@@ -142,7 +142,7 @@ dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
     app.UseServiceLevelIndicator();
     ```
 
-## Usage for Minimal API
+## Usage for Minimal APIs
 
 1. Register SLI with open telemetry by calling `AddServiceLevelIndicatorInstrumentation`.
 
@@ -186,7 +186,7 @@ dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
        .AddServiceLevelIndicator();
     ```
 
-### Usage for background jobs
+## Usage for Background Jobs
 
 You can measure a block of code by wrapping it in a `using` clause of `MeasuredOperation`.
 
@@ -201,13 +201,15 @@ async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 }
 ```
 
-### Customizations
+## Operational Guidance
 
-### Cardinality guidance
+### Cardinality Guidance
 
 Metric dimensions should stay bounded. `CustomerResourceId` and values captured with `[Measure]` are useful when they represent a stable tenant, customer group, plan, environment, or region, but they become expensive if you feed them raw per-user or highly variable values.
 
 Prefer values with a controlled set of outcomes. Avoid using email addresses, request IDs, timestamps, or unconstrained free text unless your metrics backend is explicitly designed for high-cardinality telemetry.
+
+## ASP.NET Core Customizations
 
 Once the Prerequisites are done, all controllers will emit SLI information.
 The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;.
@@ -316,25 +318,16 @@ eg GET WeatherForecast/Action1
 - To prevent automatically emitting SLI information on all controllers, set the option,
 
     ``` csharp
-    ServiceLevelIndicatorOptions.AutomaticallyEmitted = false;
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        options.AutomaticallyEmitted = false;
+    })
+    .AddMvc();
     ```
 
     In this case, add the attribute `[ServiceLevelIndicator]` on the controllers that should emit SLI.
 
-- To measure a process, run it within a `using StartMeasuring` block.
-
-   Example:
-
-    ```csharp
-    public void StoreItem(MyDomainEvent domainEvent)
-    {
-        var attribute = new KeyValuePair<string, object?>("Event", domainEvent.GetType().Name);
-        using var measuredOperation = _serviceLevelIndicator.StartMeasuring("StoreItem", attribute);
-        DoTheWork();
-    }
-    ```
-
-### Sample
+## Sample
 
 Try out the sample weather forecast Web API.
 

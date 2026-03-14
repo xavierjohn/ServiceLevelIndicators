@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using Scalar.AspNetCore;
 using SampleMinimalApiSli;
 using ServiceLevelIndicators;
 
@@ -13,14 +14,7 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-
-    var fileName = typeof(Program).Assembly.GetName().Name + ".xml";
-    var filePath = Path.Combine(AppContext.BaseDirectory, fileName);
-    options.IncludeXmlComments(filePath);
-});
+builder.Services.AddOpenApi();
 
 // Build a resource configuration action to set service information.
 
@@ -65,8 +59,8 @@ app.MapGet(
    .AddServiceLevelIndicator("background_work");
 
 app.UseUserRoute();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapOpenApi();
+app.MapScalarApiReference();
 app.UseHttpsRedirection();
 app.UseServiceLevelIndicator();
 app.Run();
