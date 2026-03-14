@@ -43,22 +43,26 @@ builder.Services.AddOpenTelemetry()
         metrics.AddOtlpExporter();
     });
 
-builder.Services.AddServiceLevelIndicator(options =>
+builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
 {
     options.Meter = sliMeter;
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "my-customer";
 });
+
+builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 ### 2. Configure options
 
 ```csharp
-builder.Services.AddServiceLevelIndicator(options =>
+builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
 {
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "my-customer";
 });
+
+builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 ### 3. Measure operations
