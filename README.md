@@ -3,27 +3,18 @@
 [![Build](https://github.com/xavierjohn/ServiceLevelIndicators/actions/workflows/build.yml/badge.svg)](https://github.com/xavierjohn/ServiceLevelIndicators/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Service level indicators (SLIs) are metrics used to measure the performance of a service.
-They are typically used in the context of service level agreements (SLAs),
-which are contracts between a service provider and its customers that define the expected level of service.
-SLIs are used to track the actual performance of the service against the agreed upon SLA.
+ServiceLevelIndicators is a .NET library for emitting service-level latency metrics in milliseconds using the standard [System.Diagnostics.Metrics](https://learn.microsoft.com/dotnet/api/system.diagnostics.metrics) and OpenTelemetry pipeline.
 
-There are many different types of SLIs that can be used to measure the performance of a service. Some common examples include:
+It is designed for teams that need more than generic request timing. The library helps measure meaningful operations, attach service-specific dimensions such as customer, location, operation name, and status, and build SLO or SLA-oriented dashboards and alerts from those metrics.
 
-- Availability: This measures the percentage of time that a service is available and functioning properly.
-- Response time: This measures the amount of time it takes for a service to respond to a request.
-- Throughput: This measures the amount of work that a service can handle in a given period of time.
-- Error rate: This measures the percentage of requests that result in errors.
-
-SLIs are important because they provide a way to objectively measure the performance of a service.
-By tracking SLIs over time, service providers can identify trends and make improvements to the service to ensure that it meets the needs of its customers.
+Service level indicators (SLIs) are metrics used to track how a service is performing against expected reliability and responsiveness goals. Common examples include availability, response time, throughput, and error rate. This library focuses on latency SLIs so you can consistently measure operation duration across background work, ASP.NET Core APIs, and versioned endpoints.
 
 [![Watch the video](https://img.youtube.com/vi/wXJbA0AkcRE/hqdefault.jpg)](https://www.youtube.com/embed/wXJbA0AkcRE)
 
 
 ## Service Level Indicator Library
 
-**ServiceLevelIndicators** library will help emit latency metrics for each API operation to help monitor the service performance over time.
+**ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
 The metrics are emitted via the standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter).
 
 By default, a meter named `ServiceLevelIndicator` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
@@ -50,6 +41,8 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 | Resolution  | milliseconds       | seconds
 | Customer    | CustomerResourceId | N/A
 | Error check | Activity or HTTP status.code | HTTP status code
+
+This makes the library useful when generic HTTP server metrics are not enough, especially for multi-tenant services, APIs with customer-specific objectives, or workloads that need the same SLI model outside HTTP request handling.
 
 **ServiceLevelIndicators.Asp.Versioning** adds the following dimensions.
 - http.api.version - The API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).

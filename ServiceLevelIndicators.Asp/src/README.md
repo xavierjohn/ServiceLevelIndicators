@@ -2,7 +2,7 @@
 
 [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp)
 
-ASP.NET Core middleware that **automatically emits Service Level Indicator (SLI) latency metrics** for every API operation. Built on the [ServiceLevelIndicators](https://www.nuget.org/packages/ServiceLevelIndicators) core library and the standard [System.Diagnostics.Metrics](https://learn.microsoft.com/dotnet/api/system.diagnostics.metrics) API.
+ASP.NET Core middleware that **automatically emits Service Level Indicator (SLI) latency metrics in milliseconds** for every API operation. Built on the [ServiceLevelIndicators](https://www.nuget.org/packages/ServiceLevelIndicators) core library, it helps teams move from generic request timing to service-specific latency metrics with dimensions such as operation, customer, location, and status.
 
 For API versioning support, add [ServiceLevelIndicators.Asp.ApiVersioning](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning).
 
