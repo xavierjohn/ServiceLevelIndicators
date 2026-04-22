@@ -1,0 +1,54 @@
+# Trellis.ServiceLevelIndicators.Asp.ApiVersioning
+
+[![NuGet Package](https://img.shields.io/nuget/v/Trellis.ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp.ApiVersioning)
+
+Adds **API version** as a metric dimension to [Trellis.ServiceLevelIndicators.Asp](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp) SLI metrics. Works with the [Asp.Versioning](https://github.com/dotnet/aspnet-api-versioning) package.
+
+## When To Use This Package
+
+Choose `Trellis.ServiceLevelIndicators.Asp.ApiVersioning` only when your ASP.NET Core application already uses [Asp.Versioning](https://github.com/dotnet/aspnet-api-versioning) and you want the resolved API version included in emitted SLI metrics.
+
+This package extends [Trellis.ServiceLevelIndicators.Asp](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp); it is not a replacement for it.
+
+## Installation
+
+```shell
+dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
+```
+
+> Requires [Trellis.ServiceLevelIndicators.Asp](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp) (installed automatically as a dependency).
+
+## Usage
+
+Chain `AddApiVersion()` onto the SLI builder:
+
+```csharp
+builder.Services.AddServiceLevelIndicator(options =>
+{
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
+})
+.AddMvc()
+.AddApiVersion();
+```
+
+This registers `ApiVersionEnrichment`, which reads the resolved API version from the request and emits it as an attribute on every SLI measurement.
+
+## Requirements
+
+- ASP.NET Core application using [Trellis.ServiceLevelIndicators.Asp](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp)
+- Asp.Versioning configured in the application
+- `AddApiVersion()` chained onto the SLI builder
+
+## Emitted Attribute
+
+| Attribute | Description |
+|-----------|-------------|
+| `http.api.version` | The resolved API version string (e.g. `1.0`, `2024-01-15`), `Neutral`, or `Unspecified` |
+
+This attribute is added alongside all the standard attributes emitted by `Trellis.ServiceLevelIndicators.Asp` (`Operation`, `CustomerResourceId`, `LocationId`, `activity.status.code`, `http.response.status.code`).
+
+## Further Reading
+
+- [Full documentation and samples](https://github.com/xavierjohn/ServiceLevelIndicators)
+- [Package selection and usage reference](https://github.com/xavierjohn/ServiceLevelIndicators/blob/main/docs/usage-reference.md)
+- [ASP.NET API Versioning](https://github.com/dotnet/aspnet-api-versioning)

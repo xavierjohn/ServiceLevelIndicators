@@ -13,6 +13,6 @@
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ServiceLevelIndicators.Asp.ApiVersioning\src\ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
+    <ProjectReference Include="..\..\Trellis.ServiceLevelIndicators.Asp.ApiVersioning\src\Trellis.ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
   </ItemGroup>
 </Project>

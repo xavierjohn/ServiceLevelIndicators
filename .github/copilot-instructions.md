@@ -3,9 +3,9 @@
 ## Repository Purpose
 
 - This repository provides Service Level Indicator libraries for .NET.
-- `ServiceLevelIndicators` is the core library for measuring operation latency.
-- `ServiceLevelIndicators.Asp` adds ASP.NET Core middleware, MVC, and Minimal API integration.
-- `ServiceLevelIndicators.Asp.ApiVersioning` adds API version as an SLI dimension when used with Asp.Versioning.
+- `Trellis.ServiceLevelIndicators` is the core library for measuring operation latency.
+- `Trellis.ServiceLevelIndicators.Asp` adds ASP.NET Core middleware, MVC, and Minimal API integration.
+- `Trellis.ServiceLevelIndicators.Asp.ApiVersioning` adds API version as an SLI dimension when used with Asp.Versioning.
 - The library emits latency metrics in milliseconds through `System.Diagnostics.Metrics` and OpenTelemetry.
 
 ## Metric Contract
@@ -31,9 +31,9 @@
 
 ## Testing Expectations
 
-- When changing core metric emission or tag behavior, update tests under `ServiceLevelIndicators/tests`.
-- When changing middleware, endpoint metadata, or HTTP behavior, update tests under `ServiceLevelIndicators.Asp/tests`.
-- When changing API versioning behavior, update tests under `ServiceLevelIndicators.Asp.ApiVersioning/tests`.
+- When changing core metric emission or tag behavior, update tests under `Trellis.ServiceLevelIndicators/tests`.
+- When changing middleware, endpoint metadata, or HTTP behavior, update tests under `Trellis.ServiceLevelIndicators.Asp/tests`.
+- When changing API versioning behavior, update tests under `Trellis.ServiceLevelIndicators.Asp.ApiVersioning/tests`.
 - Add regression tests for exception paths, custom meter behavior, and any change to emitted dimensions.
 - Prefer focused test updates over broad unrelated refactors.
 

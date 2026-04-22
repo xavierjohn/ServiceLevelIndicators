@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Sample/">
+    <Project Path="sample/ConsoleApp/SampleConsoleSLI.csproj" />
+    <Project Path="sample/GenerateSli/GenerateSli.csproj" />
+    <Project Path="sample/MinApi/SampleMinimalApiSli.csproj" />
+    <Project Path="sample/WebApi/SampleWebApplicationSLI.csproj" />
+    <Project Path="sample/WebApiVersioned/SampleVersionedWebApplicationSLI.csproj" />
+  </Folder>
+  <Folder Name="/Trellis.ServiceLevelIndicators.Asp.ApiVersioning/">
+    <Project Path="Trellis.ServiceLevelIndicators.Asp.ApiVersioning/src/Trellis.ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
+    <Project Path="Trellis.ServiceLevelIndicators.Asp.ApiVersioning/tests/Trellis.ServiceLevelIndicators.Asp.ApiVersioning.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Trellis.ServiceLevelIndicators.Asp/">
+    <Project Path="Trellis.ServiceLevelIndicators.Asp/src/Trellis.ServiceLevelIndicators.Asp.csproj" />
+    <Project Path="Trellis.ServiceLevelIndicators.Asp/tests/Trellis.ServiceLevelIndicators.Asp.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Trellis.ServiceLevelIndicators/">
+    <Project Path="Trellis.ServiceLevelIndicators/src/Trellis.ServiceLevelIndicators.csproj" />
+    <Project Path="Trellis.ServiceLevelIndicators/tests/Trellis.ServiceLevelIndicators.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="version.json" />
+  </Folder>
+</Solution>

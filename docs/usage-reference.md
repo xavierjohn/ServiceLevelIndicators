@@ -1,4 +1,4 @@
-# ServiceLevelIndicators Usage Reference
+# Trellis.ServiceLevelIndicators Usage Reference
 
 This document is a compact reference for choosing the correct package and wiring it into a .NET application.
 
@@ -6,9 +6,9 @@ This document is a compact reference for choosing the correct package and wiring
 
 | Scenario | Package | Purpose |
 |---|---|---|
-| Measure code in any .NET app | `ServiceLevelIndicators` | Core latency SLI measurement for console apps, workers, background jobs, and shared libraries |
-| Automatically measure ASP.NET Core endpoints | `ServiceLevelIndicators.Asp` | Middleware, MVC, and Minimal API integration |
-| Add API version as a metric dimension | `ServiceLevelIndicators.Asp.ApiVersioning` | Adds `http.api.version` enrichment for apps using Asp.Versioning |
+| Measure code in any .NET app | `Trellis.ServiceLevelIndicators` | Core latency SLI measurement for console apps, workers, background jobs, and shared libraries |
+| Automatically measure ASP.NET Core endpoints | `Trellis.ServiceLevelIndicators.Asp` | Middleware, MVC, and Minimal API integration |
+| Add API version as a metric dimension | `Trellis.ServiceLevelIndicators.Asp.ApiVersioning` | Adds `http.api.version` enrichment for apps using Asp.Versioning |
 
 ## Metric Contract
 
@@ -31,7 +31,7 @@ For ASP.NET Core, the library also emits `http.response.status.code` and can opt
 Install:
 
 ```shell
-dotnet add package ServiceLevelIndicators
+dotnet add package Trellis.ServiceLevelIndicators
 ```
 
 Register with OpenTelemetry:
@@ -114,7 +114,7 @@ metrics.AddServiceLevelIndicatorInstrumentation(sliMeter);
 Install:
 
 ```shell
-dotnet add package ServiceLevelIndicators.Asp
+dotnet add package Trellis.ServiceLevelIndicators.Asp
 ```
 
 Register services:
@@ -203,7 +203,7 @@ app.MapGet("/orders/{customerId}/{orderType}",
 Install:
 
 ```shell
-dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
+dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
 ```
 
 Register enrichment:

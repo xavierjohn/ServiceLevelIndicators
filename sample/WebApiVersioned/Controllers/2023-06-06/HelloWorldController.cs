@@ -2,7 +2,7 @@
 
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using ServiceLevelIndicators;
+using Trellis.ServiceLevelIndicators;
 
 /// <summary>
 /// Hello World controller.

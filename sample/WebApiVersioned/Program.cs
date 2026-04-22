@@ -2,7 +2,7 @@
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using Scalar.AspNetCore;
-using ServiceLevelIndicators;
+using Trellis.ServiceLevelIndicators;
 
 var builder = WebApplication.CreateBuilder(args);
 

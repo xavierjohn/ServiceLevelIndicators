@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ServiceLevelIndicators\src\ServiceLevelIndicators.csproj" />
+    <ProjectReference Include="..\..\Trellis.ServiceLevelIndicators\src\Trellis.ServiceLevelIndicators.csproj" />
   </ItemGroup>
 
 </Project>

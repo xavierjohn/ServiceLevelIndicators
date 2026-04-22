@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RootNamespace>Trellis.ServiceLevelIndicators</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Asp.Versioning.Http" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Trellis.ServiceLevelIndicators.Asp\src\Trellis.ServiceLevelIndicators.Asp.csproj" />
+    </ItemGroup>
+</Project>

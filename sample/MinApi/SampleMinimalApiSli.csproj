@@ -11,6 +11,6 @@
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ServiceLevelIndicators.Asp\src\ServiceLevelIndicators.Asp.csproj" />
+    <ProjectReference Include="..\..\Trellis.ServiceLevelIndicators.Asp\src\Trellis.ServiceLevelIndicators.Asp.csproj" />
   </ItemGroup>
 </Project>

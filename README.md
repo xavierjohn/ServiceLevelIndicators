@@ -14,7 +14,7 @@ Service level indicators (SLIs) are metrics used to track how a service is perfo
 
 ## Service Level Indicator Library
 
-**ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
+**Trellis.ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
 The metrics are emitted via the standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter).
 
 By default, a meter named `ServiceLevelIndicator` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
@@ -24,7 +24,7 @@ By default, a meter named `ServiceLevelIndicator` with instrument name `operatio
 - Operation - The name of the operation.
 - activity.status.code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode).
 
-**ServiceLevelIndicators.Asp** adds the following dimensions.
+**Trellis.ServiceLevelIndicators.Asp** adds the following dimensions.
 
 - Operation - In ASP.NET the operation name defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
 - The activity status code will be
@@ -44,48 +44,54 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
 This makes the library useful when generic HTTP server metrics are not enough, especially for multi-tenant services, APIs with customer-specific objectives, or workloads that need the same SLI model outside HTTP request handling.
 
-**ServiceLevelIndicators.Asp.Versioning** adds the following dimensions.
+**Trellis.ServiceLevelIndicators.Asp.Versioning** adds the following dimensions.
 - http.api.version - The API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
 
 
 ## NuGet Packages
 
-- **ServiceLevelIndicators**
+- **Trellis.ServiceLevelIndicators**
 
   This library can be used to emit SLI for all .net core applications, where each operation is measured.
 
-  [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.svg)](https://www.nuget.org/packages/ServiceLevelIndicators)
+  [![NuGet Package](https://img.shields.io/nuget/v/Trellis.ServiceLevelIndicators.svg)](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators)
 
-- **ServiceLevelIndicators.Asp**
+- **Trellis.ServiceLevelIndicators.Asp**
 
   For measuring SLI for ASP.NET Core applications use this library that will automatically measure each API operation.
 
-  [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp)
+  [![NuGet Package](https://img.shields.io/nuget/v/Trellis.ServiceLevelIndicators.Asp.svg)](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp)
   
-- **ServiceLevelIndicators.Asp.ApiVersioning**
+- **Trellis.ServiceLevelIndicators.Asp.ApiVersioning**
 
   If [API Versioning package](https://github.com/dotnet/aspnet-api-versioning) is used, this library will add the API version as a metric dimension.
 
-  [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning)
+  [![NuGet Package](https://img.shields.io/nuget/v/Trellis.ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp.ApiVersioning)
 
 ## Installation
 
 ```shell
-dotnet add package ServiceLevelIndicators
+dotnet add package Trellis.ServiceLevelIndicators
 ```
 
 For a concise package-selection and integration guide, see [docs/usage-reference.md](docs/usage-reference.md).
 
+API references:
+
+- [`docs/api_reference/trellis-api-sli.md`](docs/api_reference/trellis-api-sli.md) — `Trellis.ServiceLevelIndicators` (core)
+- [`docs/api_reference/trellis-api-sli-asp.md`](docs/api_reference/trellis-api-sli-asp.md) — `Trellis.ServiceLevelIndicators.Asp` (middleware + attributes)
+- [`docs/api_reference/trellis-api-sli-apiversioning.md`](docs/api_reference/trellis-api-sli-apiversioning.md) — `Trellis.ServiceLevelIndicators.Asp.ApiVersioning`
+
 For ASP.NET Core:
 
 ```shell
-dotnet add package ServiceLevelIndicators.Asp
+dotnet add package Trellis.ServiceLevelIndicators.Asp
 ```
 
 For API Versioning support:
 
 ```shell
-dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
+dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
 ```
 
 ## Usage for ASP.NET Core MVC
@@ -215,7 +221,7 @@ Once the Prerequisites are done, all controllers will emit SLI information.
 The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;.
 eg GET WeatherForecast/Action1
 
-- To add API versioning as a dimension use package `ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersion`.
+- To add API versioning as a dimension use package `Trellis.ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersion`.
 
    Example:
 

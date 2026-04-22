@@ -1,7 +1,7 @@
 ﻿namespace SampleWebApplicationSLI.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-using ServiceLevelIndicators;
+using Trellis.ServiceLevelIndicators;
 
 /// <summary>
 /// Weather forecast controller.
