@@ -11,7 +11,7 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
     public static IServiceLevelIndicatorBuilder AddMvc(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.AddMvcCore(static options => options.Conventions.Add(new ServiceLevelIndicatorConvention()));
+        builder.Services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(static options => options.Conventions.Add(new ServiceLevelIndicatorConvention()));
         return builder;
     }
 
