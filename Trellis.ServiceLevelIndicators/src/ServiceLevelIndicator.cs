@@ -11,10 +11,12 @@ using Microsoft.Extensions.Options;
 /// using an OpenTelemetry <see cref="Histogram{T}"/>.
 /// </summary>
 /// <remarks>
-/// Registered as a singleton. If the underlying <see cref="Meter"/> is disposed externally,
-/// recording becomes a silent no-op per OpenTelemetry convention.
+/// Registered as a singleton. The container disposes this instance at host shutdown.
+/// When no <see cref="Meter"/> is supplied via <see cref="ServiceLevelIndicatorOptions.Meter"/>,
+/// this class creates one internally and disposes it on shutdown. A user-supplied
+/// <see cref="Meter"/> is never disposed by this class; the caller owns its lifetime.
 /// </remarks>
-public class ServiceLevelIndicator
+public sealed class ServiceLevelIndicator : IDisposable
 {
     /// <summary>
     /// Default meter name used when no <see cref="Meter"/> is provided in options.
@@ -27,6 +29,9 @@ public class ServiceLevelIndicator
     public ServiceLevelIndicatorOptions ServiceLevelIndicatorOptions { get; }
 
     private readonly Histogram<long> _responseLatencyHistogram;
+    private readonly Meter _meter;
+    private readonly bool _ownsMeter;
+    private bool _disposed;
 
     public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options)
     {
@@ -39,10 +44,29 @@ public class ServiceLevelIndicator
         {
             AssemblyName AssemblyName = typeof(ServiceLevelIndicator).Assembly.GetName();
             string InstrumentationVersion = AssemblyName.Version!.ToString();
-            ServiceLevelIndicatorOptions.Meter = new(DefaultMeterName, InstrumentationVersion);
+            _meter = new Meter(DefaultMeterName, InstrumentationVersion);
+            ServiceLevelIndicatorOptions.Meter = _meter;
+            _ownsMeter = true;
+        }
+        else
+        {
+            _meter = ServiceLevelIndicatorOptions.Meter;
+            _ownsMeter = false;
         }
 
-        _responseLatencyHistogram = ServiceLevelIndicatorOptions.Meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.DurationInstrumentName, "ms", "Duration of the operation.");
+        _responseLatencyHistogram = _meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.DurationInstrumentName, "ms", "Duration of the operation.");
+    }
+
+    /// <summary>
+    /// Disposes the internally-created <see cref="Meter"/> if this instance created it.
+    /// User-supplied meters are never disposed by this class.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        if (_ownsMeter)
+            _meter.Dispose();
     }
 
     /// <summary>

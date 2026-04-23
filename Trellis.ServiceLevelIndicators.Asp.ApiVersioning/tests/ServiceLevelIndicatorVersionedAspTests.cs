@@ -158,7 +158,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("http.api.version", string.Empty),
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
-            new("Operation", "GET /" + route),
+            new("Operation", "GET <unrouted>"),
             new("activity.status.code", "Unset"),
             new("http.response.status.code", 400),
         ];

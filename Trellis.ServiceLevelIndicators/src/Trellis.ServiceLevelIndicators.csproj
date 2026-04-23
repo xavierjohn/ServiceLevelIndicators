@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Description>Core library for emitting Service Level Indicator (SLI) latency metrics from .NET applications via the OpenTelemetry-compatible Meter / Histogram API. Provides ServiceLevelIndicator, MeasuredOperation, and helpers to register a meter with a MeterProvider.</Description>
+        <PackageTags>sli;slo;opentelemetry;metrics;observability;telemetry;trellis</PackageTags>
     </PropertyGroup>
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\" />

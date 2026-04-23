@@ -265,6 +265,94 @@ public class ServiceLevelIndicatorTests : IDisposable
         ValidateMetrics(elapsedTime, InstrumentName);
     }
 
+    [Fact]
+    public void Dispose_when_meter_was_internally_created_disposes_the_meter()
+    {
+        // Arrange
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = "TestResourceId",
+            LocationId = "TestLocationId"
+        };
+        var sli = new ServiceLevelIndicator(Options.Create(options));
+        var internalMeter = sli.ServiceLevelIndicatorOptions.Meter;
+        internalMeter.Should().NotBeNull();
+
+        var measurementsCompleted = false;
+        using var listener = new MeterListener
+        {
+            InstrumentPublished = (instrument, l) =>
+            {
+                if (ReferenceEquals(instrument.Meter, internalMeter))
+                    l.EnableMeasurementEvents(instrument);
+            },
+            MeasurementsCompleted = (instrument, _) =>
+            {
+                if (ReferenceEquals(instrument.Meter, internalMeter))
+                    measurementsCompleted = true;
+            }
+        };
+        listener.Start();
+
+        // Act
+        sli.Dispose();
+
+        // Assert: MeasurementsCompleted fires when the instrument's parent Meter is disposed.
+        measurementsCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Dispose_when_meter_was_supplied_does_not_dispose_user_meter()
+    {
+        // Arrange
+        using var userMeter = new Meter("UserOwnedMeter", "1.0.0");
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = "TestResourceId",
+            LocationId = "TestLocationId",
+            Meter = userMeter
+        };
+        var sli = new ServiceLevelIndicator(Options.Create(options));
+
+        var measurementsCompleted = false;
+        using var listener = new MeterListener
+        {
+            InstrumentPublished = (instrument, l) =>
+            {
+                if (ReferenceEquals(instrument.Meter, userMeter))
+                    l.EnableMeasurementEvents(instrument);
+            },
+            MeasurementsCompleted = (instrument, _) =>
+            {
+                if (ReferenceEquals(instrument.Meter, userMeter))
+                    measurementsCompleted = true;
+            }
+        };
+        listener.Start();
+
+        // Act
+        sli.Dispose();
+
+        // Assert: user-owned meter is NOT disposed by SLI; user is responsible for its lifetime.
+        measurementsCompleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Disposing_twice_is_safe()
+    {
+        // Arrange
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = "TestResourceId",
+            LocationId = "TestLocationId"
+        };
+        var sli = new ServiceLevelIndicator(Options.Create(options));
+
+        // Act / Assert
+        Action disposeTwice = () => { sli.Dispose(); sli.Dispose(); };
+        disposeTwice.Should().NotThrow();
+    }
+
     private void ValidateMetrics(int elapsedTime, string instrumentName = "operation.duration", int? approx = null)
     {
         _callbackCalled.Should().BeTrue();

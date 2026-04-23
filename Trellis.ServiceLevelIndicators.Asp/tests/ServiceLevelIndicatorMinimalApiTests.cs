@@ -102,7 +102,7 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
         {
             new("CustomerResourceId", "myResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
-            new("Operation", "GET /resource/myResourceId"),
+            new("Operation", "GET /resource/{id}"),
             new("activity.status.code", "Ok"),
             new("http.response.status.code", 200),
         };
@@ -127,12 +127,37 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
             new("name", "Widget"),
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
-            new("Operation", "GET /measured/items/Widget"),
+            new("Operation", "GET /measured/items/{name}"),
             new("activity.status.code", "Ok"),
             new("http.response.status.code", 200),
         };
 
         ValidateMetrics(expectedTags);
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_emits_route_template_not_concrete_path_for_minimal_api_with_route_param()
+    {
+        // Regression: route placeholders must be preserved in the Operation tag so cardinality stays bounded.
+        // Arrange
+        using var host = await CreateMinimalApiHost();
+
+        // Act: hit the same endpoint twice with different route values.
+        var operations = new List<string?>();
+        _meterListener.SetMeasurementEventCallback<long>((instrument, measurement, tags, state) =>
+        {
+            _callbackCalled = true;
+            _instrument = instrument;
+            foreach (var t in tags.ToArray())
+                if (t.Key == "Operation") operations.Add(t.Value?.ToString());
+        });
+
+        (await host.GetTestClient().GetAsync("resource/abc", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await host.GetTestClient().GetAsync("resource/xyz", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        // Assert: both requests collapse to the same bounded operation name.
+        operations.Should().HaveCount(2);
+        operations.Should().AllBe("GET /resource/{id}");
     }
 
     [Fact]
