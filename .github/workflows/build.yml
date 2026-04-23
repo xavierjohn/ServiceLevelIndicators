@@ -9,22 +9,31 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
+    - name: Checkout code
+      uses: actions/checkout@v6
       with:
-        fetch-depth: 0 # depth is needed for nbgv
+        fetch-depth: 0
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
-    - uses: dotnet/nbgv@master
+    - name: Cache NuGet packages
+      uses: actions/cache@v5
       with:
-        setAllVars: true
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Setup versioning
+      run: |
+        dotnet tool install --global nbgv
+        nbgv cloud
 
     - name: Restore dependencies
       run: dotnet restore
@@ -33,14 +42,14 @@ jobs:
       run: dotnet build --no-restore -c Release
 
     - name: Test
-      run: dotnet test --no-build  -l "console;verbosity=normal" -c Release
+      run: dotnet test --no-build -c Release -l "console;verbosity=normal"
 
     - name: Pack
       if: ${{ success() && !github.base_ref }}
-      run: |
-        dotnet pack --no-build --verbosity normal -c Release -o artifacts/
-        
-    - uses: actions/upload-artifact@v6
+      run: dotnet pack --no-build --verbosity normal -c Release -o artifacts/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v6
       if: ${{ success() && !github.base_ref }}
       with:
         name: artifact
