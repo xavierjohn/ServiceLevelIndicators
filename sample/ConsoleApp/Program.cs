@@ -7,7 +7,7 @@ using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
-using ServiceLevelIndicators;
+using Trellis.ServiceLevelIndicators;
 
 #pragma warning disable CA1848 // Use the LoggerMessage delegates
 

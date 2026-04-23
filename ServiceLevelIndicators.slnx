@@ -6,17 +6,17 @@
     <Project Path="sample/WebApi/SampleWebApplicationSLI.csproj" />
     <Project Path="sample/WebApiVersioned/SampleVersionedWebApplicationSLI.csproj" />
   </Folder>
-  <Folder Name="/ServiceLevelIndicators.Asp.ApiVersioning/">
-    <Project Path="ServiceLevelIndicators.Asp.ApiVersioning/src/ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
-    <Project Path="ServiceLevelIndicators.Asp.ApiVersioning/tests/ServiceLevelIndicators.Asp.ApiVersioning.Tests.csproj" />
+  <Folder Name="/Trellis.ServiceLevelIndicators.Asp.ApiVersioning/">
+    <Project Path="Trellis.ServiceLevelIndicators.Asp.ApiVersioning/src/Trellis.ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
+    <Project Path="Trellis.ServiceLevelIndicators.Asp.ApiVersioning/tests/Trellis.ServiceLevelIndicators.Asp.ApiVersioning.Tests.csproj" />
   </Folder>
-  <Folder Name="/ServiceLevelIndicators.Asp/">
-    <Project Path="ServiceLevelIndicators.Asp/src/ServiceLevelIndicators.Asp.csproj" />
-    <Project Path="ServiceLevelIndicators.Asp/tests/ServiceLevelIndicators.Asp.Tests.csproj" />
+  <Folder Name="/Trellis.ServiceLevelIndicators.Asp/">
+    <Project Path="Trellis.ServiceLevelIndicators.Asp/src/Trellis.ServiceLevelIndicators.Asp.csproj" />
+    <Project Path="Trellis.ServiceLevelIndicators.Asp/tests/Trellis.ServiceLevelIndicators.Asp.Tests.csproj" />
   </Folder>
-  <Folder Name="/ServiceLevelIndicators/">
-    <Project Path="ServiceLevelIndicators/src/ServiceLevelIndicators.csproj" />
-    <Project Path="ServiceLevelIndicators/tests/ServiceLevelIndicators.Tests.csproj" />
+  <Folder Name="/Trellis.ServiceLevelIndicators/">
+    <Project Path="Trellis.ServiceLevelIndicators/src/Trellis.ServiceLevelIndicators.csproj" />
+    <Project Path="Trellis.ServiceLevelIndicators/tests/Trellis.ServiceLevelIndicators.Tests.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />

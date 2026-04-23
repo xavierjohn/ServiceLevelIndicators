@@ -14,19 +14,19 @@ Service level indicators (SLIs) are metrics used to track how a service is perfo
 
 ## Service Level Indicator Library
 
-**ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
+**Trellis.ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
 The metrics are emitted via the standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter).
 
 By default, a meter named `ServiceLevelIndicator` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
-- CustomerResourceId - A value that helps identity the customer, customer group or calling service.
+- CustomerResourceId - The **target resource** of the operation — the noun in the URL path being read or modified, normalized to a stable identifier (tenant, subscription, account, work item). **NOT** the caller, **NOT** a per-request GUID, **NOT** a user ID or email. Example: for `GET /teams/{teamId}` called by user `xa1` for team `team1`, the value is `"team1"`, not `"xa1"`. See the [ASP.NET Core package README](Trellis.ServiceLevelIndicators.Asp/src/README.md#what-customerresourceid-is--and-what-it-is-not) for the full mental model.
 - LocationId - The location where the service running. eg. Public cloud, West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
 - Operation - The name of the operation.
 - activity.status.code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode).
 
-**ServiceLevelIndicators.Asp** adds the following dimensions.
+**Trellis.ServiceLevelIndicators.Asp** adds the following dimensions.
 
-- Operation - In ASP.NET the operation name defaults to `AttributeRouteInfo.Template` information like `GET Weatherforecast`.
+- Operation - For ASP.NET endpoints, the operation name is the HTTP method plus the route template, resolved in this order: (1) `[ServiceLevelIndicator(Operation = "...")]` attribute or `.AddServiceLevelIndicator("op")` override, (2) MVC `AttributeRouteInfo.Template`, (3) the endpoint's `RouteEndpoint.RoutePattern.RawText` (Minimal APIs / conventional routing). Route placeholders such as `{id}` are preserved, never substituted with the concrete request value. If no bounded template is available, the middleware emits the sentinel `"<METHOD> <unrouted>"` and logs a warning — see that value in your metrics as a signal to add a route template.
 - The activity status code will be
    "Ok" when the http response status code is in the 2xx range,
    "Error" when the http response status code is in the 5xx range,
@@ -44,48 +44,54 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
 This makes the library useful when generic HTTP server metrics are not enough, especially for multi-tenant services, APIs with customer-specific objectives, or workloads that need the same SLI model outside HTTP request handling.
 
-**ServiceLevelIndicators.Asp.Versioning** adds the following dimensions.
+**Trellis.ServiceLevelIndicators.Asp.ApiVersioning** adds the following dimensions.
 - http.api.version - The API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
 
 
 ## NuGet Packages
 
-- **ServiceLevelIndicators**
+- **Trellis.ServiceLevelIndicators**
 
   This library can be used to emit SLI for all .net core applications, where each operation is measured.
 
-  [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.svg)](https://www.nuget.org/packages/ServiceLevelIndicators)
+  [![NuGet Package](https://img.shields.io/nuget/v/Trellis.ServiceLevelIndicators.svg)](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators)
 
-- **ServiceLevelIndicators.Asp**
+- **Trellis.ServiceLevelIndicators.Asp**
 
   For measuring SLI for ASP.NET Core applications use this library that will automatically measure each API operation.
 
-  [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp)
+  [![NuGet Package](https://img.shields.io/nuget/v/Trellis.ServiceLevelIndicators.Asp.svg)](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp)
   
-- **ServiceLevelIndicators.Asp.ApiVersioning**
+- **Trellis.ServiceLevelIndicators.Asp.ApiVersioning**
 
   If [API Versioning package](https://github.com/dotnet/aspnet-api-versioning) is used, this library will add the API version as a metric dimension.
 
-  [![NuGet Package](https://img.shields.io/nuget/v/ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/ServiceLevelIndicators.Asp.ApiVersioning)
+  [![NuGet Package](https://img.shields.io/nuget/v/Trellis.ServiceLevelIndicators.Asp.ApiVersioning.svg)](https://www.nuget.org/packages/Trellis.ServiceLevelIndicators.Asp.ApiVersioning)
 
 ## Installation
 
 ```shell
-dotnet add package ServiceLevelIndicators
+dotnet add package Trellis.ServiceLevelIndicators
 ```
 
 For a concise package-selection and integration guide, see [docs/usage-reference.md](docs/usage-reference.md).
 
+API references:
+
+- [`docs/api_reference/trellis-api-sli.md`](docs/api_reference/trellis-api-sli.md) — `Trellis.ServiceLevelIndicators` (core)
+- [`docs/api_reference/trellis-api-sli-asp.md`](docs/api_reference/trellis-api-sli-asp.md) — `Trellis.ServiceLevelIndicators.Asp` (middleware + attributes)
+- [`docs/api_reference/trellis-api-sli-apiversioning.md`](docs/api_reference/trellis-api-sli-apiversioning.md) — `Trellis.ServiceLevelIndicators.Asp.ApiVersioning`
+
 For ASP.NET Core:
 
 ```shell
-dotnet add package ServiceLevelIndicators.Asp
+dotnet add package Trellis.ServiceLevelIndicators.Asp
 ```
 
 For API Versioning support:
 
 ```shell
-dotnet add package ServiceLevelIndicators.Asp.ApiVersioning
+dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
 ```
 
 ## Usage for ASP.NET Core MVC
@@ -205,17 +211,20 @@ async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 
 ### Cardinality Guidance
 
-Metric dimensions should stay bounded. `CustomerResourceId` and values captured with `[Measure]` are useful when they represent a stable tenant, customer group, plan, environment, or region, but they become expensive if you feed them raw per-user or highly variable values.
+All three required tags — `Operation`, `LocationId`, and `CustomerResourceId` — must be **low-cardinality and bounded**. The library bounds `Operation` for you via the route-template resolver and the `<unrouted>` sentinel; you are responsible for `LocationId` (set once from configuration) and `CustomerResourceId` (stable tenant / subscription / resource identifier).
 
-Prefer values with a controlled set of outcomes. Avoid using email addresses, request IDs, timestamps, or unconstrained free text unless your metrics backend is explicitly designed for high-cardinality telemetry.
+The same discipline applies to `[Measure]` parameters and any custom attributes added via `AddAttribute(...)`. Avoid email addresses, request IDs, timestamps, or unconstrained free text unless your metrics backend is explicitly designed for high-cardinality telemetry.
+
+### Disposal
+
+`ServiceLevelIndicator` is a sealed `IDisposable` registered as a singleton; the DI container disposes it (and the `Meter` it created) at host shutdown — no manual cleanup needed. A `Meter` you supply via `ServiceLevelIndicatorOptions.Meter` is owned by you and is never disposed by SLI.
 
 ## ASP.NET Core Customizations
 
 Once the Prerequisites are done, all controllers will emit SLI information.
-The default operation name is in the format &lt;HTTP Method&gt; &lt;Controller&gt;/&lt;Action&gt;.
-eg GET WeatherForecast/Action1
+The default operation name is the HTTP method plus the route template (placeholders such as `{id}` are preserved). The full resolution order is described under **Trellis.ServiceLevelIndicators.Asp** above.
 
-- To add API versioning as a dimension use package `ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersion`.
+- To add API versioning as a dimension use package `Trellis.ServiceLevelIndicators.Asp.ApiVersioning` and enrich the metrics with `AddApiVersion`.
 
    Example:
 
@@ -254,10 +263,15 @@ eg GET WeatherForecast/Action1
     .AddMvc()
     .Enrich(context =>
     {
-        var upn = context.HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "upn")?.Value ?? "Unknown";
-        context.SetCustomerResourceId(upn); // Set CustomerResourceId
-        context.AddAttribute("UserPrincipalName", upn); // Add custom attribute
+        // Pull a STABLE tenant/subscription identifier — NOT the caller's UPN/user ID.
+        var tenantId = context.HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "tid")?.Value ?? "unknown";
+        context.SetCustomerResourceId(tenantId);
+
+        // Caller identity belongs in a separate (still bounded) dimension, not in CustomerResourceId.
+        var tier = context.HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "tier")?.Value ?? "free";
+        context.AddAttribute("CallerTier", tier);
     });
     ```
 

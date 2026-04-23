@@ -1,6 +1,6 @@
 ﻿namespace SampleMinimalApiSli;
 
-using ServiceLevelIndicators;
+using Trellis.ServiceLevelIndicators;
 
 /// <summary>
 /// User API routes

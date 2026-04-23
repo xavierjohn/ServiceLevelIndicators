@@ -6,13 +6,15 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+    <PackageReference Include="Asp.Versioning.OpenApi" />
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Scalar.AspNetCore.Microsoft" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ServiceLevelIndicators.Asp.ApiVersioning\src\ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
+    <ProjectReference Include="..\..\Trellis.ServiceLevelIndicators.Asp.ApiVersioning\src\Trellis.ServiceLevelIndicators.Asp.ApiVersioning.csproj" />
   </ItemGroup>
 </Project>

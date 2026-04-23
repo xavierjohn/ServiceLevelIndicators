@@ -1,7 +1,7 @@
 ﻿namespace SampleWebApplicationSLI;
 
 using Microsoft.Extensions.Options;
-using ServiceLevelIndicators;
+using Trellis.ServiceLevelIndicators;
 
 internal sealed class ConfigureServiceLevelIndicatorOptions : IConfigureOptions<ServiceLevelIndicatorOptions>
 {
