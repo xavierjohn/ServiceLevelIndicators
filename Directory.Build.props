@@ -17,6 +17,7 @@
     <RepositoryUrl>https://github.com/xavierjohn/ServiceLevelIndicators.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/xavierjohn/ServiceLevelIndicators</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
 	<PropertyGroup  Label="Build">
@@ -30,6 +31,10 @@
 		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
 		<PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
 		<PackageReference Include="DotNet.ReproducibleBuilds" PrivateAssets="All"/>
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(IsTestProject)' == 'false' ">
+		<None Include="$(MSBuildThisFileDirectory)icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<!-- Test projects. -->
