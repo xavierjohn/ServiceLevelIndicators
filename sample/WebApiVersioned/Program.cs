@@ -33,17 +33,20 @@ builder.Services.AddServiceLevelIndicator(options => options.LocationId = Servic
 
 var app = builder.Build();
 
-app.MapOpenApi().WithDocumentPerVersion();
-app.MapScalarApiReference(options =>
+if (app.Environment.IsDevelopment())
 {
-    var descriptions = app.DescribeApiVersions();
-    for (var i = 0; i < descriptions.Count; i++)
+    app.MapOpenApi().WithDocumentPerVersion();
+    app.MapScalarApiReference(options =>
     {
-        var description = descriptions[i];
-        var isDefault = i == descriptions.Count - 1;
-        options.AddDocument(description.GroupName, description.GroupName, isDefault: isDefault);
-    }
-});
+        var descriptions = app.DescribeApiVersions();
+        for (var i = 0; i < descriptions.Count; i++)
+        {
+            var description = descriptions[i];
+            var isDefault = i == descriptions.Count - 1;
+            options.AddDocument(description.GroupName, description.GroupName, isDefault: isDefault);
+        }
+    });
+}
 
 // Random delay.
 Random rnd = new Random();
