@@ -44,7 +44,7 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 
 This makes the library useful when generic HTTP server metrics are not enough, especially for multi-tenant services, APIs with customer-specific objectives, or workloads that need the same SLI model outside HTTP request handling.
 
-**Trellis.ServiceLevelIndicators.Asp.Versioning** adds the following dimensions.
+**Trellis.ServiceLevelIndicators.Asp.ApiVersioning** adds the following dimensions.
 - http.api.version - The API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
 
 

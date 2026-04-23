@@ -30,10 +30,12 @@ Additional attributes can be appended via `MeasuredOperation.AddAttribute(...)` 
 **Declaration**
 
 ```csharp
-public class ServiceLevelIndicator
+public sealed class ServiceLevelIndicator : IDisposable
 ```
 
-Singleton service that creates and records SLI metrics using an OpenTelemetry `Histogram<long>`. Resolved via DI from `IOptions<ServiceLevelIndicatorOptions>`. If the underlying `Meter` is disposed externally, recording becomes a silent no-op per OpenTelemetry convention.
+Singleton service that creates and records SLI metrics using an OpenTelemetry `Histogram<long>`. Resolved via DI from `IOptions<ServiceLevelIndicatorOptions>`.
+
+**Disposal and meter ownership.** `ServiceLevelIndicator` owns the `Meter` only when it created it (i.e. when no `Meter` was supplied in `ServiceLevelIndicatorOptions`). On `Dispose()`, an internally-created meter is disposed; a user-supplied meter is never disposed by this class. Because the type is registered as a singleton via `AddSingleton<ServiceLevelIndicator>()`, the DI container disposes it at host shutdown — applications do not need to call `Dispose()` manually. `Dispose()` is idempotent. After disposal, recording is a silent no-op per OpenTelemetry convention.
 
 **Constants**
 
@@ -60,6 +62,7 @@ Singleton service that creates and records SLI metrics using an OpenTelemetry `H
 | `public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement using the configured default `CustomerResourceId`. |
 | `public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement with an explicit `CustomerResourceId`. |
 | `public MeasuredOperation StartMeasuring(string operation, params KeyValuePair<string, object?>[] attributes)` | `MeasuredOperation` | Starts a stopwatch-backed measurement; dispose the returned object to record the elapsed time as a metric. |
+| `public void Dispose()` | `void` | Disposes the internally-created `Meter` if this instance created it; never disposes a user-supplied meter. Idempotent. Normally invoked by the DI container at host shutdown. |
 | `public static string CreateCustomerResourceId(Guid serviceId)` | `string` | Builds a `ServiceTreeId://<guid>` customer resource id. Throws `ArgumentNullException` if `serviceId` is `Guid.Empty`. |
 | `public static string CreateLocationId(string cloud, string? region = null, string? zone = null)` | `string` | Builds an `ms-loc://az/<cloud>/<region>/<zone>` location id, omitting empty segments. |
 
