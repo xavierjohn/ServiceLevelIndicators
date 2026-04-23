@@ -92,13 +92,17 @@ A meter named `ServiceLevelIndicator` with instrument `operation.duration` (mill
 | Attribute | Description |
 |-----------|-------------|
 | `Operation` | The name of the measured operation |
-| `CustomerResourceId` | Identifies the customer, customer group, or calling service |
+| `CustomerResourceId` | A **stable** identifier for the entity the operation is acting on (tenant, subscription, account, work item, etc.). NOT the caller, NOT a per-request ID, NOT a user/email. |
 | `LocationId` | Where the service is running (e.g. `ms-loc://az/public/westus3`) |
 | `activity.status.code` | `Ok`, `Error`, or `Unset` based on the operation outcome |
 
 ## Cardinality Guidance
 
-Use stable, bounded values for `CustomerResourceId` and custom attributes. Good dimensions include tenant, subscription, environment, region, or product tier. Avoid highly variable values such as request IDs, email addresses, timestamps, or arbitrary user input unless high-cardinality metrics are intentional and supported by your backend.
+All three required tags — `Operation`, `LocationId`, and `CustomerResourceId` — must be **low-cardinality and bounded**. Good values: tenant, subscription, environment, region, product tier, work-item type. Bad values: per-request GUIDs, user IDs / emails, timestamps, free-form user input. The same rule applies to any custom attributes you add via `MeasuredOperation.AddAttribute(...)`.
+
+## Disposal
+
+`ServiceLevelIndicator` is a sealed `IDisposable` and is meant to be registered as a singleton — the DI container disposes it (and the `Meter` it created) at host shutdown, so applications never need to call `Dispose()` manually. If you supply your own `Meter` via `ServiceLevelIndicatorOptions.Meter`, you own its lifetime; SLI will not dispose it.
 
 ## Key APIs
 
