@@ -1,0 +1,21 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Auto-pack API reference markdown and the shared sync .targets for any
+    Trellis.ServiceLevelIndicators package that sets TrellisApiRefName
+    (e.g., <TrellisApiRefName>sli-asp</TrellisApiRefName>).
+
+    Mirrors the same convention used in TrellisFramework so that consumers
+    of any Trellis-family package automatically receive the matching
+    .github/trellis-api-*.md reference file on restore/build.
+  -->
+  <ItemGroup Condition="'$(TrellisApiRefName)' != ''">
+    <None Include="$(MSBuildThisFileDirectory)docs\api_reference\trellis-api-$(TrellisApiRefName).md"
+          Pack="true" PackagePath="trellis\" />
+    <None Include="$(MSBuildThisFileDirectory)build\Trellis.ApiReference.targets"
+          Pack="true" PackagePath="build\$(PackageId).targets" />
+    <None Include="$(MSBuildThisFileDirectory)build\Trellis.ApiReference.targets"
+          Pack="true" PackagePath="buildTransitive\$(PackageId).targets" />
+  </ItemGroup>
+
+</Project>

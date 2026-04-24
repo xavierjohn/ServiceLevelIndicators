@@ -1,0 +1,73 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Shared targets file packed into each Trellis.ServiceLevelIndicators NuGet package.
+    Declares TrellisApiReference items pointing to the API reference markdown
+    shipped in the package's trellis/ folder, and copies them to .github/
+    in the repository root so GitHub Copilot can consume them.
+
+    This file mirrors TrellisFramework/build/Trellis.ApiReference.targets so
+    third-party Trellis-friendly packages (like ServiceLevelIndicators) can
+    participate in the same .github/trellis-api-*.md sync convention without
+    taking a dependency on TrellisFramework.
+
+    Override TrellisApiReferenceRoot to change the destination root.
+    Set TrellisDisableApiReferenceSync=true to disable automatic sync.
+    Manual sync: dotnet build /t:TrellisSyncApiReference
+  -->
+  <ItemGroup>
+    <TrellisApiReference Include="$(MSBuildThisFileDirectory)..\trellis\*.md" />
+  </ItemGroup>
+
+  <!--
+    Locate the repository root by walking up from the project directory
+    looking for a .git directory.  MSBuild's GetDirectoryNameOfFileAbove
+    only matches files, so we walk up explicitly using Exists() which
+    checks both files and directories.
+  -->
+  <PropertyGroup Condition="'$(TrellisApiReferenceRoot)' != ''">
+    <_TrellisRepoRoot>$(TrellisApiReferenceRoot)</_TrellisRepoRoot>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(_TrellisRepoRoot)' == ''">
+    <_Tp0>$(MSBuildProjectDirectory)</_Tp0>
+    <_Tp1>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_Tp0)', '..'))))</_Tp1>
+    <_Tp2>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_Tp1)', '..'))))</_Tp2>
+    <_Tp3>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_Tp2)', '..'))))</_Tp3>
+    <_Tp4>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_Tp3)', '..'))))</_Tp4>
+    <_Tp5>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_Tp4)', '..'))))</_Tp5>
+    <_Tp0Git>$([System.IO.Path]::Combine('$(_Tp0)', '.git'))</_Tp0Git>
+    <_Tp1Git>$([System.IO.Path]::Combine('$(_Tp1)', '.git'))</_Tp1Git>
+    <_Tp2Git>$([System.IO.Path]::Combine('$(_Tp2)', '.git'))</_Tp2Git>
+    <_Tp3Git>$([System.IO.Path]::Combine('$(_Tp3)', '.git'))</_Tp3Git>
+    <_Tp4Git>$([System.IO.Path]::Combine('$(_Tp4)', '.git'))</_Tp4Git>
+    <_Tp5Git>$([System.IO.Path]::Combine('$(_Tp5)', '.git'))</_Tp5Git>
+    <_TrellisRepoRoot Condition="Exists('$(_Tp0Git)')">$(_Tp0)</_TrellisRepoRoot>
+    <_TrellisRepoRoot Condition="'$(_TrellisRepoRoot)' == '' AND Exists('$(_Tp1Git)')">$(_Tp1)</_TrellisRepoRoot>
+    <_TrellisRepoRoot Condition="'$(_TrellisRepoRoot)' == '' AND Exists('$(_Tp2Git)')">$(_Tp2)</_TrellisRepoRoot>
+    <_TrellisRepoRoot Condition="'$(_TrellisRepoRoot)' == '' AND Exists('$(_Tp3Git)')">$(_Tp3)</_TrellisRepoRoot>
+    <_TrellisRepoRoot Condition="'$(_TrellisRepoRoot)' == '' AND Exists('$(_Tp4Git)')">$(_Tp4)</_TrellisRepoRoot>
+    <_TrellisRepoRoot Condition="'$(_TrellisRepoRoot)' == '' AND Exists('$(_Tp5Git)')">$(_Tp5)</_TrellisRepoRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_TrellisApiOutputDir Condition="'$(_TrellisRepoRoot)' != ''">$([MSBuild]::EnsureTrailingSlash($([System.IO.Path]::Combine('$(_TrellisRepoRoot)', '.github'))))</_TrellisApiOutputDir>
+  </PropertyGroup>
+
+  <Target Name="_CopyTrellisApiReference"
+          BeforeTargets="Build"
+          Condition="'@(TrellisApiReference)' != '' AND '$(TrellisDisableApiReferenceSync)' != 'true'">
+    <Warning Text="Trellis API references not copied: .git not found within 6 levels of $(MSBuildProjectDirectory). Set TrellisApiReferenceRoot to override."
+             Condition="'$(_TrellisApiOutputDir)' == ''" />
+    <Copy SourceFiles="@(TrellisApiReference)"
+          DestinationFolder="$(_TrellisApiOutputDir)"
+          SkipUnchangedFiles="true"
+          Condition="'$(_TrellisApiOutputDir)' != ''" />
+  </Target>
+
+  <!--
+    Manual invocation: dotnet build /t:TrellisSyncApiReference
+    Copies API reference files without running a full build.
+  -->
+  <Target Name="TrellisSyncApiReference"
+          DependsOnTargets="_CopyTrellisApiReference" />
+</Project>
