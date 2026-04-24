@@ -2,12 +2,14 @@ namespace Trellis.ServiceLevelIndicators.Asp.Tests;
 
 using System.Diagnostics.Metrics;
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -42,19 +44,25 @@ public class ProblemDetailsInteropTests
             .ToHashSet();
 
         // Subject: a service collection with ONLY AddServiceLevelIndicator().AddMvc().
+        using var meter = new Meter(nameof(ProblemDetailsInteropTests));
         var services = new ServiceCollection();
         services.AddOptions();
         services.AddServiceLevelIndicator(options =>
         {
-            options.Meter = new Meter(nameof(ProblemDetailsInteropTests));
+            options.Meter = meter;
             options.CustomerResourceId = "TestCustomerResourceId";
             options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
         }).AddMvc();
 
-        // The convention must be registered (functional check).
+        // The convention must be registered (functional check). MvcOptions.Conventions is
+        // IList<IApplicationModelConvention>; ASP.NET wraps an IParameterModelConvention in an
+        // internal adapter when added, so we can't pattern-match the stored instance directly.
+        // Instead, inspect each convention's fields for a wrapped ServiceLevelIndicatorConvention.
         using var provider = services.BuildServiceProvider();
         var mvcOptions = provider.GetRequiredService<IOptions<MvcOptions>>().Value;
-        mvcOptions.Conventions.Should().NotBeEmpty("AddMvc() must register a model convention.");
+        mvcOptions.Conventions.Should().Contain(
+            convention => WrapsServiceLevelIndicatorConvention(convention),
+            "AddMvc() must register the ServiceLevelIndicatorConvention.");
 
         // AddMvc() must NOT pull in the rest of MvcCore's service registrations. If any MvcCore-only
         // service types appear in our subject collection, AddMvc() is calling AddMvcCore() under the
@@ -120,6 +128,19 @@ public class ProblemDetailsInteropTests
                     .UseServiceLevelIndicator()
                     .UseEndpoints(endpoints => endpoints.MapControllers())))
             .StartAsync();
+
+    private static bool WrapsServiceLevelIndicatorConvention(IApplicationModelConvention convention)
+    {
+        if ((object)convention is ServiceLevelIndicatorConvention)
+            return true;
+
+        // ASP.NET wraps non-IApplicationModelConvention conventions (e.g. IParameterModelConvention)
+        // in an internal adapter that holds the inner convention in a private field.
+        const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+        return convention.GetType()
+            .GetFields(bindingFlags)
+            .Any(f => f.GetValue(convention) is ServiceLevelIndicatorConvention);
+    }
 }
 
 [ApiController]
