@@ -81,6 +81,13 @@ public class ProblemDetailsInteropTests
             "AddMvc() must register only the convention, not invoke AddMvcCore(). " +
             "Re-invoking the MVC services pipeline interferes with IProblemDetailsService " +
             "polymorphic serialization of HttpValidationProblemDetails.");
+
+        // Targeted regression check: AddMvcCore() registers MVC's IProblemDetailsWriter
+        // (Microsoft.AspNetCore.Http namespace, so missed by the prefix filter above). That writer
+        // is the exact service whose stale registration caused the original 'errors'-stripping bug.
+        services.Should().NotContain(
+            d => d.ServiceType.FullName == "Microsoft.AspNetCore.Http.IProblemDetailsWriter",
+            "AddMvc() must not introduce IProblemDetailsWriter — that's what caused the 422 'errors' dict to be dropped.");
     }
 
     [Fact]
