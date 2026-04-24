@@ -1,5 +1,6 @@
 ﻿namespace Trellis.ServiceLevelIndicators;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -11,7 +12,7 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
     public static IServiceLevelIndicatorBuilder AddMvc(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.AddMvcCore(static options => options.Conventions.Add(new ServiceLevelIndicatorConvention()));
+        builder.Services.Configure<MvcOptions>(static options => options.Conventions.Add(new ServiceLevelIndicatorConvention()));
         return builder;
     }
 
