@@ -22,7 +22,7 @@ public class ServiceLevelIndicatorTests : IDisposable
     public ServiceLevelIndicatorTests(ITestOutputHelper output)
     {
         _output = output;
-        const string MeterName = "ServiceLevelIndicator";
+        const string MeterName = "Trellis.SLI";
         _meter = new(MeterName);
         _meterListener = new()
         {

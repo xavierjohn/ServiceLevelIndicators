@@ -62,7 +62,7 @@ If you configure a custom `Meter` in `ServiceLevelIndicatorOptions`, register th
 
 ## Emitted Metrics
 
-A meter named `ServiceLevelIndicator` with instrument `operation.duration` (milliseconds) is emitted with the following attributes:
+A meter named `Trellis.SLI` with instrument `operation.duration` (milliseconds) is emitted with the following attributes:
 
 | Attribute | Description |
 |-----------|-------------|

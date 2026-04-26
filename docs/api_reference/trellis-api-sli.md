@@ -41,7 +41,7 @@ Singleton service that creates and records SLI metrics using an OpenTelemetry `H
 
 | Name | Type | Value | Description |
 |---|---|---|---|
-| `DefaultMeterName` | `const string` | `"ServiceLevelIndicator"` | Default meter name used when no `Meter` is supplied in options. |
+| `DefaultMeterName` | `const string` | `"Trellis.SLI"` | Default meter name used when no `Meter` is supplied in options. |
 
 **Properties**
 
@@ -53,7 +53,7 @@ Singleton service that creates and records SLI metrics using an OpenTelemetry `H
 
 | Signature | Description |
 |---|---|
-| `public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options)` | Validates `LocationId` and `DurationInstrumentName`, creates the default meter (`"ServiceLevelIndicator"` + assembly version) when one isn't supplied, and creates the `operation.duration` histogram. |
+| `public ServiceLevelIndicator(IOptions<ServiceLevelIndicatorOptions> options)` | Validates `LocationId` and `DurationInstrumentName`, creates the default meter (`"Trellis.SLI"` + assembly version) when one isn't supplied, and creates the `operation.duration` histogram. |
 
 **Methods**
 
@@ -199,7 +199,7 @@ Helpers for wiring the SLI meter into an OpenTelemetry pipeline.
 
 | Signature | Returns | Description |
 |---|---|---|
-| `public static MeterProviderBuilder AddServiceLevelIndicatorInstrumentation(this MeterProviderBuilder builder)` | `MeterProviderBuilder` | Adds the default meter `"ServiceLevelIndicator"`. |
+| `public static MeterProviderBuilder AddServiceLevelIndicatorInstrumentation(this MeterProviderBuilder builder)` | `MeterProviderBuilder` | Adds the default meter `"Trellis.SLI"`. |
 | `public static MeterProviderBuilder AddServiceLevelIndicatorInstrumentation(this MeterProviderBuilder builder, string meterName)` | `MeterProviderBuilder` | Adds a specific meter by name. Used when the application configures `ServiceLevelIndicatorOptions.Meter` with a custom meter. |
 | `public static MeterProviderBuilder AddServiceLevelIndicatorInstrumentation(this MeterProviderBuilder builder, Meter meter)` | `MeterProviderBuilder` | Convenience overload that reads the meter's name. |
 

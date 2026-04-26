@@ -17,7 +17,7 @@ Service level indicators (SLIs) are metrics used to track how a service is perfo
 **Trellis.ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
 The metrics are emitted via the standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter).
 
-By default, a meter named `ServiceLevelIndicator` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
+By default, a meter named `Trellis.SLI` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 - CustomerResourceId - The **target resource** of the operation — the noun in the URL path being read or modified, normalized to a stable identifier (tenant, subscription, account, work item). **NOT** the caller, **NOT** a per-request GUID, **NOT** a user ID or email. Example: for `GET /teams/{teamId}` called by user `xa1` for team `team1`, the value is `"team1"`, not `"xa1"`. See the [ASP.NET Core package README](Trellis.ServiceLevelIndicators.Asp/src/README.md#what-customerresourceid-is--and-what-it-is-not) for the full mental model.
 - LocationId - The location where the service running. eg. Public cloud, West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)

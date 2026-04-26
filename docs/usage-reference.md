@@ -16,7 +16,7 @@ These values are part of the library contract and should be treated as stable un
 
 | Metric element | Value |
 |---|---|
-| Meter name | `ServiceLevelIndicator` by default |
+| Meter name | `Trellis.SLI` by default |
 | Instrument name | `operation.duration` |
 | Unit | milliseconds (`ms`) |
 | Required tag | `CustomerResourceId` |

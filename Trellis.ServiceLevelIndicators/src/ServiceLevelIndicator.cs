@@ -21,7 +21,7 @@ public sealed class ServiceLevelIndicator : IDisposable
     /// <summary>
     /// Default meter name used when no <see cref="Meter"/> is provided in options.
     /// </summary>
-    public const string DefaultMeterName = nameof(ServiceLevelIndicator);
+    public const string DefaultMeterName = "Trellis.SLI";
 
     /// <summary>
     /// Gets the options used to configure this instance.
