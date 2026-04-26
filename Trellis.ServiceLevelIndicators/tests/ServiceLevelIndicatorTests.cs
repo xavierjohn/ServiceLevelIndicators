@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 public class ServiceLevelIndicatorTests : IDisposable
@@ -21,7 +22,7 @@ public class ServiceLevelIndicatorTests : IDisposable
     public ServiceLevelIndicatorTests(ITestOutputHelper output)
     {
         _output = output;
-        const string MeterName = "ServiceLevelIndicator";
+        const string MeterName = "Trellis.SLI";
         _meter = new(MeterName);
         _meterListener = new()
         {
@@ -352,6 +353,218 @@ public class ServiceLevelIndicatorTests : IDisposable
         Action disposeTwice = () => { sli.Dispose(); sli.Dispose(); };
         disposeTwice.Should().NotThrow();
     }
+
+    [Fact]
+    public void AddServiceLevelIndicator_registers_core_services_without_asp_package()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        var builder = services.AddServiceLevelIndicator(options =>
+        {
+            options.LocationId = "TestLocationId";
+            options.CustomerResourceId = "TestResourceId";
+        });
+
+        // Assert
+        builder.Services.Should().BeSameAs(services);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(ServiceLevelIndicator) &&
+            descriptor.Lifetime == ServiceLifetime.Singleton);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IConfigureOptions<ServiceLevelIndicatorOptions>));
+    }
+
+    [Theory]
+    [InlineData("CustomerResourceId")]
+    [InlineData("LocationId")]
+    [InlineData("Operation")]
+    [InlineData("activity.status.code")]
+    public void Record_rejects_reserved_custom_attribute_names(string reservedName)
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        Action act = () => serviceLevelIndicator.Record(
+            "TestOperation",
+            elapsedTime: 1,
+            new KeyValuePair<string, object?>(reservedName, "override"));
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*reserved Service Level Indicator attribute name*");
+    }
+
+    [Fact]
+    public void Record_rejects_duplicate_custom_attribute_names_as_argument_error()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        Action act = () => serviceLevelIndicator.Record(
+            "TestOperation",
+            elapsedTime: 1,
+            new KeyValuePair<string, object?>("CustomAttribute", "first"),
+            new KeyValuePair<string, object?>("CustomAttribute", "second"));
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*added more than once*");
+    }
+
+    [Theory]
+    [InlineData("CustomerResourceId")]
+    [InlineData("LocationId")]
+    [InlineData("Operation")]
+    [InlineData("activity.status.code")]
+    public void StartMeasuring_rejects_reserved_initial_attribute_names(string reservedName)
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        Action act = () => serviceLevelIndicator.StartMeasuring(
+            "TestOperation",
+            new KeyValuePair<string, object?>(reservedName, "override"));
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*reserved Service Level Indicator attribute name*");
+    }
+
+    [Theory]
+    [InlineData("CustomerResourceId")]
+    [InlineData("LocationId")]
+    [InlineData("Operation")]
+    [InlineData("activity.status.code")]
+    public void MeasuredOperation_AddAttribute_rejects_reserved_attribute_names(string reservedName)
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+        using var measuredOperation = serviceLevelIndicator.StartMeasuring("TestOperation");
+
+        // Act
+        Action act = () => measuredOperation.AddAttribute(reservedName, "override");
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*reserved Service Level Indicator attribute name*");
+    }
+
+    [Fact]
+    public void MeasuredOperation_AddAttribute_rejects_blank_attribute_name_with_parameter_name()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+        using var measuredOperation = serviceLevelIndicator.StartMeasuring("TestOperation");
+
+        // Act
+        Action act = () => measuredOperation.AddAttribute(" ", "override");
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .Where(ex => ex.ParamName == "attribute");
+    }
+
+    [Fact]
+    public void StartMeasuring_rejects_duplicate_initial_attribute_names()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        Action act = () => serviceLevelIndicator.StartMeasuring(
+            "TestOperation",
+            new KeyValuePair<string, object?>("CustomAttribute", "first"),
+            new KeyValuePair<string, object?>("CustomAttribute", "second"));
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*added more than once*");
+    }
+
+    [Fact]
+    public void MeasuredOperation_AddAttribute_rejects_duplicate_attribute_names()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+        using var measuredOperation = serviceLevelIndicator.StartMeasuring("TestOperation");
+        measuredOperation.AddAttribute("CustomAttribute", "first");
+
+        // Act
+        Action act = () => measuredOperation.AddAttribute("CustomAttribute", "second");
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*added more than once*");
+    }
+
+    [Fact]
+    public void Constructor_rejects_activity_status_attribute_name_that_collides_with_core_tags()
+    {
+        // Arrange
+        var options = new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = "TestResourceId",
+            LocationId = "TestLocationId",
+            Meter = _meter,
+            ActivityStatusCodeAttributeName = "Operation"
+        };
+
+        // Act
+        Action act = () =>
+        {
+            using var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
+        };
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*reserved Service Level Indicator attribute name*");
+    }
+
+    [Fact]
+    public void MeasuredOperation_Dispose_rejects_duplicate_attribute_names_added_by_direct_list_mutation()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+        var measuredOperation = serviceLevelIndicator.StartMeasuring("TestOperation");
+        measuredOperation.Attributes.Add(new KeyValuePair<string, object?>("CustomAttribute", "first"));
+        measuredOperation.Attributes.Add(new KeyValuePair<string, object?>("CustomAttribute", "second"));
+
+        // Act
+        Action act = measuredOperation.Dispose;
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*added more than once*");
+    }
+
+    [Fact]
+    public void MeasuredOperation_Dispose_rejects_blank_attribute_names_added_by_direct_list_mutation()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+        var measuredOperation = serviceLevelIndicator.StartMeasuring("TestOperation");
+        measuredOperation.Attributes.Add(new KeyValuePair<string, object?>(" ", "invalid"));
+
+        // Act
+        Action act = measuredOperation.Dispose;
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*attribute names cannot be null, empty, or whitespace*");
+    }
+
+    private ServiceLevelIndicator CreateServiceLevelIndicator() =>
+        new(Options.Create(new ServiceLevelIndicatorOptions
+        {
+            CustomerResourceId = "TestResourceId",
+            LocationId = "TestLocationId",
+            Meter = _meter
+        }));
 
     private void ValidateMetrics(int elapsedTime, string instrumentName = "operation.duration", int? approx = null)
     {

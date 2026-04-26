@@ -13,6 +13,7 @@ public class MeasuredOperation : IDisposable
     private bool _disposed;
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly Stopwatch _stopWatch;
+    private readonly HashSet<string> _attributeNames;
     private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
     private readonly object _disposeLock = new();
 
@@ -25,7 +26,15 @@ public class MeasuredOperation : IDisposable
         _serviceLevelIndicator = serviceLevelIndicator;
         Operation = operation;
         CustomerResourceId = customerResourceId;
-        Attributes = [.. attributes];
+        Attributes = new List<KeyValuePair<string, object?>>(attributes.Length);
+        _attributeNames = new HashSet<string>(attributes.Length, StringComparer.Ordinal);
+        for (var i = 0; i < attributes.Length; i++)
+        {
+            _serviceLevelIndicator.ValidateAttributeName(attributes[i].Key);
+            ValidateUniqueAttributeName(attributes[i].Key);
+            Attributes.Add(attributes[i]);
+        }
+
         _stopWatch = Stopwatch.StartNew();
     }
 
@@ -55,7 +64,22 @@ public class MeasuredOperation : IDisposable
     /// </summary>
     /// <param name="attribute">The attribute name.</param>
     /// <param name="value">The attribute value.</param>
-    public void AddAttribute(string attribute, object? value) => Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
+    public void AddAttribute(string attribute, object? value)
+    {
+        _serviceLevelIndicator.ValidateAttributeName(attribute);
+        ValidateUniqueAttributeName(attribute);
+        Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
+    }
+
+    private void ValidateUniqueAttributeName(string attribute)
+    {
+        if (!_attributeNames.Add(attribute))
+        {
+            throw new ArgumentException(
+                $"Service Level Indicator attribute '{attribute}' was added more than once. Metric attribute names must be unique.",
+                nameof(attribute));
+        }
+    }
 
     protected virtual void Dispose(bool disposing)
     {
@@ -68,7 +92,7 @@ public class MeasuredOperation : IDisposable
                     _stopWatch.Stop();
                     var elapsedTime = _stopWatch.ElapsedMilliseconds;
                     Attributes.Add(new KeyValuePair<string, object?>(_serviceLevelIndicator.ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName, _activityStatusCode.ToString()));
-                    _serviceLevelIndicator.Record(Operation, CustomerResourceId, elapsedTime, Attributes.ToArray());
+                    _serviceLevelIndicator.RecordMeasurement(Operation, CustomerResourceId, elapsedTime, Attributes.ToArray());
                 }
 
                 _disposed = true;

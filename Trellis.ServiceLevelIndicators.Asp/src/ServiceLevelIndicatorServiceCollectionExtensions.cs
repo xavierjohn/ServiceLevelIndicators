@@ -39,8 +39,3 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
         return builder;
     }
 }
-
-internal sealed class ServiceLevelIndicatorBuilder(IServiceCollection services) : IServiceLevelIndicatorBuilder
-{
-    public IServiceCollection Services => services;
-}

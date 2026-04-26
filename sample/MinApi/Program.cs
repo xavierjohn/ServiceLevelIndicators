@@ -54,8 +54,14 @@ app.MapGet(
    .AddServiceLevelIndicator();
 
 app.MapGet(
-        "/background/{wait_seconds}",
-        ([Measure] int wait_seconds) => Task.Delay(TimeSpan.FromSeconds(wait_seconds)))
+        "/background/{workType:regex(^(Quick|Standard|Slow)$)}",
+        ([Measure("WorkType")] string workType) => Task.Delay(workType switch
+        {
+            nameof(WorkType.Quick) => TimeSpan.FromMilliseconds(250),
+            nameof(WorkType.Standard) => TimeSpan.FromSeconds(1),
+            nameof(WorkType.Slow) => TimeSpan.FromSeconds(2),
+            _ => TimeSpan.FromSeconds(1)
+        }))
    .AddServiceLevelIndicator("background_work");
 
 app.UseUserRoute();
@@ -68,4 +74,11 @@ app.Run();
 internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
+
+internal enum WorkType
+{
+    Quick,
+    Standard,
+    Slow
 }

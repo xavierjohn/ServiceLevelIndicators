@@ -43,26 +43,22 @@ builder.Services.AddOpenTelemetry()
         metrics.AddOtlpExporter();
     });
 
-builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
+builder.Services.AddServiceLevelIndicator(options =>
 {
     options.Meter = sliMeter;
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "my-customer";
 });
-
-builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 ### 2. Configure options
 
 ```csharp
-builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
+builder.Services.AddServiceLevelIndicator(options =>
 {
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "my-customer";
 });
-
-builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 ### 3. Measure operations
@@ -85,9 +81,11 @@ var attribute = new KeyValuePair<string, object?>("Event", "OrderCreated");
 using var op = sli.StartMeasuring("ProcessOrder", attribute);
 ```
 
+Custom attribute names must be unique and must not reuse SLI-reserved tags such as `CustomerResourceId`, `LocationId`, `Operation`, or `activity.status.code`.
+
 ## Emitted Metrics
 
-A meter named `ServiceLevelIndicator` with instrument `operation.duration` (milliseconds) is emitted with the following attributes:
+A meter named `Trellis.SLI` with instrument `operation.duration` (milliseconds) is emitted with the following attributes:
 
 | Attribute | Description |
 |-----------|-------------|

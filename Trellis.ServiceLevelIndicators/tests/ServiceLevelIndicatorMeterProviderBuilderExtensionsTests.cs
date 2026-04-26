@@ -15,6 +15,7 @@ public class ServiceLevelIndicatorMeterProviderBuilderExtensionsTests
         var actual = builder.AddServiceLevelIndicatorInstrumentation();
 
         actual.Should().BeSameAs(builder);
+        ServiceLevelIndicator.DefaultMeterName.Should().Be("Trellis.SLI");
     }
 
     [Fact]

@@ -275,7 +275,7 @@ public static class HttpContextExtensions
 The `ServiceLevelIndicatorMiddleware` (registered by `UseServiceLevelIndicator()`):
 
 1. Reads the resolved endpoint metadata. Skips emission when neither `AutomaticallyEmitted == true` nor a `ServiceLevelIndicatorAttribute` is present.
-2. Resolves the operation name (custom override via attribute, else route template, else `"<METHOD> <path>"`).
+2. Resolves the operation name (custom override via attribute, else route template, else `"<METHOD> <unrouted>"`).
 3. Collects `MeasureMetadata` route values into measurement attributes.
 4. Starts a `MeasuredOperation` and attaches an `IServiceLevelIndicatorFeature` to `HttpContext.Features`.
 5. Optionally overrides the customer id from a `CustomerResourceIdMetadata`-tagged route value.
@@ -298,6 +298,8 @@ builder.Services.AddOpenTelemetry()
 builder.Services.AddServiceLevelIndicator(o =>
 {
     o.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
+    // Automatic emission is enabled by default. Set AutomaticallyEmitted = false
+    // to opt in endpoint-by-endpoint with AddServiceLevelIndicator().
 })
 .AddMvc()
 .AddHttpMethod();
@@ -322,6 +324,7 @@ public class WidgetsController : ControllerBase
 ## Typical usage (Minimal API)
 
 ```csharp
+// Required only when AutomaticallyEmitted = false.
 app.MapGet("/subs/{subscriptionId}/widgets/{widgetId}",
     ([CustomerResourceId] Guid subscriptionId, [Measure("widget.id")] Guid widgetId) => Results.Ok())
    .AddServiceLevelIndicator();

@@ -17,7 +17,7 @@ Service level indicators (SLIs) are metrics used to track how a service is perfo
 **Trellis.ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
 The metrics are emitted via the standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter).
 
-By default, a meter named `ServiceLevelIndicator` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
+By default, a meter named `Trellis.SLI` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 - CustomerResourceId - The **target resource** of the operation — the noun in the URL path being read or modified, normalized to a stable identifier (tenant, subscription, account, work item). **NOT** the caller, **NOT** a per-request GUID, **NOT** a user ID or email. Example: for `GET /teams/{teamId}` called by user `xa1` for team `team1`, the value is `"team1"`, not `"xa1"`. See the [ASP.NET Core package README](Trellis.ServiceLevelIndicators.Asp/src/README.md#what-customerresourceid-is--and-what-it-is-not) for the full mental model.
 - LocationId - The location where the service running. eg. Public cloud, West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
@@ -130,7 +130,7 @@ dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
     });
     ```
 
-2. Add ServiceLevelIndicator into the dependency injection. `AddMvc()` is required for overrides present in SLI attributes to take effect.
+2. Add ServiceLevelIndicator into the dependency injection. `AddMvc()` is required for overrides present in MVC SLI attributes to take effect.
 
    Example:
 
@@ -164,7 +164,7 @@ dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
         });
     ```
 
-2. Add ServiceLevelIndicator into the dependency injection.
+2. Add ServiceLevelIndicator into the dependency injection. By default, SLI is emitted for every routed endpoint when the middleware is present. Set `AutomaticallyEmitted = false` if you want Minimal APIs to opt in endpoint-by-endpoint with `.AddServiceLevelIndicator()`.
 
    Example:
 
@@ -183,7 +183,7 @@ dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
     app.UseServiceLevelIndicator();
     ```
 
-4. To each API route mapping, add `AddServiceLevelIndicator()`.
+4. Optional: when `AutomaticallyEmitted = false`, add `AddServiceLevelIndicator()` to each route mapping that should emit SLI metrics.
 
    Example:
 
@@ -288,8 +288,8 @@ The default operation name is the HTTP method plus the route template (placehold
 - To set the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
 
     ```csharp
-    [HttpGet("get-by-zip-code/{zipCode}")]
-    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode)
+    [HttpGet("teams/{teamId}")]
+    public IEnumerable<WeatherForecast> GetByTeam([CustomerResourceId] string teamId)
        => GetWeather();
     ```
 

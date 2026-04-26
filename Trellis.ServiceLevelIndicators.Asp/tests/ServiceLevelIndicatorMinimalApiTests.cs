@@ -175,6 +175,30 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
     }
 
     [Fact]
+    public async Task SLI_Metrics_is_automatically_emitted_for_minimal_api_when_automatic_emission_is_enabled()
+    {
+        // Arrange
+        using var host = await CreateMinimalApiHostWithAutomaticEmission();
+
+        // Act
+        var response = await host.GetTestClient().GetAsync("auto-sli", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET /auto-sli"),
+            new("activity.status.code", "Ok"),
+            new("http.response.status.code", 200),
+        };
+
+        ValidateMetrics(expectedTags);
+    }
+
+    [Fact]
     public async Task SLI_Metrics_is_emitted_with_enrichment_for_minimal_api()
     {
         // Arrange
@@ -270,6 +294,34 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
                     app.UseEndpoints(endpoints =>
                         endpoints.MapGet("/hello", () => "Hello World!")
                             .AddServiceLevelIndicator());
+                }))
+            .StartAsync();
+
+    private async Task<IHost> CreateMinimalApiHostWithAutomaticEmission() =>
+        await new HostBuilder()
+            .ConfigureWebHost(webBuilder => webBuilder
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.AddRouting();
+                    services.AddServiceLevelIndicator(options =>
+                    {
+                        options.Meter = _meter;
+                        options.CustomerResourceId = "TestCustomerResourceId";
+                        options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "West US 3");
+                    });
+                })
+                .Configure(app =>
+                {
+                    app.UseRouting();
+                    app.UseServiceLevelIndicator();
+                    app.Use(async (context, next) =>
+                    {
+                        await Task.Delay(MillisecondsDelay);
+                        await next(context);
+                    });
+                    app.UseEndpoints(endpoints =>
+                        endpoints.MapGet("/auto-sli", () => "Auto SLI"));
                 }))
             .StartAsync();
 

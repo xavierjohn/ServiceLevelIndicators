@@ -21,7 +21,7 @@ public sealed class ServiceLevelIndicator : IDisposable
     /// <summary>
     /// Default meter name used when no <see cref="Meter"/> is provided in options.
     /// </summary>
-    public const string DefaultMeterName = nameof(ServiceLevelIndicator);
+    public const string DefaultMeterName = "Trellis.SLI";
 
     /// <summary>
     /// Gets the options used to configure this instance.
@@ -39,6 +39,7 @@ public sealed class ServiceLevelIndicator : IDisposable
 
         ArgumentException.ThrowIfNullOrWhiteSpace(ServiceLevelIndicatorOptions.LocationId, nameof(ServiceLevelIndicatorOptions.LocationId));
         ArgumentException.ThrowIfNullOrWhiteSpace(ServiceLevelIndicatorOptions.DurationInstrumentName, nameof(ServiceLevelIndicatorOptions.DurationInstrumentName));
+        ValidateActivityStatusCodeAttributeName();
 
         if (ServiceLevelIndicatorOptions.Meter == null)
         {
@@ -87,6 +88,15 @@ public sealed class ServiceLevelIndicator : IDisposable
     /// <param name="attributes">Additional measurement attributes.</param>
     public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
     {
+        ValidateAttributes(attributes);
+        ValidateDuplicateArgumentAttributeNames(attributes);
+        RecordMeasurement(operation, customerResourceId, elapsedTime, attributes);
+    }
+
+    internal void RecordMeasurement(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
+    {
+        ValidateRecordAttributeNames(attributes);
+
         var tagList = new TagList
         {
             { "CustomerResourceId", customerResourceId },
@@ -107,6 +117,83 @@ public sealed class ServiceLevelIndicator : IDisposable
     /// <param name="attributes">Additional measurement attributes.</param>
     /// <returns>A <see cref="MeasuredOperation"/> that records the metric on disposal.</returns>
     public MeasuredOperation StartMeasuring(string operation, params KeyValuePair<string, object?>[] attributes) => new(this, operation, attributes);
+
+    internal void ValidateAttributeName(string attribute)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(attribute, nameof(attribute));
+
+        if (attribute is "CustomerResourceId" or "LocationId" or "Operation" ||
+            attribute == ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName)
+        {
+            throw new ArgumentException(
+                $"'{attribute}' is a reserved Service Level Indicator attribute name and cannot be used as a custom metric attribute.",
+                nameof(attribute));
+        }
+    }
+
+    private void ValidateActivityStatusCodeAttributeName()
+    {
+        var attribute = ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName;
+        ArgumentException.ThrowIfNullOrWhiteSpace(attribute, nameof(ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName));
+
+        if (attribute is "CustomerResourceId" or "LocationId" or "Operation")
+        {
+            throw new ArgumentException(
+                $"'{attribute}' is a reserved Service Level Indicator attribute name and cannot be used as the activity status code attribute name.",
+                nameof(ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName));
+        }
+    }
+
+    private void ValidateAttributes(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
+    {
+        for (var i = 0; i < attributes.Length; i++)
+            ValidateAttributeName(attributes[i].Key);
+    }
+
+    private static void ValidateDuplicateArgumentAttributeNames(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
+    {
+        HashSet<string>? names = null;
+
+        for (var i = 0; i < attributes.Length; i++)
+        {
+            names ??= new HashSet<string>(attributes.Length, StringComparer.Ordinal);
+
+            if (!names.Add(attributes[i].Key))
+            {
+                throw new ArgumentException(
+                    $"Service Level Indicator attribute '{attributes[i].Key}' was added more than once. Metric attribute names must be unique.",
+                    nameof(attributes));
+            }
+        }
+    }
+
+    private static void ValidateRecordAttributeNames(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
+    {
+        HashSet<string>? names = null;
+
+        for (var i = 0; i < attributes.Length; i++)
+        {
+            if (string.IsNullOrWhiteSpace(attributes[i].Key))
+            {
+                throw new ArgumentException(
+                    "Service Level Indicator attribute names cannot be null, empty, or whitespace.",
+                    nameof(attributes));
+            }
+
+            names ??= new HashSet<string>(attributes.Length + 3, StringComparer.Ordinal)
+            {
+                "CustomerResourceId",
+                "LocationId",
+                "Operation"
+            };
+
+            if (!names.Add(attributes[i].Key))
+            {
+                throw new InvalidOperationException(
+                    $"Service Level Indicator attribute '{attributes[i].Key}' was added more than once. Metric attribute names must be unique.");
+            }
+        }
+    }
 
     /// <summary>
     /// Creates a customer resource identifier from a Service Tree GUID.
