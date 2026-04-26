@@ -1,15 +1,18 @@
-﻿namespace Trellis.ServiceLevelIndicators;
+namespace Trellis.ServiceLevelIndicators;
 
 using Microsoft.Extensions.DependencyInjection;
 
-public static class IServiceCollectionExtensions
+/// <summary>
+/// Extension methods for registering Service Level Indicator services.
+/// </summary>
+public static class ServiceLevelIndicatorCoreServiceCollectionExtensions
 {
     /// <summary>
-    /// Add service level indicator options.
+    /// Adds Service Level Indicator services and options.
     /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> for adding services.</param>
-    /// <param name="configureOptions">A delegate to configure the <see cref="ServiceLevelIndicatorOptions"/>.</param>
-    /// <returns></returns>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">A delegate to configure <see cref="ServiceLevelIndicatorOptions"/>.</param>
+    /// <returns>A builder for chaining host-specific SLI integrations.</returns>
     public static IServiceLevelIndicatorBuilder AddServiceLevelIndicator(this IServiceCollection services, Action<ServiceLevelIndicatorOptions> configureOptions)
     {
         ArgumentNullException.ThrowIfNull(services);

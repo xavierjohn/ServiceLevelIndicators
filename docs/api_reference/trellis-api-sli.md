@@ -19,7 +19,7 @@ Every measurement emits the following tags on instrument `operation.duration` (m
 | `Operation` | Caller-supplied operation name |
 | `activity.status.code` | Set on `MeasuredOperation` (`Unset` / `Ok` / `Error`) |
 
-Additional attributes can be appended via `MeasuredOperation.AddAttribute(...)` or the `attributes` parameter of `Record`/`StartMeasuring`.
+Additional attributes can be appended via `MeasuredOperation.AddAttribute(...)` or the `attributes` parameter of `Record`/`StartMeasuring`. Custom attributes must not reuse `CustomerResourceId`, `LocationId`, `Operation`, the configured activity-status tag name, or any other attribute name already present on the measurement.
 
 ---
 
@@ -35,7 +35,7 @@ public sealed class ServiceLevelIndicator : IDisposable
 
 Singleton service that creates and records SLI metrics using an OpenTelemetry `Histogram<long>`. Resolved via DI from `IOptions<ServiceLevelIndicatorOptions>`.
 
-**Disposal and meter ownership.** `ServiceLevelIndicator` owns the `Meter` only when it created it (i.e. when no `Meter` was supplied in `ServiceLevelIndicatorOptions`). On `Dispose()`, an internally-created meter is disposed; a user-supplied meter is never disposed by this class. Because the type is registered as a singleton via `AddSingleton<ServiceLevelIndicator>()`, the DI container disposes it at host shutdown — applications do not need to call `Dispose()` manually. `Dispose()` is idempotent. After disposal, recording is a silent no-op per OpenTelemetry convention.
+**Disposal and meter ownership.** `ServiceLevelIndicator` owns the `Meter` only when it created it (i.e. when no `Meter` was supplied in `ServiceLevelIndicatorOptions`). On `Dispose()`, an internally-created meter is disposed; a user-supplied meter is never disposed by this class. Because `AddServiceLevelIndicator(...)` registers the type as a singleton, the DI container disposes it at host shutdown — applications do not need to call `Dispose()` manually. `Dispose()` is idempotent. After disposal, recording is a silent no-op per OpenTelemetry convention.
 
 **Constants**
 
@@ -86,8 +86,22 @@ Bound via `IOptions<ServiceLevelIndicatorOptions>`. `LocationId` and `DurationIn
 | `CustomerResourceId` | `string` | `"Unset"` | Default `CustomerResourceId` tag value (per-tenant / per-subscription identifier). Can be overridden on each call. |
 | `LocationId` | `string` | `""` | **Required.** Where the service is running (e.g. `ms-loc://az/public/westus3`). Must be non-empty. |
 | `DurationInstrumentName` | `string` | `"operation.duration"` | **Required.** Histogram instrument name. Must be non-empty. |
-| `ActivityStatusCodeAttributeName` | `string` | `"activity.status.code"` | Tag name used to emit the operation's `ActivityStatusCode`. |
+| `ActivityStatusCodeAttributeName` | `string` | `"activity.status.code"` | Tag name used to emit the operation's `ActivityStatusCode`. Must be non-empty and cannot be `CustomerResourceId`, `LocationId`, or `Operation`. |
 | `AutomaticallyEmitted` | `bool` | `true` | When `false`, only operations explicitly opted-in (e.g. via the `[ServiceLevelIndicator]` attribute in the ASP package) emit metrics. |
+
+---
+
+### DI registration
+
+**Declaration**
+
+```csharp
+public static IServiceLevelIndicatorBuilder AddServiceLevelIndicator(
+    this IServiceCollection services,
+    Action<ServiceLevelIndicatorOptions> configureOptions)
+```
+
+Registers `ServiceLevelIndicator` as a singleton and configures `ServiceLevelIndicatorOptions`. This lives in the core package, so console apps, workers, and shared libraries do not need to reference the ASP package just to use DI. The returned `IServiceLevelIndicatorBuilder` exposes `Services` and is the chaining point for host packages such as `.AddMvc()`, `.AddHttpMethod()`, and `.AddApiVersion()`.
 
 ---
 
@@ -121,7 +135,7 @@ Represents an in-flight measurement. The stopwatch starts in the constructor; di
 | Signature | Returns | Description |
 |---|---|---|
 | `public void SetActivityStatusCode(ActivityStatusCode code)` | `void` | Sets the `ActivityStatusCode` recorded with the measurement. Default is `Unset`. |
-| `public void AddAttribute(string attribute, object? value)` | `void` | Appends a custom attribute to be emitted with the measurement. |
+| `public void AddAttribute(string attribute, object? value)` | `void` | Appends a custom attribute to be emitted with the measurement. Throws if the name collides with a reserved SLI tag. |
 | `public void Dispose()` | `void` | Stops the stopwatch and records the metric. Idempotent. |
 | `protected virtual void Dispose(bool disposing)` | `void` | Standard dispose pattern hook. |
 
@@ -201,8 +215,7 @@ builder.Services.AddOpenTelemetry()
         .AddServiceLevelIndicatorInstrumentation()
         .AddOtlpExporter());
 
-builder.Services.AddSingleton<ServiceLevelIndicator>();
-builder.Services.Configure<ServiceLevelIndicatorOptions>(o =>
+builder.Services.AddServiceLevelIndicator(o =>
 {
     o.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
 });

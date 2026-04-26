@@ -50,7 +50,8 @@ builder.Services.AddServiceLevelIndicator(options =>
 
 app.UseServiceLevelIndicator();
 
-// Mark individual endpoints
+// Automatic emission is enabled by default. If you set
+// options.AutomaticallyEmitted = false, mark individual endpoints:
 app.MapGet("/hello", () => "Hello World!")
     .AddServiceLevelIndicator();
 ```
@@ -150,8 +151,8 @@ public IActionResult Get() => Ok();
 ### Set CustomerResourceId from a route parameter
 
 ```csharp
-[HttpGet("get-by-zip-code/{zipCode}")]
-public IActionResult GetByZipcode([CustomerResourceId] string zipCode) => Ok();
+[HttpGet("teams/{teamId}")]
+public IActionResult GetTeam([CustomerResourceId] string teamId) => Ok();
 ```
 
 Or imperatively:

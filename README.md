@@ -130,7 +130,7 @@ dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
     });
     ```
 
-2. Add ServiceLevelIndicator into the dependency injection. `AddMvc()` is required for overrides present in SLI attributes to take effect.
+2. Add ServiceLevelIndicator into the dependency injection. `AddMvc()` is required for overrides present in MVC SLI attributes to take effect.
 
    Example:
 
@@ -164,7 +164,7 @@ dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
         });
     ```
 
-2. Add ServiceLevelIndicator into the dependency injection.
+2. Add ServiceLevelIndicator into the dependency injection. By default, SLI is emitted for every routed endpoint when the middleware is present. Set `AutomaticallyEmitted = false` if you want Minimal APIs to opt in endpoint-by-endpoint with `.AddServiceLevelIndicator()`.
 
    Example:
 
@@ -183,7 +183,7 @@ dotnet add package Trellis.ServiceLevelIndicators.Asp.ApiVersioning
     app.UseServiceLevelIndicator();
     ```
 
-4. To each API route mapping, add `AddServiceLevelIndicator()`.
+4. Optional: when `AutomaticallyEmitted = false`, add `AddServiceLevelIndicator()` to each route mapping that should emit SLI metrics.
 
    Example:
 
@@ -288,8 +288,8 @@ The default operation name is the HTTP method plus the route template (placehold
 - To set the `CustomerResourceId` within an API method, mark the parameter with the attribute `[CustomerResourceId]`
 
     ```csharp
-    [HttpGet("get-by-zip-code/{zipCode}")]
-    public IEnumerable<WeatherForecast> GetByZipcode([CustomerResourceId] string zipCode)
+    [HttpGet("teams/{teamId}")]
+    public IEnumerable<WeatherForecast> GetByTeam([CustomerResourceId] string teamId)
        => GetWeather();
     ```
 

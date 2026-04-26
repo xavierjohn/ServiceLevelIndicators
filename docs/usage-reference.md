@@ -48,13 +48,11 @@ builder.Services.AddOpenTelemetry()
 Register the service:
 
 ```csharp
-builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
+builder.Services.AddServiceLevelIndicator(options =>
 {
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "tenant-a";
 });
-
-builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 Measure work:
@@ -91,14 +89,12 @@ builder.Services.AddOpenTelemetry()
         metrics.AddOtlpExporter();
     });
 
-builder.Services.Configure<ServiceLevelIndicatorOptions>(options =>
+builder.Services.AddServiceLevelIndicator(options =>
 {
     options.Meter = sliMeter;
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
     options.CustomerResourceId = "tenant-a";
 });
-
-builder.Services.AddSingleton<ServiceLevelIndicator>();
 ```
 
 Available registration overloads:
@@ -280,6 +276,7 @@ Avoid values that can explode cardinality unless your backend is designed for th
 3. Forgetting `AddMvc()` when relying on MVC conventions and attribute-based overrides.
 4. Forgetting `.AddServiceLevelIndicator()` on Minimal API endpoints when `AutomaticallyEmitted` is `false`.
 5. Renaming `CustomerResourceId` or `LocationId` even though downstream systems depend on those exact names.
+6. Reusing reserved tag names such as `CustomerResourceId`, `LocationId`, `Operation`, or `activity.status.code` as custom attributes.
 
 ## Public API Cheat Sheet
 

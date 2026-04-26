@@ -1,4 +1,4 @@
-﻿namespace Trellis.ServiceLevelIndicators;
+namespace Trellis.ServiceLevelIndicators;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,4 +11,9 @@ public interface IServiceLevelIndicatorBuilder
     /// Gets the <see cref="IServiceCollection"/> where SLI services are registered.
     /// </summary>
     IServiceCollection Services { get; }
+}
+
+internal sealed class ServiceLevelIndicatorBuilder(IServiceCollection services) : IServiceLevelIndicatorBuilder
+{
+    public IServiceCollection Services => services;
 }

@@ -27,7 +27,11 @@ builder.Services.AddOpenTelemetry()
         builder.AddOtlpExporter();
     });
 
-builder.Services.AddServiceLevelIndicator(options => options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name))
+builder.Services.AddServiceLevelIndicator(options =>
+{
+    options.CustomerResourceId = "SampleVersionedApiResource";
+    options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
+})
 .AddMvc()
 .AddApiVersion();
 

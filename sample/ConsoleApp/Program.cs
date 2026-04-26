@@ -21,9 +21,9 @@ ResourceBuilder resourceBuilder = ResourceBuilder
     .AddService(ProgramName, serviceVersion: version, serviceInstanceId: Environment.MachineName);
 
 ServiceCollection services = new();
-services.Configure<ServiceLevelIndicatorOptions>(r =>
+services.AddServiceLevelIndicator(r =>
 {
-    r.CustomerResourceId = ProgramName; // Customer ID if this work is done on behalf of a customer.
+    r.CustomerResourceId = ProgramName; // Stable resource this background workload is measuring.
     r.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
 });
 
@@ -32,8 +32,7 @@ services
         {
             options.SetResourceBuilder(resourceBuilder);
             options.AddConsoleExporter();
-        }))
-    .AddSingleton<ServiceLevelIndicator>();
+        }));
 
 var serviceProvider = services.BuildServiceProvider();
 
