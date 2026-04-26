@@ -89,6 +89,7 @@ public sealed class ServiceLevelIndicator : IDisposable
     public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
     {
         ValidateAttributes(attributes);
+        ValidateDuplicateArgumentAttributeNames(attributes);
         RecordMeasurement(operation, customerResourceId, elapsedTime, attributes);
     }
 
@@ -147,6 +148,23 @@ public sealed class ServiceLevelIndicator : IDisposable
     {
         for (var i = 0; i < attributes.Length; i++)
             ValidateAttributeName(attributes[i].Key);
+    }
+
+    private static void ValidateDuplicateArgumentAttributeNames(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
+    {
+        HashSet<string>? names = null;
+
+        for (var i = 0; i < attributes.Length; i++)
+        {
+            names ??= new HashSet<string>(attributes.Length, StringComparer.Ordinal);
+
+            if (!names.Add(attributes[i].Key))
+            {
+                throw new ArgumentException(
+                    $"Service Level Indicator attribute '{attributes[i].Key}' was added more than once. Metric attribute names must be unique.",
+                    nameof(attributes));
+            }
+        }
     }
 
     private static void ValidateRecordAttributeNames(ReadOnlySpan<KeyValuePair<string, object?>> attributes)

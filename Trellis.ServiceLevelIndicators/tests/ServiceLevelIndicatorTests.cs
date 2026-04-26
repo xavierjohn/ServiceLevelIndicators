@@ -397,6 +397,24 @@ public class ServiceLevelIndicatorTests : IDisposable
             .WithMessage("*reserved Service Level Indicator attribute name*");
     }
 
+    [Fact]
+    public void Record_rejects_duplicate_custom_attribute_names_as_argument_error()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        Action act = () => serviceLevelIndicator.Record(
+            "TestOperation",
+            elapsedTime: 1,
+            new KeyValuePair<string, object?>("CustomAttribute", "first"),
+            new KeyValuePair<string, object?>("CustomAttribute", "second"));
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*added more than once*");
+    }
+
     [Theory]
     [InlineData("CustomerResourceId")]
     [InlineData("LocationId")]
