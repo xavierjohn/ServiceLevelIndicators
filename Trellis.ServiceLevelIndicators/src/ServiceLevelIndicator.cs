@@ -94,7 +94,7 @@ public sealed class ServiceLevelIndicator : IDisposable
 
     internal void RecordMeasurement(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
     {
-        ValidateNoDuplicateAttributeNames(attributes);
+        ValidateRecordAttributeNames(attributes);
 
         var tagList = new TagList
         {
@@ -119,7 +119,7 @@ public sealed class ServiceLevelIndicator : IDisposable
 
     internal void ValidateAttributeName(string attribute)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(attribute);
+        ArgumentException.ThrowIfNullOrWhiteSpace(attribute, nameof(attribute));
 
         if (attribute is "CustomerResourceId" or "LocationId" or "Operation" ||
             attribute == ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName)
@@ -149,12 +149,19 @@ public sealed class ServiceLevelIndicator : IDisposable
             ValidateAttributeName(attributes[i].Key);
     }
 
-    private static void ValidateNoDuplicateAttributeNames(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
+    private static void ValidateRecordAttributeNames(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
     {
         HashSet<string>? names = null;
 
         for (var i = 0; i < attributes.Length; i++)
         {
+            if (string.IsNullOrWhiteSpace(attributes[i].Key))
+            {
+                throw new ArgumentException(
+                    "Service Level Indicator attribute names cannot be null, empty, or whitespace.",
+                    nameof(attributes));
+            }
+
             names ??= new HashSet<string>(attributes.Length + 3, StringComparer.Ordinal)
             {
                 "CustomerResourceId",

@@ -437,6 +437,21 @@ public class ServiceLevelIndicatorTests : IDisposable
     }
 
     [Fact]
+    public void MeasuredOperation_AddAttribute_rejects_blank_attribute_name_with_parameter_name()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+        using var measuredOperation = serviceLevelIndicator.StartMeasuring("TestOperation");
+
+        // Act
+        Action act = () => measuredOperation.AddAttribute(" ", "override");
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .Where(ex => ex.ParamName == "attribute");
+    }
+
+    [Fact]
     public void StartMeasuring_rejects_duplicate_initial_attribute_names()
     {
         // Arrange
@@ -507,6 +522,22 @@ public class ServiceLevelIndicatorTests : IDisposable
         // Assert
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*added more than once*");
+    }
+
+    [Fact]
+    public void MeasuredOperation_Dispose_rejects_blank_attribute_names_added_by_direct_list_mutation()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+        var measuredOperation = serviceLevelIndicator.StartMeasuring("TestOperation");
+        measuredOperation.Attributes.Add(new KeyValuePair<string, object?>(" ", "invalid"));
+
+        // Act
+        Action act = measuredOperation.Dispose;
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*attribute names cannot be null, empty, or whitespace*");
     }
 
     private ServiceLevelIndicator CreateServiceLevelIndicator() =>
