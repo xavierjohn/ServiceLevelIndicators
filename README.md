@@ -17,12 +17,12 @@ Service level indicators (SLIs) are metrics used to track how a service is perfo
 **Trellis.ServiceLevelIndicators** emits operation latency metrics in milliseconds so service owners can monitor performance over time using dimensions that matter to their system.
 The metrics are emitted via the standard [.NET Meter Class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.metrics.meter).
 
-By default, a meter named `Trellis.SLI` with instrument name `operation.duration` is added to the service metrics. The metrics are emitted with the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
+By default, a meter named `Trellis.SLI` with instrument name `operation.duration` is added to the service metrics. If you configure `ServiceLevelIndicatorOptions.Meter`, metrics are emitted from that meter instead. Metrics recorded with `StartMeasuring(...)` emit the following [attributes](https://opentelemetry.io/docs/specs/otel/common/#attribute).
 
 - CustomerResourceId - The **target resource** of the operation — the noun in the URL path being read or modified, normalized to a stable identifier (tenant, subscription, account, work item). **NOT** the caller, **NOT** a per-request GUID, **NOT** a user ID or email. Example: for `GET /teams/{teamId}` called by user `xa1` for team `team1`, the value is `"team1"`, not `"xa1"`. See the [ASP.NET Core package README](Trellis.ServiceLevelIndicators.Asp/src/README.md#what-customerresourceid-is--and-what-it-is-not) for the full mental model.
-- LocationId - The location where the service running. eg. Public cloud, West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
+- LocationId - The location where the service is running, such as public cloud in the West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
 - Operation - The name of the operation.
-- activity.status.code - The activity status code is set based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode).
+- activity.status.code - The activity status code is set on `MeasuredOperation` based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode). Direct `Record(...)` calls emit only `CustomerResourceId`, `LocationId`, `Operation`, and any custom attributes supplied to the call.
 
 **Trellis.ServiceLevelIndicators.Asp** adds the following dimensions.
 
@@ -45,7 +45,7 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 This makes the library useful when generic HTTP server metrics are not enough, especially for multi-tenant services, APIs with customer-specific objectives, or workloads that need the same SLI model outside HTTP request handling.
 
 **Trellis.ServiceLevelIndicators.Asp.ApiVersioning** adds the following dimensions.
-- http.api.version - The API Version when used in conjunction with [API Versioning package](https://github.com/dotnet/aspnet-api-versioning).
+- http.api.version - The resolved API version when used in conjunction with the [API Versioning package](https://github.com/dotnet/aspnet-api-versioning). The value can be a version string, `Neutral`, `Unspecified`, or an empty string for invalid or ambiguous requests.
 
 
 ## NuGet Packages
@@ -199,7 +199,7 @@ You can measure a block of code by wrapping it in a `using` clause of `MeasuredO
 Example:
 
 ```csharp
-async Task MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
+void MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 {
     using var measuredOperation = serviceLevelIndicator.StartMeasuring("OperationName");
     // Do Work.
@@ -352,7 +352,7 @@ To view the metrics locally using the [.NET Aspire Dashboard](https://aspire.dev
    docker run --rm -it -d -p 18888:18888 -p 4317:18889 -e DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true -e DASHBOARD__OTLP__AUTHMODE=Unsecured --name aspire-dashboard mcr.microsoft.com/dotnet/aspire-dashboard:latest
    ```
 2. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the instrument `operation.duration` where `Operation = "GET WeatherForecast"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus2"`, `activity.status.code = Ok`.
+3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the instrument `operation.duration` where `Operation = "GET WeatherForecast"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus3"`, `activity.status.code = Ok`.
 ![SLI](assets/aspire.jpg)
 4. If you run the sample with API Versioning, you will see something similar to the following.
 ![SLI](assets/versioned.jpg)

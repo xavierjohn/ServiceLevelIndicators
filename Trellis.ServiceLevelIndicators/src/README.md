@@ -66,7 +66,7 @@ builder.Services.AddServiceLevelIndicator(options =>
 Wrap any block of code in a `using StartMeasuring` scope:
 
 ```csharp
-async Task DoWork(ServiceLevelIndicator sli)
+void DoWork(ServiceLevelIndicator sli)
 {
     using var op = sli.StartMeasuring("ProcessOrder");
     // Do work...
@@ -85,7 +85,9 @@ Custom attribute names must be unique and must not reuse SLI-reserved tags such 
 
 ## Emitted Metrics
 
-A meter named `Trellis.SLI` with instrument `operation.duration` (milliseconds) is emitted with the following attributes:
+By default, a meter named `Trellis.SLI` emits the `operation.duration` histogram in milliseconds. If you configure `ServiceLevelIndicatorOptions.Meter`, metrics are emitted from that meter instead.
+
+`StartMeasuring(...)` emits the following attributes when the returned `MeasuredOperation` is disposed:
 
 | Attribute | Description |
 |-----------|-------------|
@@ -93,6 +95,8 @@ A meter named `Trellis.SLI` with instrument `operation.duration` (milliseconds) 
 | `CustomerResourceId` | A **stable** identifier for the entity the operation is acting on (tenant, subscription, account, work item, etc.). NOT the caller, NOT a per-request ID, NOT a user/email. |
 | `LocationId` | Where the service is running (e.g. `ms-loc://az/public/westus3`) |
 | `activity.status.code` | `Ok`, `Error`, or `Unset` based on the operation outcome |
+
+Direct `Record(...)` calls emit `CustomerResourceId`, `LocationId`, `Operation`, and any custom attributes supplied to the call; they do not add `activity.status.code`.
 
 ## Cardinality Guidance
 

@@ -10,7 +10,7 @@ See also: [`trellis-api-sli-asp.md`](trellis-api-sli-asp.md), [`trellis-api-sli-
 
 ## Default emitted dimensions
 
-Every measurement emits the following tags on instrument `operation.duration` (ms, `Histogram<long>`):
+`StartMeasuring(...)` scopes emit the following tags on instrument `operation.duration` (ms, `Histogram<long>`) when the returned `MeasuredOperation` is disposed:
 
 | Tag | Source |
 |---|---|
@@ -19,7 +19,7 @@ Every measurement emits the following tags on instrument `operation.duration` (m
 | `Operation` | Caller-supplied operation name |
 | `activity.status.code` | Set on `MeasuredOperation` (`Unset` / `Ok` / `Error`) |
 
-Additional attributes can be appended via `MeasuredOperation.AddAttribute(...)` or the `attributes` parameter of `Record`/`StartMeasuring`. Custom attributes must not reuse `CustomerResourceId`, `LocationId`, `Operation`, the configured activity-status tag name, or any other attribute name already present on the measurement.
+Additional attributes can be appended via `MeasuredOperation.AddAttribute(...)` or the `attributes` parameter of `Record`/`StartMeasuring`. Custom attributes must not reuse `CustomerResourceId`, `LocationId`, `Operation`, the configured activity-status tag name, or any other attribute name already present on the measurement. Direct `Record(...)` calls emit `CustomerResourceId`, `LocationId`, `Operation`, and any supplied custom attributes, but they do not add `activity.status.code`.
 
 ---
 
@@ -59,8 +59,8 @@ Singleton service that creates and records SLI metrics using an OpenTelemetry `H
 
 | Signature | Returns | Description |
 |---|---|---|
-| `public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement using the configured default `CustomerResourceId`. |
-| `public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement with an explicit `CustomerResourceId`. |
+| `public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement using the configured default `CustomerResourceId`. Does not add `activity.status.code`. |
+| `public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement with an explicit `CustomerResourceId`. Does not add `activity.status.code`. |
 | `public MeasuredOperation StartMeasuring(string operation, params KeyValuePair<string, object?>[] attributes)` | `MeasuredOperation` | Starts a stopwatch-backed measurement; dispose the returned object to record the elapsed time as a metric. |
 | `public void Dispose()` | `void` | Disposes the internally-created `Meter` if this instance created it; never disposes a user-supplied meter. Idempotent. Normally invoked by the DI container at host shutdown. |
 | `public static string CreateCustomerResourceId(Guid serviceId)` | `string` | Builds a `ServiceTreeId://<guid>` customer resource id. Throws `ArgumentNullException` if `serviceId` is `Guid.Empty`. |
