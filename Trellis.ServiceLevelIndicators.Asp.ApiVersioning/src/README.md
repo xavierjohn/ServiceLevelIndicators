@@ -43,7 +43,7 @@ This registers `ApiVersionEnrichment`, which reads the resolved API version from
 
 | Attribute | Description |
 |-----------|-------------|
-| `http.api.version` | The resolved API version string (e.g. `1.0`, `2024-01-15`), `Neutral`, or `Unspecified` |
+| `http.api.version` | The single resolved API version string (e.g. `1.0`, `2024-01-15`), `Neutral` for API-version-neutral endpoints, `Unspecified` when no version is requested and no default is assumed, or an empty string for invalid or ambiguous requests |
 
 This attribute is added alongside all the standard attributes emitted by `Trellis.ServiceLevelIndicators.Asp` (`Operation`, `CustomerResourceId`, `LocationId`, `activity.status.code`, `http.response.status.code`).
 

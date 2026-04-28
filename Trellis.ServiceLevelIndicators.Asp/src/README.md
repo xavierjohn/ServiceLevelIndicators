@@ -43,6 +43,8 @@ app.UseServiceLevelIndicator();
 ## Quick Start — Minimal APIs
 
 ```csharp
+// Register with OpenTelemetry as shown in the MVC example above.
+
 builder.Services.AddServiceLevelIndicator(options =>
 {
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
@@ -60,9 +62,13 @@ If you configure a custom `Meter` in `ServiceLevelIndicatorOptions`, register th
 
 `ServiceLevelIndicator` is a sealed `IDisposable` registered as a singleton; the DI container disposes it (and the `Meter` it created) at host shutdown — no manual cleanup needed. A `Meter` you supply via `Options.Meter` is owned by you and is never disposed by SLI.
 
+Place `UseServiceLevelIndicator()` after routing and before endpoint execution so the middleware can read endpoint metadata and measure request handling.
+
 ## Emitted Metrics
 
-A meter named `Trellis.SLI` with instrument `operation.duration` (milliseconds) is emitted with the following attributes:
+By default, a meter named `Trellis.SLI` emits the `operation.duration` histogram in milliseconds. If you configure `ServiceLevelIndicatorOptions.Meter`, ASP.NET Core SLI metrics are emitted from that meter instead.
+
+Measured HTTP requests emit the following attributes:
 
 | Attribute | Description |
 |-----------|-------------|

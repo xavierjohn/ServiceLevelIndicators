@@ -16,7 +16,7 @@ When the middleware is registered, every measured request emits these tags on to
 
 | Tag | Source |
 |---|---|
-| `Operation` | Route template (e.g. `GET Weatherforecast`) — derived from `ControllerActionDescriptor.AttributeRouteInfo.Template` for MVC, or from the route pattern for Minimal APIs. Overridable via `[ServiceLevelIndicator(operation)]` or `AddServiceLevelIndicator("operation")`. |
+| `Operation` | HTTP method plus route template (e.g. `GET WeatherForecast` or `GET /teams/{teamId}`) — derived from `ControllerActionDescriptor.AttributeRouteInfo.Template` for MVC, or from the route pattern for Minimal APIs. Overridable via `[ServiceLevelIndicator(operation)]` or `AddServiceLevelIndicator("operation")`. |
 | `activity.status.code` | `Ok` for HTTP 2xx, `Error` for HTTP 5xx (or unhandled exception), `Unset` otherwise. |
 | `http.response.status.code` | `HttpContext.Response.StatusCode`. |
 | `http.request.method` | Added when `AddHttpMethod()` is called on the SLI builder. |
@@ -43,19 +43,19 @@ Builder returned by `AddServiceLevelIndicator(...)` to chain MVC integration, HT
 
 ---
 
-### IServiceCollectionExtensions
+### ServiceLevelIndicatorCoreServiceCollectionExtensions
 
 **Declaration**
 
 ```csharp
-public static class IServiceCollectionExtensions
+public static class ServiceLevelIndicatorCoreServiceCollectionExtensions
 ```
 
 **Methods**
 
 | Signature | Returns | Description |
 |---|---|---|
-| `public static IServiceLevelIndicatorBuilder AddServiceLevelIndicator(this IServiceCollection services, Action<ServiceLevelIndicatorOptions> configureOptions)` | `IServiceLevelIndicatorBuilder` | Registers the `ServiceLevelIndicator` singleton, configures `ServiceLevelIndicatorOptions`, and returns a builder for additional setup. |
+| `public static IServiceLevelIndicatorBuilder AddServiceLevelIndicator(this IServiceCollection services, Action<ServiceLevelIndicatorOptions> configureOptions)` | `IServiceLevelIndicatorBuilder` | Registers the `ServiceLevelIndicator` singleton, configures `ServiceLevelIndicatorOptions`, and returns a builder for additional setup. This extension is defined by the core package and used by the ASP.NET Core integration. |
 
 ---
 
@@ -92,7 +92,7 @@ public static class ServiceLevelIndicatorApplicationBuilderExtensions
 
 | Signature | Returns | Description |
 |---|---|---|
-| `public static IApplicationBuilder UseServiceLevelIndicator(this IApplicationBuilder app)` | `IApplicationBuilder` | Adds the `ServiceLevelIndicatorMiddleware` to the request pipeline. Place after routing so the endpoint is already resolved. |
+| `public static IApplicationBuilder UseServiceLevelIndicator(this IApplicationBuilder app)` | `IApplicationBuilder` | Adds the `ServiceLevelIndicatorMiddleware` to the request pipeline. Place after routing and before endpoint execution so the endpoint is already resolved and request handling is measured. |
 
 ---
 
