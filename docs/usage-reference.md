@@ -22,7 +22,7 @@ These values are part of the library contract and should be treated as stable un
 | Required tag | `CustomerResourceId` |
 | Required tag | `LocationId` |
 | Standard tag | `Operation` |
-| Standard tag | `activity.status.code` for `StartMeasuring(...)` scopes and ASP.NET Core middleware |
+| Standard tag | `activity.status.code` |
 
 For ASP.NET Core, the library also emits `http.response.status.code` and can optionally emit `http.request.method` and `http.api.version`.
 
@@ -69,7 +69,7 @@ async Task ProcessOrder(ServiceLevelIndicator sli)
 }
 ```
 
-Direct recording is also available when you already know the elapsed time. `Record(...)` emits `CustomerResourceId`, `LocationId`, `Operation`, and any custom attributes supplied to the call; it does not add `activity.status.code`.
+Direct recording is also available when you already know the elapsed time:
 
 ```csharp
 sli.Record("ProcessOrder", elapsedTime: 42);
@@ -213,7 +213,7 @@ builder.Services.AddServiceLevelIndicator(options =>
 .AddApiVersion();
 ```
 
-This adds the `http.api.version` metric dimension when Asp.Versioning is present. The value is the single resolved API version, `Neutral`, `Unspecified`, or an empty string when the requested version is invalid or ambiguous.
+This adds the `http.api.version` metric dimension when Asp.Versioning is present.
 
 ## ASP.NET Runtime Helpers
 
