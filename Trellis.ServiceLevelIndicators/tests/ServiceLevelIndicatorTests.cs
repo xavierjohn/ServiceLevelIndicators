@@ -71,6 +71,7 @@ public class ServiceLevelIndicatorTests : IDisposable
             new("CustomerResourceId", customerResourceId),
             new("LocationId", locationId),
             new("Operation", operation),
+            new("Outcome", "Ignored"),
             new("Attribute1", "Value1"),
             new("Attribute2", "Value2")
         ];
@@ -103,7 +104,7 @@ public class ServiceLevelIndicatorTests : IDisposable
             new("CustomerResourceId", customerResourceId),
             new("LocationId", locationId),
             new("Operation", "SleepWorker"),
-            new("activity.status.code", nameof(System.Diagnostics.ActivityStatusCode.Ok)),
+            new("Outcome", "Success"),
         ];
 
         ValidateMetrics(sleepTime, approx: 100);
@@ -112,8 +113,94 @@ public class ServiceLevelIndicatorTests : IDisposable
         {
             using var measuredOperation = serviceLevelIndicator.StartMeasuring("SleepWorker");
             await Task.Delay(sleepTime);
-            measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+            measuredOperation.SetOutcome(SliOutcome.Success);
         }
+    }
+
+    [Fact]
+    public void Measure_sets_success_outcome_when_action_completes()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        serviceLevelIndicator.Measure("MeasuredAction", () => { });
+
+        // Assert
+        _expectedTags =
+        [
+            new("CustomerResourceId", "TestResourceId"),
+            new("LocationId", "TestLocationId"),
+            new("Operation", "MeasuredAction"),
+            new("Outcome", "Success"),
+        ];
+
+        ValidateMetrics(0, approx: 100);
+    }
+
+    [Fact]
+    public void Measure_sets_failure_outcome_and_rethrows_when_action_throws()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        Action act = () => serviceLevelIndicator.Measure("MeasuredAction", () => throw new InvalidOperationException("Boom"));
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>().WithMessage("Boom");
+        _expectedTags =
+        [
+            new("CustomerResourceId", "TestResourceId"),
+            new("LocationId", "TestLocationId"),
+            new("Operation", "MeasuredAction"),
+            new("Outcome", "Failure"),
+        ];
+
+        ValidateMetrics(0, approx: 100);
+    }
+
+    [Fact]
+    public void Measure_sets_ignored_outcome_and_rethrows_for_cancellation()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        Action act = () => serviceLevelIndicator.Measure("MeasuredAction", () => throw new OperationCanceledException());
+
+        // Assert
+        act.Should().Throw<OperationCanceledException>();
+        _expectedTags =
+        [
+            new("CustomerResourceId", "TestResourceId"),
+            new("LocationId", "TestLocationId"),
+            new("Operation", "MeasuredAction"),
+            new("Outcome", "Ignored"),
+        ];
+
+        ValidateMetrics(0, approx: 100);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_sets_success_outcome_when_action_completes()
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        await serviceLevelIndicator.MeasureAsync("MeasuredAsyncAction", () => Task.CompletedTask);
+
+        // Assert
+        _expectedTags =
+        [
+            new("CustomerResourceId", "TestResourceId"),
+            new("LocationId", "TestLocationId"),
+            new("Operation", "MeasuredAsyncAction"),
+            new("Outcome", "Success"),
+        ];
+
+        ValidateMetrics(0, approx: 100);
     }
 
     [Fact]
@@ -160,10 +247,103 @@ public class ServiceLevelIndicatorTests : IDisposable
         [
             new("CustomerResourceId", customerResourceId),
             new("LocationId", locationId),
-            new("Operation", operation)
+            new("Operation", operation),
+            new("Outcome", "Ignored")
         ];
 
         ValidateMetrics(elapsedTime);
+    }
+
+    [Theory]
+    [InlineData(SliOutcome.Success, "Success")]
+    [InlineData(SliOutcome.Failure, "Failure")]
+    [InlineData(SliOutcome.ClientError, "ClientError")]
+    [InlineData(SliOutcome.Ignored, "Ignored")]
+    public void Record_emits_explicit_outcome_wire_value(SliOutcome outcome, string wireValue)
+    {
+        // Arrange
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
+
+        // Act
+        serviceLevelIndicator.Record("TestOperation", 25, outcome);
+
+        // Assert
+        _expectedTags =
+        [
+            new("CustomerResourceId", "TestResourceId"),
+            new("LocationId", "TestLocationId"),
+            new("Operation", "TestOperation"),
+            new("Outcome", wireValue)
+        ];
+
+        ValidateMetrics(25);
+    }
+
+    [Fact]
+    public void Record_uses_unknown_customer_resource_id_when_default_is_not_configured()
+    {
+        // Arrange
+        var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(new ServiceLevelIndicatorOptions
+        {
+            LocationId = "TestLocationId",
+            Meter = _meter
+        }));
+
+        // Act
+        serviceLevelIndicator.Record("TestOperation", elapsedTime: 10);
+
+        // Assert
+        _expectedTags =
+        [
+            new("CustomerResourceId", "Unknown"),
+            new("LocationId", "TestLocationId"),
+            new("Operation", "TestOperation"),
+            new("Outcome", "Ignored")
+        ];
+
+        ValidateMetrics(10);
+    }
+
+    [Fact]
+    public void Unknown_customer_resource_id_emits_diagnostic_counter_on_configured_meter()
+    {
+        // Arrange
+        var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(new ServiceLevelIndicatorOptions
+        {
+            LocationId = "TestLocationId",
+            Meter = _meter
+        }));
+
+        Instrument? counterInstrument = null;
+        long counterMeasurement = 0;
+        KeyValuePair<string, object?>[] counterTags = [];
+
+        _meterListener.SetMeasurementEventCallback<long>((instrument, measurement, tags, state) =>
+        {
+            if (instrument.Name == "sli.diagnostics.unknown_customer_resource_id")
+            {
+                counterInstrument = instrument;
+                counterMeasurement = measurement;
+                counterTags = tags.ToArray();
+            }
+            else
+            {
+                OnMeasurementRecorded(instrument, measurement, tags, state);
+            }
+        });
+
+        // Act
+        serviceLevelIndicator.Record("TestOperation", elapsedTime: 10);
+
+        // Assert
+        counterInstrument.Should().NotBeNull();
+        counterInstrument!.Meter.Should().BeSameAs(_meter);
+        counterMeasurement.Should().Be(1);
+        counterTags.Should().BeEquivalentTo(
+        [
+            new KeyValuePair<string, object?>("Operation", "TestOperation"),
+            new KeyValuePair<string, object?>("LocationId", "TestLocationId")
+        ]);
     }
 
     [Fact]
@@ -193,7 +373,8 @@ public class ServiceLevelIndicatorTests : IDisposable
         [
             new("CustomerResourceId", overrideCustomerResourceId),
             new("LocationId", locationId),
-            new("Operation", operation)
+            new("Operation", operation),
+            new("Outcome", "Ignored")
         ];
 
         ValidateMetrics(elapsedTime);
@@ -224,7 +405,7 @@ public class ServiceLevelIndicatorTests : IDisposable
         // Act
         var measuredOperation = serviceLevelIndicator.StartMeasuring("DoubleDispose");
         await Task.Delay(50, TestContext.Current.CancellationToken);
-        measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
+        measuredOperation.SetOutcome(SliOutcome.Success);
         measuredOperation.Dispose();
         measuredOperation.Dispose(); // Second dispose should be a no-op
 
@@ -260,7 +441,8 @@ public class ServiceLevelIndicatorTests : IDisposable
         [
             new("CustomerResourceId", customerResourceId),
             new("LocationId", locationId),
-            new("Operation", operation)
+            new("Operation", operation),
+            new("Outcome", "Ignored")
         ];
 
         ValidateMetrics(elapsedTime, InstrumentName);
@@ -380,7 +562,10 @@ public class ServiceLevelIndicatorTests : IDisposable
     [InlineData("CustomerResourceId")]
     [InlineData("LocationId")]
     [InlineData("Operation")]
+    [InlineData("Outcome")]
     [InlineData("activity.status.code")]
+    [InlineData("http.request.method")]
+    [InlineData("http.response.status.code")]
     public void Record_rejects_reserved_custom_attribute_names(string reservedName)
     {
         // Arrange
@@ -419,7 +604,10 @@ public class ServiceLevelIndicatorTests : IDisposable
     [InlineData("CustomerResourceId")]
     [InlineData("LocationId")]
     [InlineData("Operation")]
+    [InlineData("Outcome")]
     [InlineData("activity.status.code")]
+    [InlineData("http.request.method")]
+    [InlineData("http.response.status.code")]
     public void StartMeasuring_rejects_reserved_initial_attribute_names(string reservedName)
     {
         // Arrange
@@ -439,7 +627,10 @@ public class ServiceLevelIndicatorTests : IDisposable
     [InlineData("CustomerResourceId")]
     [InlineData("LocationId")]
     [InlineData("Operation")]
+    [InlineData("Outcome")]
     [InlineData("activity.status.code")]
+    [InlineData("http.request.method")]
+    [InlineData("http.response.status.code")]
     public void MeasuredOperation_AddAttribute_rejects_reserved_attribute_names(string reservedName)
     {
         // Arrange
@@ -503,26 +694,17 @@ public class ServiceLevelIndicatorTests : IDisposable
     }
 
     [Fact]
-    public void Constructor_rejects_activity_status_attribute_name_that_collides_with_core_tags()
+    public void StartMeasuring_rejects_blank_operation()
     {
         // Arrange
-        var options = new ServiceLevelIndicatorOptions
-        {
-            CustomerResourceId = "TestResourceId",
-            LocationId = "TestLocationId",
-            Meter = _meter,
-            ActivityStatusCodeAttributeName = "Operation"
-        };
+        var serviceLevelIndicator = CreateServiceLevelIndicator();
 
         // Act
-        Action act = () =>
-        {
-            using var serviceLevelIndicator = new ServiceLevelIndicator(Options.Create(options));
-        };
+        Action act = () => serviceLevelIndicator.StartMeasuring(" ");
 
         // Assert
         act.Should().Throw<ArgumentException>()
-            .WithMessage("*reserved Service Level Indicator attribute name*");
+            .Where(ex => ex.ParamName == "operation");
     }
 
     [Fact]

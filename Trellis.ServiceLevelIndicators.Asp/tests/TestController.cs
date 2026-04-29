@@ -16,6 +16,15 @@ public class TestController : ControllerBase
     [HttpGet("bad_request")]
     public IActionResult Bad() => BadRequest("Sad World!");
 
+    [HttpGet("unprocessable")]
+    public IActionResult Unprocessable() => UnprocessableEntity("Invalid World!");
+
+    [HttpGet("too_many_requests")]
+    public IActionResult TooManyRequestsResult() => StatusCode(429, "Busy World!");
+
+    [HttpGet("redirect")]
+    public IActionResult RedirectResult() => StatusCode(302);
+
     [HttpGet("server_error")]
     public IActionResult ServerError() => StatusCode(500, "Server Error!");
 

@@ -1,4 +1,4 @@
-namespace Trellis.ServiceLevelIndicators;
+﻿namespace Trellis.ServiceLevelIndicators;
 
 using Microsoft.Extensions.DependencyInjection;
 

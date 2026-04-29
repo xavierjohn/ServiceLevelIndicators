@@ -12,14 +12,14 @@ See also: [`trellis-api-sli.md`](trellis-api-sli.md).
 
 ## Auto-emitted dimensions (in addition to the core ones)
 
-When the middleware is registered, every measured request emits these tags on top of the core `Operation` / `CustomerResourceId` / `LocationId` / `activity.status.code`:
+When the middleware is registered, every measured request emits these tags on top of the core `CustomerResourceId` / `LocationId` / `Operation` / `Outcome` dimensions:
 
 | Tag | Source |
 |---|---|
 | `Operation` | HTTP method plus route template (e.g. `GET WeatherForecast` or `GET /teams/{teamId}`) — derived from `ControllerActionDescriptor.AttributeRouteInfo.Template` for MVC, or from the route pattern for Minimal APIs. Overridable via `[ServiceLevelIndicator(operation)]` or `AddServiceLevelIndicator("operation")`. |
-| `activity.status.code` | `Ok` for HTTP 2xx, `Error` for HTTP 5xx (or unhandled exception), `Unset` otherwise. |
+| `Outcome` | `Success` for 2xx/3xx, `ClientError` for common caller errors (400/401/403/404/409/412/422), `Failure` for 429/5xx and unhandled exceptions, and `Ignored` for request-aborted cancellations. |
 | `http.response.status.code` | `HttpContext.Response.StatusCode`. |
-| `http.request.method` | Added when `AddHttpMethod()` is called on the SLI builder. |
+| `http.request.method` | `HttpContext.Request.Method`; emitted by default. |
 
 ---
 
@@ -74,7 +74,8 @@ Extensions on `IServiceLevelIndicatorBuilder` for opting into MVC support and en
 | Signature | Returns | Description |
 |---|---|---|
 | `public static IServiceLevelIndicatorBuilder AddMvc(this IServiceLevelIndicatorBuilder builder)` | `IServiceLevelIndicatorBuilder` | Registers the MVC convention so that `[CustomerResourceId]` and `[Measure]` parameter attributes contribute endpoint metadata. **Required** for any MVC controller that uses these attributes. |
-| `public static IServiceLevelIndicatorBuilder AddHttpMethod(this IServiceLevelIndicatorBuilder builder)` | `IServiceLevelIndicatorBuilder` | Adds the built-in enrichment that emits `http.request.method`. |
+| `public static IServiceLevelIndicatorBuilder AddHttpMethod(this IServiceLevelIndicatorBuilder builder)` | `IServiceLevelIndicatorBuilder` | No-op compatibility method; `http.request.method` is emitted by default. |
+| `public static IServiceLevelIndicatorBuilder ClassifyHttpOutcome(this IServiceLevelIndicatorBuilder builder, Func<HttpContext, SliOutcome> classifier)` | `IServiceLevelIndicatorBuilder` | Configures a global HTTP outcome classifier. The returned `SliOutcome` overrides the default status-code mapping for completed requests. |
 | `public static IServiceLevelIndicatorBuilder Enrich(this IServiceLevelIndicatorBuilder builder, Action<WebEnrichmentContext> action)` | `IServiceLevelIndicatorBuilder` | Registers a synchronous enrichment delegate. |
 | `public static IServiceLevelIndicatorBuilder EnrichAsync(this IServiceLevelIndicatorBuilder builder, Func<WebEnrichmentContext, CancellationToken, ValueTask> func)` | `IServiceLevelIndicatorBuilder` | Registers an asynchronous enrichment delegate. |
 
@@ -280,7 +281,7 @@ The `ServiceLevelIndicatorMiddleware` (registered by `UseServiceLevelIndicator()
 4. Starts a `MeasuredOperation` and attaches an `IServiceLevelIndicatorFeature` to `HttpContext.Features`.
 5. Optionally overrides the customer id from a `CustomerResourceIdMetadata`-tagged route value.
 6. Invokes the next middleware. On unhandled exceptions, sets status to 500 (when not started) and rethrows.
-7. In `finally`, sets `activity.status.code` from the response status (`Ok` for 2xx, `Error` for 5xx, `Unset` otherwise) and runs all registered `IEnrichment<WebEnrichmentContext>` enrichments. Enrichment exceptions are caught and logged.
+7. In `finally`, sets `Outcome`, `http.request.method`, and `http.response.status.code`, then runs all registered `IEnrichment<WebEnrichmentContext>` enrichments. Enrichment exceptions are caught and logged.
 8. Disposes the `MeasuredOperation` (which records the metric) and removes the feature.
 
 Throws `InvalidOperationException` if a second instance of the middleware tries to attach an SLI feature to the same request.
@@ -301,8 +302,7 @@ builder.Services.AddServiceLevelIndicator(o =>
     // Automatic emission is enabled by default. Set AutomaticallyEmitted = false
     // to opt in endpoint-by-endpoint with AddServiceLevelIndicator().
 })
-.AddMvc()
-.AddHttpMethod();
+.AddMvc();
 
 var app = builder.Build();
 app.UseRouting();
