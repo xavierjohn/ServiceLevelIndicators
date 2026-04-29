@@ -1,4 +1,4 @@
-﻿namespace Trellis.ServiceLevelIndicators.Asp.Tests;
+namespace Trellis.ServiceLevelIndicators.Asp.Tests;
 
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;

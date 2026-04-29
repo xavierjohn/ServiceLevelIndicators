@@ -3,8 +3,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
-using SampleWebApplicationSLI;
 using Scalar.AspNetCore;
+using SampleWebApplicationSLI;
 using Trellis.ServiceLevelIndicators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +37,8 @@ builder.Services.AddServiceLevelIndicator(options =>
     options.CustomerResourceId = "SampleCustomerResourceId";
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", AzureLocation.WestUS3.Name);
 })
-.AddMvc();
+.AddMvc()
+.AddHttpMethod();
 
 var app = builder.Build();
 

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 internal sealed partial class ServiceLevelIndicatorMiddleware
 {
@@ -16,20 +15,13 @@ internal sealed partial class ServiceLevelIndicatorMiddleware
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly IEnumerable<IEnrichment<WebEnrichmentContext>> _enrichments;
     private readonly ILogger<ServiceLevelIndicatorMiddleware> _logger;
-    private readonly ServiceLevelIndicatorHttpOptions _httpOptions;
 
-    public ServiceLevelIndicatorMiddleware(
-        RequestDelegate next,
-        ServiceLevelIndicator serviceLevelIndicator,
-        IEnumerable<IEnrichment<WebEnrichmentContext>> enrichments,
-        ILogger<ServiceLevelIndicatorMiddleware> logger,
-        IOptions<ServiceLevelIndicatorHttpOptions> httpOptions)
+    public ServiceLevelIndicatorMiddleware(RequestDelegate next, ServiceLevelIndicator serviceLevelIndicator, IEnumerable<IEnrichment<WebEnrichmentContext>> enrichments, ILogger<ServiceLevelIndicatorMiddleware> logger)
     {
         _next = next;
         _serviceLevelIndicator = serviceLevelIndicator;
         _enrichments = enrichments;
         _logger = logger;
-        _httpOptions = httpOptions.Value;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -57,12 +49,8 @@ internal sealed partial class ServiceLevelIndicatorMiddleware
         {
             unhandledException = ex;
 
-            if (!IsRequestAborted(context, ex) &&
-                !context.Response.HasStarted &&
-                context.Response.StatusCode < StatusCodes.Status500InternalServerError)
-            {
+            if (!context.Response.HasStarted && context.Response.StatusCode < StatusCodes.Status500InternalServerError)
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            }
 
             throw;
         }
@@ -71,7 +59,7 @@ internal sealed partial class ServiceLevelIndicatorMiddleware
             try
             {
                 var webmeasurementContext = new WebEnrichmentContext(measuredOperation, context);
-                UpdateOperationWithResponseStatus(context, measuredOperation, unhandledException);
+                UpdateOperationWithResponseStatus(context, measuredOperation, unhandledException is not null);
 
                 foreach (var enrichment in _enrichments)
                 {
@@ -108,39 +96,18 @@ internal sealed partial class ServiceLevelIndicatorMiddleware
             measuredOperation.CustomerResourceId = customerResourceId;
     }
 
-    private void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperation measuredOperation, Exception? unhandledException)
+    private static void UpdateOperationWithResponseStatus(HttpContext context, MeasuredOperation measuredOperation, bool unhandledException = false)
     {
         var statusCode = context.Response.StatusCode;
-        measuredOperation.Attributes.Add(new KeyValuePair<string, object?>("http.request.method", context.Request.Method));
-        measuredOperation.Attributes.Add(new KeyValuePair<string, object?>("http.response.status.code", statusCode));
-
-        var outcome = context.RequestAborted.IsCancellationRequested
-            ? SliOutcome.Ignored
-            : unhandledException is not null
-                ? SliOutcome.Failure
-                : _httpOptions.ClassifyOutcome?.Invoke(context) ?? ClassifyStatusCode(statusCode);
-
-        measuredOperation.SetOutcome(outcome);
+        measuredOperation.AddAttribute("http.response.status.code", statusCode);
+        var activityCode = unhandledException ? ActivityStatusCode.Error : statusCode switch
+        {
+            >= StatusCodes.Status500InternalServerError => ActivityStatusCode.Error,
+            >= StatusCodes.Status200OK and < StatusCodes.Status300MultipleChoices => ActivityStatusCode.Ok,
+            _ => ActivityStatusCode.Unset,
+        };
+        measuredOperation.SetActivityStatusCode(activityCode);
     }
-
-    private static SliOutcome ClassifyStatusCode(int statusCode) => statusCode switch
-    {
-        >= StatusCodes.Status200OK and < StatusCodes.Status400BadRequest => SliOutcome.Success,
-        StatusCodes.Status400BadRequest
-            or StatusCodes.Status401Unauthorized
-            or StatusCodes.Status403Forbidden
-            or StatusCodes.Status404NotFound
-            or StatusCodes.Status409Conflict
-            or StatusCodes.Status412PreconditionFailed
-            or StatusCodes.Status422UnprocessableEntity => SliOutcome.ClientError,
-        StatusCodes.Status429TooManyRequests => SliOutcome.Failure,
-        >= StatusCodes.Status500InternalServerError => SliOutcome.Failure,
-        _ => SliOutcome.Ignored,
-    };
-
-    private static bool IsRequestAborted(HttpContext context, Exception? exception) =>
-        context.RequestAborted.IsCancellationRequested &&
-        exception is OperationCanceledException;
 
     private bool ShouldEmitMetrics(EndpointMetadataCollection metadata) =>
         _serviceLevelIndicator.ServiceLevelIndicatorOptions.AutomaticallyEmitted || GetSliAttribute(metadata) is not null;
@@ -166,10 +133,10 @@ internal sealed partial class ServiceLevelIndicatorMiddleware
         if (string.IsNullOrEmpty(template))
         {
             LogMissingRouteTemplate(context.GetEndpoint()?.DisplayName ?? "(no endpoint)");
-            return context.Request.Method.ToUpperInvariant() + " <unrouted>";
+            return context.Request.Method + " <unrouted>";
         }
 
-        return context.Request.Method.ToUpperInvariant() + " " + template;
+        return context.Request.Method + " " + template;
     }
 
     private static string? GetCustomerResourceIdAttributes(HttpContext context, EndpointMetadataCollection metadata)

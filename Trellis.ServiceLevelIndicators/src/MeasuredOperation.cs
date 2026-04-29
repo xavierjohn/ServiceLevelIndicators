@@ -14,8 +14,7 @@ public class MeasuredOperation : IDisposable
     private readonly ServiceLevelIndicator _serviceLevelIndicator;
     private readonly Stopwatch _stopWatch;
     private readonly HashSet<string> _attributeNames;
-    private SliOutcome _outcome = SliOutcome.Ignored;
-    private bool _outcomeExplicitlySet;
+    private ActivityStatusCode _activityStatusCode = ActivityStatusCode.Unset;
     private readonly object _disposeLock = new();
 
     public MeasuredOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, params KeyValuePair<string, object?>[] attributes) :
@@ -24,8 +23,6 @@ public class MeasuredOperation : IDisposable
 
     public MeasuredOperation(ServiceLevelIndicator serviceLevelIndicator, string operation, string customerResourceId, params KeyValuePair<string, object?>[] attributes)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(operation);
-
         _serviceLevelIndicator = serviceLevelIndicator;
         Operation = operation;
         CustomerResourceId = customerResourceId;
@@ -33,7 +30,7 @@ public class MeasuredOperation : IDisposable
         _attributeNames = new HashSet<string>(attributes.Length, StringComparer.Ordinal);
         for (var i = 0; i < attributes.Length; i++)
         {
-            ServiceLevelIndicator.ValidateAttributeName(attributes[i].Key);
+            _serviceLevelIndicator.ValidateAttributeName(attributes[i].Key);
             ValidateUniqueAttributeName(attributes[i].Key);
             Attributes.Add(attributes[i]);
         }
@@ -57,35 +54,10 @@ public class MeasuredOperation : IDisposable
     public List<KeyValuePair<string, object?>> Attributes { get; }
 
     /// <summary>
-    /// Sets the outcome recorded with the measurement.
-    /// </summary>
-    /// <param name="outcome">The SLI outcome.</param>
-    public void SetOutcome(SliOutcome outcome)
-    {
-        _outcome = outcome;
-        _outcomeExplicitlySet = true;
-    }
-
-    internal void SetInferredOutcome(SliOutcome outcome)
-    {
-        if (!_outcomeExplicitlySet)
-            _outcome = outcome;
-    }
-
-    internal void ForceOutcome(SliOutcome outcome) => _outcome = outcome;
-
-    /// <summary>
-    /// Sets the outcome based on an <see cref="ActivityStatusCode"/>.
+    /// Sets the <see cref="ActivityStatusCode"/> recorded with the measurement.
     /// </summary>
     /// <param name="activityStatusCode">The activity status code.</param>
-    [Obsolete("Use SetOutcome(SliOutcome) instead.")]
-    public void SetActivityStatusCode(ActivityStatusCode activityStatusCode) =>
-        SetOutcome(activityStatusCode switch
-        {
-            ActivityStatusCode.Ok => SliOutcome.Success,
-            ActivityStatusCode.Error => SliOutcome.Failure,
-            _ => SliOutcome.Ignored
-        });
+    public void SetActivityStatusCode(ActivityStatusCode activityStatusCode) => _activityStatusCode = activityStatusCode;
 
     /// <summary>
     /// Adds a custom attribute to the measurement.
@@ -94,7 +66,7 @@ public class MeasuredOperation : IDisposable
     /// <param name="value">The attribute value.</param>
     public void AddAttribute(string attribute, object? value)
     {
-        ServiceLevelIndicator.ValidateAttributeName(attribute);
+        _serviceLevelIndicator.ValidateAttributeName(attribute);
         ValidateUniqueAttributeName(attribute);
         Attributes.Add(new KeyValuePair<string, object?>(attribute, value));
     }
@@ -119,7 +91,8 @@ public class MeasuredOperation : IDisposable
                 {
                     _stopWatch.Stop();
                     var elapsedTime = _stopWatch.ElapsedMilliseconds;
-                    _serviceLevelIndicator.RecordMeasurement(Operation, CustomerResourceId, elapsedTime, _outcome, Attributes.ToArray());
+                    Attributes.Add(new KeyValuePair<string, object?>(_serviceLevelIndicator.ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName, _activityStatusCode.ToString()));
+                    _serviceLevelIndicator.RecordMeasurement(Operation, CustomerResourceId, elapsedTime, Attributes.ToArray());
                 }
 
                 _disposed = true;

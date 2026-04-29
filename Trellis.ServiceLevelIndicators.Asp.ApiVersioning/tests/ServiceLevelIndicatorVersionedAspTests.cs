@@ -1,4 +1,4 @@
-﻿namespace Trellis.ServiceLevelIndicators.Asp.ApiVersioning.Tests;
+namespace Trellis.ServiceLevelIndicators.Asp.ApiVersioning.Tests;
 
 using System.Diagnostics.Metrics;
 using System.Net;
@@ -49,7 +49,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
-            new("Outcome", "Success"),
+            new("activity.status.code", "Ok"),
             new("http.response.status.code", 200),
             new("http.api.version", "2023-08-29"),
         ];
@@ -72,7 +72,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
-            new("Outcome", "Success"),
+            new("activity.status.code", "Ok"),
             new("http.response.status.code", 200),
             new("http.api.version", "2023-08-29"),
         ];
@@ -98,7 +98,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestNeutral"),
-            new("Outcome", "Success"),
+            new("activity.status.code", "Ok"),
             new("http.response.status.code", 200),
         ];
         using var host = await CreateHost();
@@ -121,7 +121,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET TestSingle"),
-            new("Outcome", "Success"),
+            new("activity.status.code", "Ok"),
             new("http.response.status.code", 200),
         ];
         using var host = await CreateHostWithDefaultApiVersion();
@@ -159,7 +159,7 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET <unrouted>"),
-            new("Outcome", "ClientError"),
+            new("activity.status.code", "Unset"),
             new("http.response.status.code", 400),
         ];
         var routeWithVersion = route + "?" + version;
@@ -239,19 +239,8 @@ public class ServiceLevelIndicatorVersionedAspTests : IDisposable
 
     private void ValidateMetrics()
     {
-        _expectedTags = AddDefaultHttpMethod(_expectedTags);
-
         _callbackCalled.Should().BeTrue();
-        _actualTags.Should().NotContain(tag => tag.Key == "activity.status.code");
         _actualTags.Should().BeEquivalentTo(_expectedTags);
-    }
-
-    private static KeyValuePair<string, object?>[] AddDefaultHttpMethod(KeyValuePair<string, object?>[] expectedTags)
-    {
-        if (expectedTags.Any(tag => tag.Key == "http.request.method"))
-            return expectedTags;
-
-        return [.. expectedTags, new KeyValuePair<string, object?>("http.request.method", "GET")];
     }
 
     private void OnMeasurementRecorded(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)

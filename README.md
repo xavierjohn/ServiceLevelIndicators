@@ -5,7 +5,7 @@
 
 ServiceLevelIndicators is a .NET library for emitting service-level latency metrics in milliseconds using the standard [System.Diagnostics.Metrics](https://learn.microsoft.com/dotnet/api/system.diagnostics.metrics) and OpenTelemetry pipeline.
 
-It is designed for teams that need more than generic request timing. The library helps measure meaningful operations, attach service-specific dimensions such as customer, location, operation name, and SLI outcome, and build SLO or SLA-oriented dashboards and alerts from those metrics.
+It is designed for teams that need more than generic request timing. The library helps measure meaningful operations, attach service-specific dimensions such as customer, location, operation name, and status, and build SLO or SLA-oriented dashboards and alerts from those metrics.
 
 Service level indicators (SLIs) are metrics used to track how a service is performing against expected reliability and responsiveness goals. Common examples include availability, response time, throughput, and error rate. This library focuses on latency SLIs so you can consistently measure operation duration across background work, ASP.NET Core APIs, and versioned endpoints.
 
@@ -22,14 +22,17 @@ By default, a meter named `Trellis.SLI` with instrument name `operation.duration
 - CustomerResourceId - The **target resource** of the operation — the noun in the URL path being read or modified, normalized to a stable identifier (tenant, subscription, account, work item). **NOT** the caller, **NOT** a per-request GUID, **NOT** a user ID or email. Example: for `GET /teams/{teamId}` called by user `xa1` for team `team1`, the value is `"team1"`, not `"xa1"`. See the [ASP.NET Core package README](Trellis.ServiceLevelIndicators.Asp/src/README.md#what-customerresourceid-is--and-what-it-is-not) for the full mental model.
 - LocationId - The location where the service is running, such as public cloud in the West US 3 region. [Azure Core](https://learn.microsoft.com/en-us/dotnet/api/azure.core.azurelocation?view=azure-dotnet)
 - Operation - The name of the operation.
-- Outcome - The SLI outcome. Exact values are `Success`, `Failure`, `ClientError`, and `Ignored`. Default success-rate queries should use `Success / (Success + Failure)`.
+- activity.status.code - The activity status code is set on `MeasuredOperation` based on the success or failure of the operation. [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode). Direct `Record(...)` calls emit only `CustomerResourceId`, `LocationId`, `Operation`, and any custom attributes supplied to the call.
 
 **Trellis.ServiceLevelIndicators.Asp** adds the following dimensions.
 
 - Operation - For ASP.NET endpoints, the operation name is the HTTP method plus the route template, resolved in this order: (1) `[ServiceLevelIndicator(Operation = "...")]` attribute or `.AddServiceLevelIndicator("op")` override, (2) MVC `AttributeRouteInfo.Template`, (3) the endpoint's `RouteEndpoint.RoutePattern.RawText` (Minimal APIs / conventional routing). Route placeholders such as `{id}` are preserved, never substituted with the concrete request value. If no bounded template is available, the middleware emits the sentinel `"<METHOD> <unrouted>"` and logs a warning — see that value in your metrics as a signal to add a route template.
-- Outcome - By default, 2xx and 3xx responses are `Success`, common caller errors such as 400/401/403/404/409/412/422 are `ClientError`, 429 and 5xx responses are `Failure`, and request-aborted cancellations are `Ignored`.
+- The activity status code will be
+   "Ok" when the http response status code is in the 2xx range,
+   "Error" when the http response status code is in the 5xx range,
+   "Unset" for any other status code.
 - http.response.status.code - The http status code.
-- http.request.method - The http request method (GET, POST, etc).
+- http.request.method (Optional)- The http request method (GET, POST, etc) is added.
 
 Difference between ServiceLevelIndicator and http.server.request.duration
 
@@ -37,7 +40,7 @@ Difference between ServiceLevelIndicator and http.server.request.duration
 | ----------  | ------- | ------
 | Resolution  | milliseconds       | seconds
 | Customer    | CustomerResourceId | N/A
-| Error check | `Outcome` and HTTP status code | HTTP status code
+| Error check | Activity or HTTP status.code | HTTP status code
 
 This makes the library useful when generic HTTP server metrics are not enough, especially for multi-tenant services, APIs with customer-specific objectives, or workloads that need the same SLI model outside HTTP request handling.
 
@@ -200,7 +203,7 @@ void MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 {
     using var measuredOperation = serviceLevelIndicator.StartMeasuring("OperationName");
     // Do Work.
-    measuredOperation.SetOutcome(SliOutcome.Success);
+    measuredOperation.SetActivityStatusCode(System.Diagnostics.ActivityStatusCode.Ok);
 }
 ```
 
@@ -208,7 +211,7 @@ void MeasureCodeBlock(ServiceLevelIndicator serviceLevelIndicator)
 
 ### Cardinality Guidance
 
-Required tags must be stable and meaningful. The library bounds `Operation` for you via the route-template resolver and the `<unrouted>` sentinel; you are responsible for `LocationId` (set once from configuration) and `CustomerResourceId` (stable tenant / subscription / resource identifier). `CustomerResourceId` may be high-cardinality when the backend is designed for it, but it must not be a per-request generated value.
+All three required tags — `Operation`, `LocationId`, and `CustomerResourceId` — must be **low-cardinality and bounded**. The library bounds `Operation` for you via the route-template resolver and the `<unrouted>` sentinel; you are responsible for `LocationId` (set once from configuration) and `CustomerResourceId` (stable tenant / subscription / resource identifier).
 
 The same discipline applies to `[Measure]` parameters and any custom attributes added via `AddAttribute(...)`. Avoid email addresses, request IDs, timestamps, or unconstrained free text unless your metrics backend is explicitly designed for high-cardinality telemetry.
 
@@ -234,7 +237,18 @@ The default operation name is the HTTP method plus the route template (placehold
     .AddApiVersion();
     ```
 
-- `http.request.method` is emitted by default by the ASP.NET Core middleware. `AddHttpMethod()` remains available as a no-op for older setup code.
+- To add HTTP method as a dimension, add `AddHttpMethod` to Service Level Indicator.
+
+   Example:
+
+    ```csharp
+    builder.Services.AddServiceLevelIndicator(options =>
+    {
+        /// Options
+    })
+    .AddMvc()
+    .AddHttpMethod();
+    ```
 
 - Enrich SLI with the `Enrich` callback. The callback receives a `MeasuredOperation` as context that can be used to set `CustomerResourceId` or additional attributes.
   An async version `EnrichAsync` is also available.
@@ -338,7 +352,7 @@ To view the metrics locally using the [.NET Aspire Dashboard](https://aspire.dev
    docker run --rm -it -d -p 18888:18888 -p 4317:18889 -e DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true -e DASHBOARD__OTLP__AUTHMODE=Unsecured --name aspire-dashboard mcr.microsoft.com/dotnet/aspire-dashboard:latest
    ```
 2. Run the sample web API project and call the `GET WeatherForecast` using the Open API UI.
-3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the instrument `operation.duration` where `Operation = "GET WeatherForecast"`, `Outcome = "Success"`, `http.response.status.code = 200`, and `LocationId = "ms-loc://az/public/westus3"`.
+3. Open `http://localhost:18888` to view the dashboard. You should see the SLI metrics under the instrument `operation.duration` where `Operation = "GET WeatherForecast"`, `http.response.status.code = 200`, `LocationId = "ms-loc://az/public/westus3"`, `activity.status.code = Ok`.
 ![SLI](assets/aspire.jpg)
 4. If you run the sample with API Versioning, you will see something similar to the following.
 ![SLI](assets/versioned.jpg)

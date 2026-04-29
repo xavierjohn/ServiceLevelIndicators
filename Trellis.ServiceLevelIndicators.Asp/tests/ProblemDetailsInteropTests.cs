@@ -1,4 +1,4 @@
-﻿namespace Trellis.ServiceLevelIndicators.Asp.Tests;
+namespace Trellis.ServiceLevelIndicators.Asp.Tests;
 
 using System.Diagnostics.Metrics;
 using System.Net;

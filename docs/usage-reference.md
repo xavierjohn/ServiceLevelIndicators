@@ -21,10 +21,10 @@ These values are part of the library contract and should be treated as stable un
 | Unit | milliseconds (`ms`) |
 | Required tag | `CustomerResourceId` |
 | Required tag | `LocationId` |
-| Required tag | `Operation` |
-| Required tag | `Outcome` (`Success`, `Failure`, `ClientError`, or `Ignored`) |
+| Standard tag | `Operation` |
+| Standard tag | `activity.status.code` for `StartMeasuring(...)` scopes and ASP.NET Core middleware |
 
-For ASP.NET Core, the library also emits `http.request.method` and `http.response.status.code`; `http.api.version` is emitted when API version enrichment is enabled.
+For ASP.NET Core, the library also emits `http.response.status.code` and can optionally emit `http.request.method` and `http.api.version`.
 
 ## Core Package
 
@@ -65,11 +65,11 @@ async Task ProcessOrder(ServiceLevelIndicator sli)
 
     await Task.Delay(50);
 
-    op.SetOutcome(SliOutcome.Success);
+    op.SetActivityStatusCode(ActivityStatusCode.Ok);
 }
 ```
 
-Direct recording is also available when you already know the elapsed time. `Record(...)` emits `CustomerResourceId`, `LocationId`, `Operation`, `Outcome`, and any custom attributes supplied to the call. Manual measurements default to `Ignored` unless you set an outcome.
+Direct recording is also available when you already know the elapsed time. `Record(...)` emits `CustomerResourceId`, `LocationId`, `Operation`, and any custom attributes supplied to the call; it does not add `activity.status.code`.
 
 ```csharp
 sli.Record("ProcessOrder", elapsedTime: 42);
@@ -145,6 +145,7 @@ builder.Services.AddServiceLevelIndicator(options =>
     options.LocationId = ServiceLevelIndicator.CreateLocationId("public", "westus3");
 })
 .AddMvc()
+.AddHttpMethod()
 .Enrich(context =>
 {
     context.SetCustomerResourceId("tenant-a");
@@ -233,21 +234,20 @@ Use `GetMeasuredOperation()` when the route is guaranteed to emit SLI metrics. U
 
 ## Status Semantics
 
-For non-HTTP code, set the outcome explicitly or use `Measure(...)` / `MeasureAsync(...)` helpers to infer it:
+For non-HTTP code, set the outcome explicitly:
 
 ```csharp
-op.SetOutcome(SliOutcome.Success);
+op.SetActivityStatusCode(ActivityStatusCode.Ok);
 ```
 
 For ASP.NET Core:
 
-| Response outcome | `Outcome` |
+| Response outcome | `activity.status.code` |
 |---|---|
-| `2xx`, `3xx` | `Success` |
-| `400`, `401`, `403`, `404`, `409`, `412`, `422` | `ClientError` |
-| `429`, `5xx` | `Failure` |
-| Unhandled exceptions | `Failure` |
-| Request-aborted cancellations | `Ignored` |
+| `2xx` | `Ok` |
+| `5xx` | `Error` |
+| Other status codes | `Unset` |
+| Unhandled exceptions | `Error` |
 
 ## Cardinality Guidance
 
@@ -276,7 +276,7 @@ Avoid values that can explode cardinality unless your backend is designed for th
 3. Forgetting `AddMvc()` when relying on MVC conventions and attribute-based overrides.
 4. Forgetting `.AddServiceLevelIndicator()` on Minimal API endpoints when `AutomaticallyEmitted` is `false`.
 5. Renaming `CustomerResourceId` or `LocationId` even though downstream systems depend on those exact names.
-6. Reusing reserved tag names such as `CustomerResourceId`, `LocationId`, `Operation`, `Outcome`, `activity.status.code`, `http.request.method`, or `http.response.status.code` as custom attributes.
+6. Reusing reserved tag names such as `CustomerResourceId`, `LocationId`, `Operation`, or `activity.status.code` as custom attributes.
 
 ## Public API Cheat Sheet
 
@@ -295,7 +295,7 @@ ASP.NET Core package:
 
 - `UseServiceLevelIndicator()`
 - `IServiceLevelIndicatorBuilder.AddMvc()`
-- `IServiceLevelIndicatorBuilder.ClassifyHttpOutcome(...)`
+- `IServiceLevelIndicatorBuilder.AddHttpMethod()`
 - `IServiceLevelIndicatorBuilder.Enrich(...)`
 - `IServiceLevelIndicatorBuilder.EnrichAsync(...)`
 - `EndpointConventionBuilder.AddServiceLevelIndicator(...)`

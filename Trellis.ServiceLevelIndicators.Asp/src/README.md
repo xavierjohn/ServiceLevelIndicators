@@ -75,9 +75,9 @@ Measured HTTP requests emit the following attributes:
 | `Operation` | The HTTP method + route template (e.g. `GET /teams/{teamId}`) — see [How `Operation` is resolved](#how-operation-is-resolved) below. |
 | `CustomerResourceId` | The **target resource** of the operation — see [What `CustomerResourceId` is — and what it is NOT](#what-customerresourceid-is--and-what-it-is-not) below. |
 | `LocationId` | Where the service is running |
-| `Outcome` | `Success`, `Failure`, `ClientError`, or `Ignored`; 2xx/3xx responses are `Success`, common 4xx caller errors are `ClientError`, 429/5xx and unhandled exceptions are `Failure`, and request-aborted cancellations are `Ignored` |
+| `activity.status.code` | `Ok` (2xx), `Error` (5xx), or `Unset` (other) |
 | `http.response.status.code` | The HTTP response status code |
-| `http.request.method` | The HTTP method |
+| `http.request.method` | *(Optional)* The HTTP method — enabled via `AddHttpMethod()` |
 
 ### What `CustomerResourceId` is — and what it is NOT
 
@@ -104,7 +104,7 @@ app.MapGet("/teams/{teamId}",
    .AddServiceLevelIndicator("GetTeam");
 ```
 
-Or set it imperatively from claims/headers via `Enrich` or `HttpContext.GetMeasuredOperation()` — but the value must still be stable and meaningful.
+Or set it imperatively from claims/headers via `Enrich` or `HttpContext.GetMeasuredOperation()` — but the value must still be a stable, low-cardinality resource identifier.
 
 ### How `Operation` is resolved
 
@@ -118,9 +118,13 @@ If none of those yield a bounded template (e.g. a synthetic problem-details endp
 
 ## Customizations
 
-### HTTP method dimension
+### Add HTTP method as a dimension
 
-`http.request.method` is emitted by default. `AddHttpMethod()` remains available as a no-op for older setup code.
+```csharp
+builder.Services.AddServiceLevelIndicator(options => { /* ... */ })
+    .AddMvc()
+    .AddHttpMethod();
+```
 
 ### Enrich with custom data
 
@@ -184,11 +188,11 @@ if (HttpContext.TryGetMeasuredOperation(out var op))
 
 ## Cardinality Guidance
 
-Required tags must be stable and meaningful:
+All three required tags — `Operation`, `LocationId`, and `CustomerResourceId` — must be **low-cardinality and bounded**:
 
 - **`Operation`** is bounded for you by the route-template resolver above (one series per HTTP method × route template). Watch your metrics for the `<unrouted>` sentinel — it means an endpoint is missing a route template.
 - **`LocationId`** is set once per process from configuration — naturally bounded.
-- **`CustomerResourceId`** is your responsibility. Use a stable tenant / subscription / resource identifier; do not use per-request GUIDs, timestamps, request IDs, or raw user input. High-cardinality customer resources are acceptable when they are stable, meaningful, and supported by your metrics backend.
+- **`CustomerResourceId`** is your responsibility. Use a stable tenant / subscription / resource identifier; do not use per-request GUIDs, user IDs, email addresses, request IDs, or raw user input.
 
 The same discipline applies to `[Measure]` parameters and any custom attributes you add via `AddAttribute(...)`.
 

@@ -4,7 +4,7 @@ using System.Diagnostics.Metrics;
 
 /// <summary>
 /// Options for configuring the Service Level Indicator.
-/// CustomerResourceId & LocationId are mandatory properties.
+/// DefaultCustomerResourceId & LocationId are mandatory properties.
 /// </summary>
 public class ServiceLevelIndicatorOptions
 {
@@ -18,7 +18,7 @@ public class ServiceLevelIndicatorOptions
     /// CustomerResourceId is the unique identifier for the customer like subscriptionId, tenantId, etc.
     /// CustomerResourceId can be set for the entire service here or in each API method.
     /// </summary>
-    public string CustomerResourceId { get; set; } = ServiceLevelIndicator.UnknownCustomerResourceId;
+    public string CustomerResourceId { get; set; } = "Unset";
 
     /// <summary>
     /// Location where the service is running.
@@ -31,9 +31,9 @@ public class ServiceLevelIndicatorOptions
     public string DurationInstrumentName { get; set; } = "operation.duration";
 
     /// <summary>
-    /// Obsolete. Activity status is no longer emitted as a metric dimension.
+    /// Activity Status Code attribute name.
+    /// [ActivityStatusCode](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activitystatuscode?view=net-7.0)
     /// </summary>
-    [Obsolete("Activity status is no longer emitted as a metric dimension. Use SliOutcome instead.")]
     public string ActivityStatusCodeAttributeName { get; set; } = "activity.status.code";
 
     /// <summary>

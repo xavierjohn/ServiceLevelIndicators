@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Azure.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -44,17 +45,17 @@ using MeterProvider meterProvider = Sdk.CreateMeterProviderBuilder()
                 .Build();
 
 var serviceLevelIndicator = serviceProvider.GetRequiredService<ServiceLevelIndicator>();
+using MeasuredOperation measuredOperation = serviceLevelIndicator.StartMeasuring("OperationWork");
 
 try
 {
-    await serviceLevelIndicator.MeasureAsync("OperationWork", async () =>
-    {
-        logger.LogInformation("Starting to do some work...");
-        await Task.Delay(1000); // Simulate some work
-        logger.LogInformation("Work done.");
-    });
+    logger.LogInformation("Starting to do some work...");
+    await Task.Delay(1000); // Simulate some work
+    logger.LogInformation("Work done.");
+    measuredOperation.SetActivityStatusCode(ActivityStatusCode.Ok);
 }
 catch (Exception ex)
 {
+    measuredOperation.SetActivityStatusCode(ActivityStatusCode.Error);
     logger.LogError(ex, "An error occurred doing work.");
 }
