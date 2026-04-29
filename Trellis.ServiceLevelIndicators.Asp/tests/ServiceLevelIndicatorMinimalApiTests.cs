@@ -1,4 +1,4 @@
-namespace Trellis.ServiceLevelIndicators.Asp.Tests;
+﻿namespace Trellis.ServiceLevelIndicators.Asp.Tests;
 
 using System;
 using System.Diagnostics.Metrics;
@@ -55,7 +55,7 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET /hello"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -79,7 +79,7 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "CustomOp"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -103,7 +103,7 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
             new("CustomerResourceId", "myResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET /resource/{id}"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -128,7 +128,7 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET /measured/items/{name}"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -191,7 +191,7 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET /auto-sli"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -215,7 +215,7 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET /hello"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
             new("http.request.method", "GET"),
         };
@@ -336,11 +336,22 @@ public class ServiceLevelIndicatorMinimalApiTests : IDisposable
 
     private void ValidateMetrics(KeyValuePair<string, object?>[] expectedTags)
     {
+        expectedTags = AddDefaultHttpMethod(expectedTags);
+
         _callbackCalled.Should().BeTrue();
         _instrument!.Name.Should().Be("operation.duration");
         _instrument.Unit.Should().Be("ms");
         _measurement.Should().BeInRange(MillisecondsDelay - 10, MillisecondsDelay + 400);
+        _actualTags.Should().NotContain(tag => tag.Key == "activity.status.code");
         _actualTags.Should().BeEquivalentTo(expectedTags);
+    }
+
+    private static KeyValuePair<string, object?>[] AddDefaultHttpMethod(KeyValuePair<string, object?>[] expectedTags)
+    {
+        if (expectedTags.Any(tag => tag.Key == "http.request.method"))
+            return expectedTags;
+
+        return [.. expectedTags, new KeyValuePair<string, object?>("http.request.method", "GET")];
     }
 
     protected virtual void Dispose(bool disposing)

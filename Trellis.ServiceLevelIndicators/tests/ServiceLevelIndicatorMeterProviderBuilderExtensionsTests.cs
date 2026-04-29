@@ -1,4 +1,4 @@
-namespace Trellis.ServiceLevelIndicators.Tests;
+﻿namespace Trellis.ServiceLevelIndicators.Tests;
 
 using System;
 using System.Diagnostics.Metrics;

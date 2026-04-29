@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
 /// <summary>
@@ -24,11 +25,17 @@ public sealed class ServiceLevelIndicator : IDisposable
     public const string DefaultMeterName = "Trellis.SLI";
 
     /// <summary>
+    /// Default value used when no customer resource identifier is available.
+    /// </summary>
+    public const string UnknownCustomerResourceId = "Unknown";
+
+    /// <summary>
     /// Gets the options used to configure this instance.
     /// </summary>
     public ServiceLevelIndicatorOptions ServiceLevelIndicatorOptions { get; }
 
     private readonly Histogram<long> _responseLatencyHistogram;
+    private readonly Counter<long> _unknownCustomerResourceIdCounter;
     private readonly Meter _meter;
     private readonly bool _ownsMeter;
     private bool _disposed;
@@ -39,7 +46,6 @@ public sealed class ServiceLevelIndicator : IDisposable
 
         ArgumentException.ThrowIfNullOrWhiteSpace(ServiceLevelIndicatorOptions.LocationId, nameof(ServiceLevelIndicatorOptions.LocationId));
         ArgumentException.ThrowIfNullOrWhiteSpace(ServiceLevelIndicatorOptions.DurationInstrumentName, nameof(ServiceLevelIndicatorOptions.DurationInstrumentName));
-        ValidateActivityStatusCodeAttributeName();
 
         if (ServiceLevelIndicatorOptions.Meter == null)
         {
@@ -56,6 +62,7 @@ public sealed class ServiceLevelIndicator : IDisposable
         }
 
         _responseLatencyHistogram = _meter.CreateHistogram<long>(ServiceLevelIndicatorOptions.DurationInstrumentName, "ms", "Duration of the operation.");
+        _unknownCustomerResourceIdCounter = _meter.CreateCounter<long>("sli.diagnostics.unknown_customer_resource_id", description: "Count of SLI measurements emitted with an unknown customer resource identifier.");
     }
 
     /// <summary>
@@ -80,6 +87,16 @@ public sealed class ServiceLevelIndicator : IDisposable
         Record(operation, ServiceLevelIndicatorOptions.CustomerResourceId, elapsedTime, attributes);
 
     /// <summary>
+    /// Records an operation measurement using the default <see cref="ServiceLevelIndicatorOptions.CustomerResourceId"/>.
+    /// </summary>
+    /// <param name="operation">The operation name.</param>
+    /// <param name="elapsedTime">Elapsed time in milliseconds.</param>
+    /// <param name="outcome">The SLI outcome.</param>
+    /// <param name="attributes">Additional measurement attributes.</param>
+    public void Record(string operation, long elapsedTime, SliOutcome outcome, params KeyValuePair<string, object?>[] attributes) =>
+        Record(operation, ServiceLevelIndicatorOptions.CustomerResourceId, elapsedTime, outcome, attributes);
+
+    /// <summary>
     /// Records an operation measurement with an explicit customer resource identifier.
     /// </summary>
     /// <param name="operation">The operation name.</param>
@@ -87,21 +104,38 @@ public sealed class ServiceLevelIndicator : IDisposable
     /// <param name="elapsedTime">Elapsed time in milliseconds.</param>
     /// <param name="attributes">Additional measurement attributes.</param>
     public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
+        => Record(operation, customerResourceId, elapsedTime, SliOutcome.Ignored, attributes);
+
+    /// <summary>
+    /// Records an operation measurement with an explicit customer resource identifier.
+    /// </summary>
+    /// <param name="operation">The operation name.</param>
+    /// <param name="customerResourceId">The customer resource identifier.</param>
+    /// <param name="elapsedTime">Elapsed time in milliseconds.</param>
+    /// <param name="outcome">The SLI outcome.</param>
+    /// <param name="attributes">Additional measurement attributes.</param>
+    public void Record(string operation, string customerResourceId, long elapsedTime, SliOutcome outcome, params KeyValuePair<string, object?>[] attributes)
     {
         ValidateAttributes(attributes);
         ValidateDuplicateArgumentAttributeNames(attributes);
-        RecordMeasurement(operation, customerResourceId, elapsedTime, attributes);
+        RecordMeasurement(operation, customerResourceId, elapsedTime, outcome, attributes);
     }
 
-    internal void RecordMeasurement(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)
+    internal void RecordMeasurement(string operation, string customerResourceId, long elapsedTime, SliOutcome outcome, params KeyValuePair<string, object?>[] attributes)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(operation, nameof(operation));
         ValidateRecordAttributeNames(attributes);
+
+        customerResourceId = NormalizeCustomerResourceId(customerResourceId);
+        RecordUnknownCustomerResourceId(operation, customerResourceId);
+        Activity.Current?.SetStatus(GetActivityStatusCode(outcome));
 
         var tagList = new TagList
         {
             { "CustomerResourceId", customerResourceId },
             { "LocationId", ServiceLevelIndicatorOptions.LocationId },
-            { "Operation", operation }
+            { "Operation", operation },
+            { "Outcome", ToWireValue(outcome) }
         };
 
         for (var i = 0; i < attributes.Length; i++)
@@ -118,12 +152,119 @@ public sealed class ServiceLevelIndicator : IDisposable
     /// <returns>A <see cref="MeasuredOperation"/> that records the metric on disposal.</returns>
     public MeasuredOperation StartMeasuring(string operation, params KeyValuePair<string, object?>[] attributes) => new(this, operation, attributes);
 
-    internal void ValidateAttributeName(string attribute)
+    /// <summary>
+    /// Measures a synchronous operation and infers the SLI outcome from completion or exception.
+    /// </summary>
+    public void Measure(string operation, Action action, params KeyValuePair<string, object?>[] attributes)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        using var measuredOperation = StartMeasuring(operation, attributes);
+        try
+        {
+            action();
+            measuredOperation.SetInferredOutcome(SliOutcome.Success);
+        }
+        catch (OperationCanceledException)
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Ignored);
+            throw;
+        }
+        catch
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Failure);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Measures a synchronous operation and returns its result.
+    /// </summary>
+    public T Measure<T>(string operation, Func<T> action, params KeyValuePair<string, object?>[] attributes)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        using var measuredOperation = StartMeasuring(operation, attributes);
+        try
+        {
+            var result = action();
+            measuredOperation.SetInferredOutcome(SliOutcome.Success);
+            return result;
+        }
+        catch (OperationCanceledException)
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Ignored);
+            throw;
+        }
+        catch
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Failure);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Measures an asynchronous operation and infers the SLI outcome from completion or exception.
+    /// </summary>
+    public async Task MeasureAsync(string operation, Func<Task> action, params KeyValuePair<string, object?>[] attributes)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        using var measuredOperation = StartMeasuring(operation, attributes);
+        try
+        {
+            await action().ConfigureAwait(false);
+            measuredOperation.SetInferredOutcome(SliOutcome.Success);
+        }
+        catch (OperationCanceledException)
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Ignored);
+            throw;
+        }
+        catch
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Failure);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Measures an asynchronous operation and returns its result.
+    /// </summary>
+    public async Task<T> MeasureAsync<T>(string operation, Func<Task<T>> action, params KeyValuePair<string, object?>[] attributes)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        using var measuredOperation = StartMeasuring(operation, attributes);
+        try
+        {
+            var result = await action().ConfigureAwait(false);
+            measuredOperation.SetInferredOutcome(SliOutcome.Success);
+            return result;
+        }
+        catch (OperationCanceledException)
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Ignored);
+            throw;
+        }
+        catch
+        {
+            measuredOperation.ForceOutcome(SliOutcome.Failure);
+            throw;
+        }
+    }
+
+    internal static void ValidateAttributeName(string attribute)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(attribute, nameof(attribute));
 
-        if (attribute is "CustomerResourceId" or "LocationId" or "Operation" ||
-            attribute == ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName)
+        if (attribute is "CustomerResourceId"
+            or "LocationId"
+            or "Operation"
+            or "Outcome"
+            or "activity.status.code"
+            or "http.request.method"
+            or "http.response.status.code")
         {
             throw new ArgumentException(
                 $"'{attribute}' is a reserved Service Level Indicator attribute name and cannot be used as a custom metric attribute.",
@@ -131,20 +272,7 @@ public sealed class ServiceLevelIndicator : IDisposable
         }
     }
 
-    private void ValidateActivityStatusCodeAttributeName()
-    {
-        var attribute = ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName;
-        ArgumentException.ThrowIfNullOrWhiteSpace(attribute, nameof(ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName));
-
-        if (attribute is "CustomerResourceId" or "LocationId" or "Operation")
-        {
-            throw new ArgumentException(
-                $"'{attribute}' is a reserved Service Level Indicator attribute name and cannot be used as the activity status code attribute name.",
-                nameof(ServiceLevelIndicatorOptions.ActivityStatusCodeAttributeName));
-        }
-    }
-
-    private void ValidateAttributes(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
+    private static void ValidateAttributes(ReadOnlySpan<KeyValuePair<string, object?>> attributes)
     {
         for (var i = 0; i < attributes.Length; i++)
             ValidateAttributeName(attributes[i].Key);
@@ -184,7 +312,8 @@ public sealed class ServiceLevelIndicator : IDisposable
             {
                 "CustomerResourceId",
                 "LocationId",
-                "Operation"
+                "Operation",
+                "Outcome"
             };
 
             if (!names.Add(attributes[i].Key))
@@ -219,5 +348,36 @@ public sealed class ServiceLevelIndicator : IDisposable
         var arr = new string?[] { "ms-loc://az", cloud, region, zone };
         var id = string.Join("/", arr.Where(s => !string.IsNullOrEmpty(s)));
         return id;
+    }
+
+    internal static string ToWireValue(SliOutcome outcome) => outcome switch
+    {
+        SliOutcome.Success => "Success",
+        SliOutcome.Failure => "Failure",
+        SliOutcome.ClientError => "ClientError",
+        SliOutcome.Ignored => "Ignored",
+        _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "Unknown SLI outcome.")
+    };
+
+    private static ActivityStatusCode GetActivityStatusCode(SliOutcome outcome) => outcome switch
+    {
+        SliOutcome.Success => ActivityStatusCode.Ok,
+        SliOutcome.Failure => ActivityStatusCode.Error,
+        SliOutcome.ClientError or SliOutcome.Ignored => ActivityStatusCode.Unset,
+        _ => ActivityStatusCode.Unset
+    };
+
+    private static string NormalizeCustomerResourceId(string customerResourceId) =>
+        string.IsNullOrWhiteSpace(customerResourceId) ? UnknownCustomerResourceId : customerResourceId;
+
+    private void RecordUnknownCustomerResourceId(string operation, string customerResourceId)
+    {
+        if (!string.Equals(customerResourceId, UnknownCustomerResourceId, StringComparison.Ordinal))
+            return;
+
+        _unknownCustomerResourceIdCounter.Add(
+            1,
+            new KeyValuePair<string, object?>("Operation", operation),
+            new KeyValuePair<string, object?>("LocationId", ServiceLevelIndicatorOptions.LocationId));
     }
 }
