@@ -1,5 +1,6 @@
 ﻿namespace Trellis.ServiceLevelIndicators;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -19,7 +20,15 @@ public static class ServiceLevelIndicatorServiceCollectionExtensions
     public static IServiceLevelIndicatorBuilder AddHttpMethod(this IServiceLevelIndicatorBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IEnrichment<WebEnrichmentContext>, HttpMethodEnrichment>());
+        return builder;
+    }
+
+    public static IServiceLevelIndicatorBuilder ClassifyHttpOutcome(this IServiceLevelIndicatorBuilder builder, Func<HttpContext, SliOutcome> classifier)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(classifier);
+
+        builder.Services.Configure<ServiceLevelIndicatorHttpOptions>(options => options.ClassifyOutcome = classifier);
         return builder;
     }
 

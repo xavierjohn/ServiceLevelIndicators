@@ -10,16 +10,16 @@ See also: [`trellis-api-sli-asp.md`](trellis-api-sli-asp.md), [`trellis-api-sli-
 
 ## Default emitted dimensions
 
-Every measurement emits the following tags on instrument `operation.duration` (ms, `Histogram<long>`):
+`StartMeasuring(...)` scopes emit the following tags on instrument `operation.duration` (ms, `Histogram<long>`) when the returned `MeasuredOperation` is disposed:
 
 | Tag | Source |
 |---|---|
 | `CustomerResourceId` | `ServiceLevelIndicatorOptions.CustomerResourceId` (or per-call override) |
 | `LocationId` | `ServiceLevelIndicatorOptions.LocationId` |
 | `Operation` | Caller-supplied operation name |
-| `activity.status.code` | Set on `MeasuredOperation` (`Unset` / `Ok` / `Error`) |
+| `Outcome` | `Success`, `Failure`, `ClientError`, or `Ignored` |
 
-Additional attributes can be appended via `MeasuredOperation.AddAttribute(...)` or the `attributes` parameter of `Record`/`StartMeasuring`. Custom attributes must not reuse `CustomerResourceId`, `LocationId`, `Operation`, the configured activity-status tag name, or any other attribute name already present on the measurement.
+Additional attributes can be appended via `MeasuredOperation.AddAttribute(...)` or the `attributes` parameter of `Record`/`StartMeasuring`. Custom attributes must not reuse `CustomerResourceId`, `LocationId`, `Operation`, `Outcome`, `activity.status.code`, `http.request.method`, `http.response.status.code`, or any other attribute name already present on the measurement. Direct `Record(...)` calls emit `CustomerResourceId`, `LocationId`, `Operation`, `Outcome`, and any supplied custom attributes.
 
 ---
 
@@ -59,9 +59,15 @@ Singleton service that creates and records SLI metrics using an OpenTelemetry `H
 
 | Signature | Returns | Description |
 |---|---|---|
-| `public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement using the configured default `CustomerResourceId`. |
-| `public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement with an explicit `CustomerResourceId`. |
+| `public void Record(string operation, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement using the configured default `CustomerResourceId` and default outcome `Ignored`. |
+| `public void Record(string operation, long elapsedTime, SliOutcome outcome, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement using the configured default `CustomerResourceId` and explicit outcome. |
+| `public void Record(string operation, string customerResourceId, long elapsedTime, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement with an explicit `CustomerResourceId` and default outcome `Ignored`. |
+| `public void Record(string operation, string customerResourceId, long elapsedTime, SliOutcome outcome, params KeyValuePair<string, object?>[] attributes)` | `void` | Records a measurement with an explicit `CustomerResourceId` and outcome. |
 | `public MeasuredOperation StartMeasuring(string operation, params KeyValuePair<string, object?>[] attributes)` | `MeasuredOperation` | Starts a stopwatch-backed measurement; dispose the returned object to record the elapsed time as a metric. |
+| `public void Measure(string operation, Action action, params KeyValuePair<string, object?>[] attributes)` | `void` | Measures a synchronous operation and infers `Success`, `Failure`, or `Ignored` for `OperationCanceledException`. |
+| `public T Measure<T>(string operation, Func<T> action, params KeyValuePair<string, object?>[] attributes)` | `T` | Measures a synchronous operation and returns its result. |
+| `public Task MeasureAsync(string operation, Func<Task> action, params KeyValuePair<string, object?>[] attributes)` | `Task` | Measures an asynchronous operation and infers outcome before rethrowing exceptions. |
+| `public Task<T> MeasureAsync<T>(string operation, Func<Task<T>> action, params KeyValuePair<string, object?>[] attributes)` | `Task<T>` | Measures an asynchronous operation and returns its result. |
 | `public void Dispose()` | `void` | Disposes the internally-created `Meter` if this instance created it; never disposes a user-supplied meter. Idempotent. Normally invoked by the DI container at host shutdown. |
 | `public static string CreateCustomerResourceId(Guid serviceId)` | `string` | Builds a `ServiceTreeId://<guid>` customer resource id. Throws `ArgumentNullException` if `serviceId` is `Guid.Empty`. |
 | `public static string CreateLocationId(string cloud, string? region = null, string? zone = null)` | `string` | Builds an `ms-loc://az/<cloud>/<region>/<zone>` location id, omitting empty segments. |
@@ -83,10 +89,10 @@ Bound via `IOptions<ServiceLevelIndicatorOptions>`. `LocationId` and `DurationIn
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `Meter` | `Meter` | `null` (auto-created) | The meter used to create the duration histogram. Set during startup; read once when the `ServiceLevelIndicator` singleton is constructed. |
-| `CustomerResourceId` | `string` | `"Unset"` | Default `CustomerResourceId` tag value (per-tenant / per-subscription identifier). Can be overridden on each call. |
+| `CustomerResourceId` | `string` | `"Unknown"` | Default `CustomerResourceId` tag value. Can be overridden on each call. When emitted as `Unknown`, the diagnostic counter `sli.diagnostics.unknown_customer_resource_id` is incremented. |
 | `LocationId` | `string` | `""` | **Required.** Where the service is running (e.g. `ms-loc://az/public/westus3`). Must be non-empty. |
 | `DurationInstrumentName` | `string` | `"operation.duration"` | **Required.** Histogram instrument name. Must be non-empty. |
-| `ActivityStatusCodeAttributeName` | `string` | `"activity.status.code"` | Tag name used to emit the operation's `ActivityStatusCode`. Must be non-empty and cannot be `CustomerResourceId`, `LocationId`, or `Operation`. |
+| `ActivityStatusCodeAttributeName` | `string` | `"activity.status.code"` | Obsolete compatibility option. Activity status is no longer emitted as a metric dimension. |
 | `AutomaticallyEmitted` | `bool` | `true` | When `false`, only operations explicitly opted-in (e.g. via the `[ServiceLevelIndicator]` attribute in the ASP package) emit metrics. |
 
 ---
@@ -113,7 +119,7 @@ Registers `ServiceLevelIndicator` as a singleton and configures `ServiceLevelInd
 public class MeasuredOperation : IDisposable
 ```
 
-Represents an in-flight measurement. The stopwatch starts in the constructor; disposing records the elapsed milliseconds plus the `activity.status.code` tag.
+Represents an in-flight measurement. The stopwatch starts in the constructor; disposing records the elapsed milliseconds plus the `Outcome` tag.
 
 **Properties**
 
@@ -134,7 +140,8 @@ Represents an in-flight measurement. The stopwatch starts in the constructor; di
 
 | Signature | Returns | Description |
 |---|---|---|
-| `public void SetActivityStatusCode(ActivityStatusCode code)` | `void` | Sets the `ActivityStatusCode` recorded with the measurement. Default is `Unset`. |
+| `public void SetOutcome(SliOutcome outcome)` | `void` | Sets the SLI outcome recorded with the measurement. Default is `Ignored`. |
+| `public void SetActivityStatusCode(ActivityStatusCode code)` | `void` | Obsolete compatibility shim that maps `Ok` to `Success`, `Error` to `Failure`, and other values to `Ignored`. |
 | `public void AddAttribute(string attribute, object? value)` | `void` | Appends a custom attribute to be emitted with the measurement. Throws if the name collides with a reserved SLI tag. |
 | `public void Dispose()` | `void` | Stops the stopwatch and records the metric. Idempotent. |
 | `protected virtual void Dispose(bool disposing)` | `void` | Standard dispose pattern hook. |
@@ -227,11 +234,11 @@ async Task DoWorkAsync(ServiceLevelIndicator sli, CancellationToken ct)
     try
     {
         await ProcessAsync(ct);
-        op.SetActivityStatusCode(ActivityStatusCode.Ok);
+        op.SetOutcome(SliOutcome.Success);
     }
     catch
     {
-        op.SetActivityStatusCode(ActivityStatusCode.Error);
+        op.SetOutcome(SliOutcome.Failure);
         throw;
     }
 }

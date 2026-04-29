@@ -1,4 +1,4 @@
-namespace Trellis.ServiceLevelIndicators.Asp.Tests;
+﻿namespace Trellis.ServiceLevelIndicators.Asp.Tests;
 
 using System;
 using System.Diagnostics.Metrics;
@@ -51,7 +51,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -71,7 +71,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "POST Test"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -91,8 +91,53 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/bad_request"),
-            new("activity.status.code", "Unset"),
+            new("Outcome", "ClientError"),
             new("http.response.status.code", 400),
+        };
+
+        ValidateMetrics(expectedTags);
+    }
+
+    [Theory]
+    [InlineData("test/redirect", HttpStatusCode.Found, "GET Test/redirect", "Success", 302)]
+    [InlineData("test/unprocessable", HttpStatusCode.UnprocessableEntity, "GET Test/unprocessable", "ClientError", 422)]
+    [InlineData("test/too_many_requests", (HttpStatusCode)429, "GET Test/too_many_requests", "Failure", 429)]
+    public async Task SLI_Metrics_classifies_http_status_codes(string route, HttpStatusCode expectedStatus, string operation, string outcome, int statusCode)
+    {
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+
+        var response = await host.GetTestClient().GetAsync(route, TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(expectedStatus);
+
+        var expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", operation),
+            new("Outcome", outcome),
+            new("http.response.status.code", statusCode),
+        };
+
+        ValidateMetrics(expectedTags);
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_uses_configured_http_outcome_classifier()
+    {
+        using var host = await TestHostBuilder.CreateHostWithSli(
+            _meter,
+            context => context.Response.StatusCode == 429 ? SliOutcome.ClientError : SliOutcome.Failure);
+
+        var response = await host.GetTestClient().GetAsync("test/too_many_requests", TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be((HttpStatusCode)429);
+
+        var expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/too_many_requests"),
+            new("Outcome", "ClientError"),
+            new("http.response.status.code", 429),
         };
 
         ValidateMetrics(expectedTags);
@@ -114,7 +159,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "xavier@somewhere.com"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.request.method", "GET"),
             new("http.response.status.code", 200),
             new("foo", "bar"),
@@ -138,7 +183,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "TestOperation"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -158,7 +203,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "myId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/customer_resourceid/{id}"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -178,7 +223,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/custom_attribute/{value}"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
             new("CustomAttribute", "Mickey"),
         };
@@ -210,7 +255,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/send_sli"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -258,7 +303,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/try_get_measured_operation/{value}"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
             new("CustomAttribute", "Goofy"),
         };
@@ -281,7 +326,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("age", "25"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/name/{first}/{surname}/{age}"),
-            new("activity.status.code", "Ok"),
+            new("Outcome", "Success"),
             new("http.response.status.code", 200),
         };
 
@@ -374,7 +419,7 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/server_error"),
-            new("activity.status.code", "Error"),
+            new("Outcome", "Failure"),
             new("http.response.status.code", 500),
         };
 
@@ -396,8 +441,29 @@ public class ServiceLevelIndicatorAspTests : IDisposable
             new("CustomerResourceId", "TestCustomerResourceId"),
             new("LocationId", "ms-loc://az/public/West US 3"),
             new("Operation", "GET Test/throw"),
-            new("activity.status.code", "Error"),
+            new("Outcome", "Failure"),
             new("http.response.status.code", 500),
+        };
+
+        ValidateMetrics(expectedTags);
+    }
+
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_as_ignored_for_request_aborted_cancellation()
+    {
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+
+        Func<Task> act = () => host.GetTestClient().GetAsync("test/request_aborted", TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+
+        var expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/request_aborted"),
+            new("Outcome", "Ignored"),
+            new("http.response.status.code", 200),
         };
 
         ValidateMetrics(expectedTags);
@@ -434,11 +500,25 @@ public class ServiceLevelIndicatorAspTests : IDisposable
 
     private void ValidateMetrics(KeyValuePair<string, object?>[] expectedTags)
     {
+        expectedTags = AddDefaultHttpMethod(expectedTags);
+
         _callbackCalled.Should().BeTrue();
         _instrument!.Name.Should().Be("operation.duration");
         _instrument.Unit.Should().Be("ms");
         _measurement.Should().BeInRange(TestHostBuilder.MillisecondsDelay - 10, TestHostBuilder.MillisecondsDelay + 400);
+        _actualTags.Should().NotContain(tag => tag.Key == "activity.status.code");
         _actualTags.Should().BeEquivalentTo(expectedTags);
+    }
+
+    private static KeyValuePair<string, object?>[] AddDefaultHttpMethod(KeyValuePair<string, object?>[] expectedTags)
+    {
+        if (expectedTags.Any(tag => tag.Key == "http.request.method"))
+            return expectedTags;
+
+        var operation = expectedTags.First(tag => tag.Key == "Operation").Value?.ToString();
+        var method = operation?.StartsWith("POST ", StringComparison.Ordinal) == true ? "POST" : "GET";
+
+        return [.. expectedTags, new KeyValuePair<string, object?>("http.request.method", method)];
     }
 
 }

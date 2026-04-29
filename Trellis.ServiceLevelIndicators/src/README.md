@@ -66,11 +66,11 @@ builder.Services.AddServiceLevelIndicator(options =>
 Wrap any block of code in a `using StartMeasuring` scope:
 
 ```csharp
-async Task DoWork(ServiceLevelIndicator sli)
+void DoWork(ServiceLevelIndicator sli)
 {
     using var op = sli.StartMeasuring("ProcessOrder");
     // Do work...
-    op.SetActivityStatusCode(ActivityStatusCode.Ok);
+    op.SetOutcome(SliOutcome.Success);
 }
 ```
 
@@ -81,22 +81,26 @@ var attribute = new KeyValuePair<string, object?>("Event", "OrderCreated");
 using var op = sli.StartMeasuring("ProcessOrder", attribute);
 ```
 
-Custom attribute names must be unique and must not reuse SLI-reserved tags such as `CustomerResourceId`, `LocationId`, `Operation`, or `activity.status.code`.
+Custom attribute names must be unique and must not reuse SLI-reserved tags such as `CustomerResourceId`, `LocationId`, `Operation`, `Outcome`, `activity.status.code`, `http.request.method`, or `http.response.status.code`.
 
 ## Emitted Metrics
 
-A meter named `Trellis.SLI` with instrument `operation.duration` (milliseconds) is emitted with the following attributes:
+By default, a meter named `Trellis.SLI` emits the `operation.duration` histogram in milliseconds. If you configure `ServiceLevelIndicatorOptions.Meter`, metrics are emitted from that meter instead.
+
+`StartMeasuring(...)` emits the following attributes when the returned `MeasuredOperation` is disposed:
 
 | Attribute | Description |
 |-----------|-------------|
 | `Operation` | The name of the measured operation |
 | `CustomerResourceId` | A **stable** identifier for the entity the operation is acting on (tenant, subscription, account, work item, etc.). NOT the caller, NOT a per-request ID, NOT a user/email. |
 | `LocationId` | Where the service is running (e.g. `ms-loc://az/public/westus3`) |
-| `activity.status.code` | `Ok`, `Error`, or `Unset` based on the operation outcome |
+| `Outcome` | `Success`, `Failure`, `ClientError`, or `Ignored` |
+
+Direct `Record(...)` calls emit `CustomerResourceId`, `LocationId`, `Operation`, `Outcome`, and any custom attributes supplied to the call. Without an explicit outcome, manual/background measurements default to `Ignored`.
 
 ## Cardinality Guidance
 
-All three required tags — `Operation`, `LocationId`, and `CustomerResourceId` — must be **low-cardinality and bounded**. Good values: tenant, subscription, environment, region, product tier, work-item type. Bad values: per-request GUIDs, user IDs / emails, timestamps, free-form user input. The same rule applies to any custom attributes you add via `MeasuredOperation.AddAttribute(...)`.
+Required tags must be stable and meaningful. Good values: tenant, subscription, environment, region, product tier, work-item type. Bad values: per-request GUIDs, timestamps, free-form user input, or raw emails when a stable object ID is available. The same rule applies to any custom attributes you add via `MeasuredOperation.AddAttribute(...)`.
 
 ## Disposal
 
@@ -107,7 +111,7 @@ All three required tags — `Operation`, `LocationId`, and `CustomerResourceId` 
 | Type / Method | Description |
 |---------------|-------------|
 | `ServiceLevelIndicator.StartMeasuring(operation, attributes)` | Start a measured operation scope |
-| `MeasuredOperation.SetActivityStatusCode(code)` | Set the outcome status |
+| `MeasuredOperation.SetOutcome(outcome)` | Set the SLI outcome |
 | `MeasuredOperation.AddAttribute(name, value)` | Add a custom metric attribute |
 | `MeasuredOperation.CustomerResourceId` | Get/set the customer resource ID |
 | `ServiceLevelIndicator.CreateLocationId(cloud, region?, zone?)` | Helper to build a location ID string |
