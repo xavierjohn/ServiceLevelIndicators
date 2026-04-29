@@ -331,6 +331,8 @@ The default operation name is the HTTP method plus the route template (placehold
 
 Try out the sample weather forecast Web API.
 
+For a local Grafana/Prometheus/OpenTelemetry Collector experience, run the provisioned dashboard in [`sample\Observability\Grafana`](sample/Observability/Grafana/README.md). It shows SLI latency percentiles, success rate, failures, client errors, unknown customer diagnostics, and `<unrouted>` detection.
+
 To view the metrics locally using the [.NET Aspire Dashboard](https://aspire.dev/dashboard/standalone/):
 
 1. Start the Aspire dashboard:
