@@ -448,6 +448,27 @@ public class ServiceLevelIndicatorAspTests : IDisposable
         ValidateMetrics(expectedTags);
     }
 
+    [Fact]
+    public async Task SLI_Metrics_is_emitted_as_ignored_for_request_aborted_cancellation()
+    {
+        using var host = await TestHostBuilder.CreateHostWithSli(_meter);
+
+        Func<Task> act = () => host.GetTestClient().GetAsync("test/request_aborted", TestContext.Current.CancellationToken);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+
+        var expectedTags = new KeyValuePair<string, object?>[]
+        {
+            new("CustomerResourceId", "TestCustomerResourceId"),
+            new("LocationId", "ms-loc://az/public/West US 3"),
+            new("Operation", "GET Test/request_aborted"),
+            new("Outcome", "Ignored"),
+            new("http.response.status.code", 200),
+        };
+
+        ValidateMetrics(expectedTags);
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)

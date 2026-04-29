@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft for pre-implementation review.
+Implemented in the pre-1.0 metric contract finalization.
 
 ## Context
 

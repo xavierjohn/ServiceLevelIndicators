@@ -35,6 +35,13 @@ public class TestController : ControllerBase
         throw new InvalidOperationException("Boom");
     }
 
+    [HttpGet("request_aborted")]
+    public IActionResult RequestAborted()
+    {
+        HttpContext.Abort();
+        throw new OperationCanceledException();
+    }
+
     [HttpGet("operation")]
     [ServiceLevelIndicator(Operation = "TestOperation")]
     public IActionResult GetOperation() => Ok("Hello World!");

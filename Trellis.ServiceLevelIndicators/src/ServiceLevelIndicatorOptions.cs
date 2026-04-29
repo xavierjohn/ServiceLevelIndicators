@@ -4,7 +4,7 @@ using System.Diagnostics.Metrics;
 
 /// <summary>
 /// Options for configuring the Service Level Indicator.
-/// CustomerResourceId & LocationId are mandatory properties.
+/// LocationId is required. CustomerResourceId defaults to <see cref="ServiceLevelIndicator.UnknownCustomerResourceId"/> when not configured.
 /// </summary>
 public class ServiceLevelIndicatorOptions
 {
